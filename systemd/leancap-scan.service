@@ -1,0 +1,20 @@
+# /etc/systemd/system/leancap-scan.service
+[Unit]
+Description=LeanCapture Scan & Monitor
+Wants=mysql.service network-online.target multi-user.target
+After=mysql.service network-online.target multi-user.target
+
+[Service]
+Type=simple
+User=mythtv
+UMask=0002
+WorkingDirectory=~
+ExecStart=/opt/mythtv/bin/hdmirec_scan.sh
+Restart=on-failure
+StartLimitInterval=10min
+StartLimitBurst=5
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target
+

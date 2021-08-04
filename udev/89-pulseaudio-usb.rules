@@ -1,0 +1,1 @@
+ATTRS{idVendor}=="534d", ATTRS{idProduct}=="2109", ENV{PULSE_IGNORE}="1"
