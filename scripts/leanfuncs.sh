@@ -1,5 +1,5 @@
 #!/usr/bin/echo This file is not executable
-# Common functions used by hdmi record scripts
+# Common functions used by lean capture scripts
 # This file need not be marked executable
 
 LOGDATE='date +%Y-%m-%d_%H-%M-%S'

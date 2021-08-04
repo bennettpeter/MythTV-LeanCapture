@@ -48,15 +48,29 @@ Prerequisite software for these scripts can be installed on Linux with the distr
 - jp2a
 - adb version 1.0.41 or later
 
-Note that Ubuntu has an obsolete version of adb in apt. Get the latest version from https://developer.android.com/studio/releases/platform-tools . Place adb on your path, e.g. in /usr/local/bin .
+Note that Ubuntu has an obsolete version of adb in apt. Get the latest version from https://developer.android.com/studio/releases/platform-tools . Place adb on your path, e.g. in /usr/local/bin.
 
-Once the prerequisites have been installed, install the scripts using by running ./install.sh. This will need to be run in root or by using sudo.
+Once the prerequisites have been installed, install the scripts using by running ./install.sh. This will need to be run with root or using sudo.
 
 The install.sh script tests for the presence of required versions and stops if they are not present.
 
-The install script assumes user id mthtv, group id mythtv, and script directory /opt/mythtv/bin. You can use different values by setting appropriate environment variables before running install.sh.
+The install script assumes the mythbackend user id is mthtv, and group id is mythtv. It assumes script directory /opt/mythtv/leancap. You can use different values by setting appropriate environment variables before running install.sh.
 
 ### Fire stick
 
+## Configuration
 
+### Fire Stick
+
+### Linux
+
+### MythTV
+
+## Troubleshooting
+
+### Power failure
+
+### Fire TV Glitches
+
+### Taking fire stick out of service
 

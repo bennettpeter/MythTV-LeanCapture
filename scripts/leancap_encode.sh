@@ -40,7 +40,7 @@ logfile=$LOGDIR/${scriptname}_${recname}.log
     fi
 
     if [[ "$AUDIO_OFFSET" == "" ]] ; then
-        AUDIO_OFFSET=0.000
+        AUDIO_OFFSET=0.150
     fi
 } &>> $logfile
 
@@ -67,6 +67,7 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
         echo `$LOGDATE` "ERROR: playback failed, retrying."
         $scriptpath/notify.py "Xfinity Problem" \
             "leancap_encode: Playback Failed on ${recname}, retrying" &
+        # Try to tune again, once only.
         $scriptpath/leancap_tune.sh $recname $tunechan NOLOCK
     fi
 } &>> $logfile

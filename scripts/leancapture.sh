@@ -4,7 +4,7 @@
 # Parameter 1 - recorder name
 
 # In mythtv setup, create a capture card type EXTERNAL. Enter command path
-# as /opt/mythtv/bin/leancapture.sh leancap1
+# as /opt/mythtv/leancap/leancapture.sh leancap1
 # (fill in correct path and tuner id)
 # setup /etc/opt/mythtv/leancap1.conf
 
@@ -13,12 +13,11 @@
 # used by mythbackend for cmmunicating with mythexternrecorder
 
 recname=$1
-shift
 . /etc/opt/mythtv/leancap.conf
 scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`
 scriptname=`basename "$scriptname" .sh`
-source $scriptpath/hdmifuncs.sh
+source $scriptpath/leanfuncs.sh
 logfile=$LOGDIR/${scriptname}_${recname}.log
 {
     initialize NOREDIRECT
