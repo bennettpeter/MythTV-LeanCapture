@@ -3,7 +3,7 @@
 # Initialize android device and make it ready for tuning
 # Keep the device on favorite channel list.
 
-. /etc/opt/mythtv/leancap.conf
+. /etc/opt/mythtv/leancapture.conf
 scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`
 scriptname=`basename "$scriptname" .sh`
@@ -59,6 +59,8 @@ while true ; do
             if (( capseq == 1 )) ; then
                 $scriptpath/leancap_checkfavorites.sh
             fi
+            # At least once a day, restart xfinity app
+            $scriptpath/adb-sendkey.sh HOME
         fi
         $scriptpath/adb-sendkey.sh MENU
         $scriptpath/adb-sendkey.sh LEFT

@@ -6,7 +6,7 @@
 # with VIDEO_IN and AUDIO_IN settings
 # 
 
-. /etc/opt/mythtv/leancap.conf
+. /etc/opt/mythtv/leancapture.conf
 scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`
 scriptname=`basename "$scriptname" .sh`
@@ -15,20 +15,20 @@ source $scriptpath/leanfuncs.sh
 
 initialize
 
-if ! ls /etc/opt/mythtv/leancap*.conf ; then
+if ! ls /etc/opt/mythtv/leancap?.conf ; then
     echo No Leancap recorders, exiting
     exit 2
 fi
 
 reqname="$1"
 if [[ "$reqname" == "" ]] ; then
-    reqname=leancap*
+    reqname=leancap?
 fi
 
 # Quickly lock all the tuners
 for conffile in /etc/opt/mythtv/$reqname.conf ; do
     echo $conffile found
-    if [[ "$conffile" == "/etc/opt/mythtv/leancap*.conf" ]] ; then
+    if [[ "$conffile" == "/etc/opt/mythtv/$reqname.conf" ]] ; then
         echo `$LOGDATE` "Warning - No leancap recorder found"
         exit
     fi
@@ -151,14 +151,20 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
     echo "AUDIO_IN=$AUDIO_IN" >> $DATADIR/${recname}.conf
     echo `$LOGDATE` Successfully created parameters in $DATADIR/${recname}.conf.
     unlocktuner
-    # script that runs forever to keep device in a ready state
-    let capseq++
-    $scriptpath/leancap_ready.sh $recname $capseq &
-    pidlist="$pidlist $!"
+    # When rinnung as a service, start up the leancap_ready processes
+    if (( ! isterminal )) ; then
+        # script that runs forever to keep device in a ready state
+        let capseq++
+        $scriptpath/leancap_ready.sh $recname $capseq &
+        pidlist="$pidlist $!"
+    fi
 done
 
 $LOGDATE > $LOCKBASEDIR/scandate
-# wait for any ready process to end
-wait -n $pidlist
-# kill all ready processes if one ends
-kill $pidlist
+
+if [[ "$pidlist" != "" ]] ; then
+    # wait for any ready process to end
+    wait -n $pidlist
+    # kill all ready processes if one ends
+    kill $pidlist
+fi

@@ -90,9 +90,9 @@ function unlocktuner {
 # param NOREDIRECT to prevent redirection of stdout and stderr
 function initialize {
     if [[ -t 1 ]] ; then
-        isterminal=Y
+        isterminal=1
     else
-        isterminal=N
+        isterminal=0
     fi
     tail_pid=
     REDIRECT=N
@@ -105,7 +105,7 @@ function initialize {
         REDIRECT=Y
         exec 1>>$logfile
         exec 2>&1
-        if [[ $isterminal == Y ]] ; then
+        if (( isterminal )) ; then
             tail -f $logfile >/dev/tty &
             tail_pid=$!
         fi

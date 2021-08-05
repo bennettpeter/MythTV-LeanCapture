@@ -6,10 +6,10 @@ After=mysql.service network-online.target multi-user.target
 
 [Service]
 Type=simple
-User=mythtv
+User=$MYTHTVUSER
 UMask=0002
 WorkingDirectory=~
-ExecStart=/opt/mythtv/bin/hdmirec_scan.sh
+ExecStart=$SCRIPTDIR/leancap_scan.sh
 Restart=on-failure
 StartLimitInterval=10min
 StartLimitBurst=5

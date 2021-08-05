@@ -2,14 +2,23 @@
 
 # Check favorite channels against upcoming
 
-. /etc/opt/mythtv/leancap.conf
+. /etc/opt/mythtv/leancapture.conf
 scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`
 scriptname=`basename "$scriptname" .sh`
-
+exec 1>>$LOGDIR/${scriptname}.log
+exec 2>&1
+date
 
 $scriptpath/myth_upcoming_recordings.pl --plain_text --recordings -1 --hours 336 \
   --text_format "%cn\n" | sort -un | tail -n +2 > $DATADIR/recording_channels.txt
+rc=$?
+
+if [[ "$rc" != 0 ]] ; then
+    $scriptpath/notify.py "Upcoming Recordings Error" \
+      "$scriptname failed." &
+    exit
+fi
 
 wc=$(cat $DATADIR/recording_channels.txt | wc -c)
 if (( wc == 0 )) ; then

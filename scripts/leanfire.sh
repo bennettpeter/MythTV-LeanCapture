@@ -14,7 +14,7 @@ echo "Number of responses (default 0)"
 echo "Maximum Number of minutes [default 360*(responses+1)]"
 echo "Recorder id (default leancap1)"
 
-. /etc/opt/mythtv/leancap.conf
+. /etc/opt/mythtv/leancapture.conf
 
 scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`

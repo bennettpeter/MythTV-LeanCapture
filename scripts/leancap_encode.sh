@@ -6,7 +6,7 @@
 # This script must write nothing to stdout other than the encoded data.
 recname=$1
 
-. /etc/opt/mythtv/leancap.conf
+. /etc/opt/mythtv/leancapture.conf
 scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`
 scriptname=`basename "$scriptname" .sh`

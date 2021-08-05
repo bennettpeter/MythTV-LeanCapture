@@ -1,8 +1,9 @@
 #!/bin/bash
 
-if [[ "$MYTHTV_USER" == "" ]] ; then MYTHTV_USER=mythtv ; fi
-if [[ "$MYTHTV_GROUP" == "" ]] ; then MYTHTV_GROUP=mythtv ; fi
-if [[ "$SCRIPT_DIR" == "" ]] ; then SCRIPT_DIR=/opt/mythtv/leancap ; fi
+if [[ "$MYTHTVUSER" == "" ]] ; then MYTHTVUSER=mythtv ; fi
+if [[ "$MYTHTVGROUP" == "" ]] ; then MYTHTVGROUP=mythtv ; fi
+if [[ "$SCRIPTDIR" == "" ]] ; then SCRIPTDIR=/opt/mythtv/leancap ; fi
+if [[ "$DATADIR" == "" ]] ; then DATADIR=/var/opt/mythtv ; fi
 
 scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`
@@ -51,21 +52,22 @@ fi
 
 set -e
 
-adduser $MYTHTV_USER audio
-adduser $MYTHTV_USER video
+adduser $MYTHTVUSER audio
+adduser $MYTHTVUSER video
 
 mkdir -p /etc/opt/mythtv
 cp -n $scriptpath/settings/* /etc/opt/mythtv/
 chmod 600 /etc/opt/mythtv/private.conf
-chown $MYTHTV_USER:$MYTHTV_GROUP /etc/opt/mythtv/private.conf
+chown $MYTHTVUSER:$MYTHTVGROUP /etc/opt/mythtv/private.conf
 
-mkdir -p $SCRIPT_DIR
-cp $scriptpath/scripts/* $SCRIPT_DIR
+mkdir -p $SCRIPTDIR
+cp $scriptpath/scripts/* $SCRIPTDIR
 
 mkdir -p /etc/systemd/system
-cp $scriptpath/systemd/* /etc/systemd/system/
+export MYTHTVUSER SCRIPTDIR
+envsubst < $scriptpath/systemd/leancap-scan.service > /etc/systemd/system/leancap-scan.service
 
 mkdir -p /etc/udev/rules.d
-cp $scriptpath/udev/* /etc/udev/rules.d/
+cp -n $scriptpath/udev/* /etc/udev/rules.d/
 
-
+echo "Install completed successfully"

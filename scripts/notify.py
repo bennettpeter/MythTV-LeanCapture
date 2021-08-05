@@ -18,7 +18,7 @@ config=ConfigParser()
 # In order for this to work, there must be a line [ default ] before
 # other executable lines. 
 # any line that is not simply var=value must be prepended with a=1;
-config.read('/etc/opt/mythtv/leancap.conf')
+config.read('/etc/opt/mythtv/leancapture.conf')
 
 privConfig=ConfigParser()
 privConfig.read('/etc/opt/mythtv/private.conf')
