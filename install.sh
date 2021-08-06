@@ -70,6 +70,14 @@ fi
 
 set -e
 
+mkdir -pv /var/log/mythtv_scripts
+chown $MYTHTVUSER:$MYTHTVUSER /var/log/mythtv_scripts
+chmod 2775 /var/log/mythtv_scripts
+
+mkdir -pv /var/opt/mythtv
+chown $MYTHTVUSER:$MYTHTVUSER /var/opt/mythtv
+chmod 2775 /var/opt/mythtv
+
 adduser $MYTHTVUSER audio
 adduser $MYTHTVUSER video
 
