@@ -94,7 +94,19 @@ In order to operate your fire stick while connected to MythTV:
 
 ## Configuration
 
+### Xfinity
+
+The "tuning" of channels on the stream app requires selecting the channel from a list. There is no option of entering a channel number. Since the list of channels can run into the hundreds, tuning could take minutes. To avoid this problem, we use the "favorite channels", where you can select the actual channels you will record.
+
+There is a script that runs at startup and once a day that will notrify you by email, text message or log message if there are channels set up for recordings that are not in the favorites list. It looks two weeks ahead so you have time to get it done.
+
+The Xfinity app on the fire stick is not able to set up favorite channels. Either log in to the xfinity.com web site and select streaming to set up the favorites, or install the xfinity stream app on an android phone and set them up there. Note that the xfinity stream web site fails on Chrome under Linux, but it works on Firefox on Linux.
+
 ### Linux
+
+#### /etc/opt/mythtv/leanchans.txt
+
+This needs to have a list of the favorite channels set up in the xfinity stream app. Type one number per line. They must be in numerical ascending order, with no leading zeroes. It must match what is set up in xfinity. Note that when you add a channel to favorites it sometimes adds the channel twice, an extra copy of the channel in the 1000 plus range. Add any extra numbers to the list as well, so that there is a match between what is in xfinity and leanchans.txt.
 
 #### /etc/opt/mythtv/leancap.conf
 

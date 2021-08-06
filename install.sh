@@ -1,9 +1,27 @@
 #!/bin/bash
 
+if [[ -f /etc/opt/mythtv/leaninstall.conf ]] ; then
+    source /etc/opt/mythtv/leaninstall.conf
+fi
+
 if [[ "$MYTHTVUSER" == "" ]] ; then MYTHTVUSER=mythtv ; fi
 if [[ "$MYTHTVGROUP" == "" ]] ; then MYTHTVGROUP=mythtv ; fi
 if [[ "$SCRIPTDIR" == "" ]] ; then SCRIPTDIR=/opt/mythtv/leancap ; fi
-if [[ "$DATADIR" == "" ]] ; then DATADIR=/var/opt/mythtv ; fi
+
+if [[ ! -f /etc/opt/mythtv/leaninstall.conf ]] ; then
+    echo Install configuration:
+    echo MythTV User: $MYTHTVUSER
+    echo MythTV Group: $MYTHTVGROUP
+    echo Install Directory: $SCRIPTDIR
+    echo To change these set MYTHTVUSER, MYTHTVGROUP, and SCRIPTDIR
+    echo Type Y to continue
+    read -e resp
+    if [[ "$resp" != Y ]] ; then exit 2 ; fi
+    mkdir -p /etc/opt/mythtv
+    echo "MYTHTVUSER=$MYTHTVUSER" > /etc/opt/mythtv/leaninstall.conf
+    echo "MYTHTVGROUP=$MYTHTVGROUP" >> /etc/opt/mythtv/leaninstall.conf
+    echo "SCRIPTDIR=$SCRIPTDIR" >> /etc/opt/mythtv/leaninstall.conf
+fi
 
 scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`
@@ -55,16 +73,19 @@ set -e
 adduser $MYTHTVUSER audio
 adduser $MYTHTVUSER video
 
+export MYTHTVUSER SCRIPTDIR
+
 mkdir -p /etc/opt/mythtv
 cp -n $scriptpath/settings/* /etc/opt/mythtv/
+envsubst < $scriptpath/settings/leancap1.conf > /etc/opt/mythtv/leancap1.conf
 chmod 600 /etc/opt/mythtv/private.conf
 chown $MYTHTVUSER:$MYTHTVGROUP /etc/opt/mythtv/private.conf
+
 
 mkdir -p $SCRIPTDIR
 cp $scriptpath/scripts/* $SCRIPTDIR
 
 mkdir -p /etc/systemd/system
-export MYTHTVUSER SCRIPTDIR
 envsubst < $scriptpath/systemd/leancap-scan.service > /etc/systemd/system/leancap-scan.service
 
 mkdir -p /etc/udev/rules.d

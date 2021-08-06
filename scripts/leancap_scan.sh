@@ -163,8 +163,6 @@ done
 $LOGDATE > $LOCKBASEDIR/scandate
 
 if [[ "$pidlist" != "" ]] ; then
-    # wait for any ready process to end
-    wait -n $pidlist
-    # kill all ready processes if one ends
-    kill $pidlist
+    # wait for ready processes to end
+    wait
 fi
