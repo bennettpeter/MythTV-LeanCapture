@@ -13,6 +13,9 @@
 # used by mythbackend for cmmunicating with mythexternrecorder
 
 recname=$1
+# The shift is to remove recname from the parameters
+# so that the rest of the parameters get passed to mythexternrecorder
+shift
 . /etc/opt/mythtv/leancapture.conf
 scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`

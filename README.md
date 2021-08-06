@@ -29,6 +29,20 @@ Here is an alternative method for recording channels on Comcast. It may be exten
 - You can use additional sets of the above three items to support multiple recordings at the same time.
 - MythTV backend on a Linux device. This must have a CPU capable of real-time encoding the number of simultaneous channels you will be recording.
 
+### CPU power required
+
+Since the backend will be encoding real-time, it needs sufficient CPU power. To determine how many fire sticks you can connect, find out how many encodes you can do at one time.
+
+Run this on your backend to get a value:
+
+    sysbench --num-threads=$(nproc) --max-time=10 --test=cpu run
+
+Look at the resulting *events per second*. Based on my simple testing, each encode will take approximately 2000 out of this. I do not recommend loading the CPU to 100%, preferably do not go over 50%. If your *events per second* is 4000 you should only do 1 encode at a time. if it is 16000, you could theoretically do 8 at a time, but I would limit it to 4.
+
+Since I tested on only a few backends, these figures may not be reliable. This is only a rough guide. Once you have your setup running, set a recording going and run mpstat 1 10 to see the %idle to get a better idea of how much CPU is being used.
+
+A raspberry pi 2 shows events per second of 178. Do not try to run *LeanCapture* on a raspberry pi!
+
 ## Hardware Installation
 
 Connect each fire stick to a capture device, ethernet adapter, and power supply. If you do not have an ethernet adapter you can use wifi. Connect each to a USB socket on the MythTV backend.
