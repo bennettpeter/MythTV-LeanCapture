@@ -28,8 +28,8 @@ fi
 # Quickly lock all the tuners
 for conffile in /etc/opt/mythtv/$reqname.conf ; do
     echo $conffile found
-    if [[ "$conffile" == "/etc/opt/mythtv/$reqname.conf" ]] ; then
-        echo `$LOGDATE` "Warning - No leancap recorder found"
+    if [[ ! -f "$conffile" ]] ; then
+        echo `$LOGDATE` "Warning - $conffile not found"
         exit
     fi
     recname=$(basename $conffile .conf)

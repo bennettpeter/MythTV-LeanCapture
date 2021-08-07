@@ -93,7 +93,6 @@ if [[ ! -f /etc/opt/mythtv/leancap1.conf ]] ; then
     envsubst < $scriptpath/settings/leancap1.conf > /etc/opt/mythtv/leancap1.conf
 fi
 
-
 mkdir -p $SCRIPTDIR
 cp $scriptpath/scripts/* $SCRIPTDIR
 
