@@ -32,12 +32,12 @@ logfile=$LOGDIR/${scriptname}_${recname}.log
             rc=0
         else
             rc=99
-            if (( count > 2 )) ; then
+            if (( count > 15 )) ; then
             echo `$LOGDATE` "ERROR leancap_scan not yet run, tuner disabled"
                 break
             fi
             echo `$LOGDATE` "leancap_scan not yet run, waiting 5 seconds"
-            sleep 5
+            sleep 2
         fi
     done
     if (( rc > 1 )) ; then exit $rc ; fi

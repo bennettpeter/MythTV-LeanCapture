@@ -84,10 +84,14 @@ adduser $MYTHTVUSER video
 export MYTHTVUSER SCRIPTDIR
 
 mkdir -p /etc/opt/mythtv
-cp -n $scriptpath/settings/* /etc/opt/mythtv/
-envsubst < $scriptpath/settings/leancap1.conf > /etc/opt/mythtv/leancap1.conf
+cp -n $scriptpath/settings/leancapture.conf /etc/opt/mythtv/
+cp -n $scriptpath/settings/leanchans.txt /etc/opt/mythtv/
+cp -n $scriptpath/settings/private.conf /etc/opt/mythtv/
 chmod 600 /etc/opt/mythtv/private.conf
 chown $MYTHTVUSER:$MYTHTVGROUP /etc/opt/mythtv/private.conf
+if [[ ! -f /etc/opt/mythtv/leancap1.conf ]] ; then
+    envsubst < $scriptpath/settings/leancap1.conf > /etc/opt/mythtv/leancap1.conf
+fi
 
 
 mkdir -p $SCRIPTDIR

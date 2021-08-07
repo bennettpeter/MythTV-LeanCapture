@@ -22,7 +22,7 @@ initialize
 # tunestatus values
 # idle
 # tuned
-sleep 15
+sleep 2
 errored=0
 lastrescheck=
 while true ; do
