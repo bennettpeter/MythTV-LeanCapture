@@ -126,6 +126,10 @@ This file prevents pulseaudio grabbing the audio output of your capture devices.
 
 ### MythTV
 
+#### General: Shutdown/Wakeup Options
+
+- Startup Before Recording (secs): If you use this set it to 600 seconds (10 minutes), to allow time for the scan and ready scripts to do their work before a recording starts.
+
 #### Capture Cards
 
 Add a capture card for each Fire Stick / Capture device.
@@ -166,7 +170,7 @@ If you use this device for Live TV, bear in mind that you can only select channe
 
 ## Operation
 
-If you have a cable card or other capture device, you can leave that in place while you test the new device or devices. To prevent recordings from using the new devices set the Schedule Order and Live TV oreder to 0.
+If you have a cable card or other capture device, you can leave that in place while you test the new device or devices, or use it in conjunction with the LeanCapture device. To prevent recordings from using the new devices set the Schedule Order and Live TV order to 0.
 
 ### Test your setup.
 
@@ -199,7 +203,7 @@ You should seee a bunch of screen messages, ending with
 
 Press ctrl-c to end the script, which otherwise repeats the process every 5 minutes.
 
-Run vlc and open the video card. You should see the page of "Favorit Channels" and the channel numbers and programs displayed. Close vlc.
+Run vlc and open the video card. You should see the page of "Favorite Channels" and the channel numbers and programs displayed. Close vlc.
 
 Repeat the menu navigation test for each tuner if you have more than one.
 
@@ -226,11 +230,13 @@ Enable the leancap-scan service
 
 Reboot so that the udev setting can take effect and the leancap-scan service can be started. Look in the log directory /var/log/mythtv_scripts to see if there are any errors displayed in the leancap_scan or leancap_ready logs.
 
-### Power failure
+You must not open the video device with vlc if any recording is scheduled to tart. Recordings cann be done while it is open in vlc.
 
 ### Fire Stick 
 
-### Taking fire stick out of service
+While the fire stick is set up as a capture device, it is dedicated to that task. You cannot use it for any other apps. Put the remote in a safe place where nobody will touch it. To be extra sure remove its battery.
+
+Any time you need to do any work on the fire stick (reset resolution, update, etc.), you  need to do as follows.
 
 ### Replugging any USB devices
 

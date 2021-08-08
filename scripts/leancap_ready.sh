@@ -25,6 +25,8 @@ initialize
 sleep 2
 errored=0
 lastrescheck=
+lastfavcheck=
+startup=$(date +%s)
 while true ; do
     if ! locktuner ; then
         echo `$LOGDATE` "Encoder $recname is already locked, waiting"
@@ -47,6 +49,10 @@ while true ; do
         today=$(date +%Y-%m-%d)
         adb connect $ANDROID_DEVICE
         if [[ "$lastrescheck" != "$today" ]] ; then
+            # At least once a day, restart xfinity app
+            $scriptpath/adb-sendkey.sh POWER
+            $scriptpath/adb-sendkey.sh HOME
+            sleep 1
             errored=0
             capturepage adb
             rc=$?
@@ -56,11 +62,17 @@ while true ; do
                   "leancap_ready: Wrong resolution on ${recname}" &
             fi
             lastrescheck="$today"
-            if (( capseq == 1 )) ; then
-                $scriptpath/leancap_checkfavorites.sh
+        fi
+        # Only check this on one tuner
+        if (( capseq == 1 )) ; then
+            # Only check once per day
+            if [[ "$lastfavcheck" != "$today" ]] ; then
+                # Make sure that backend is up by now
+                if (( now - startup > 300 )) ; then
+                    $scriptpath/leancap_checkfavorites.sh
+                    lastfavcheck="$today"
+                fi
             fi
-            # At least once a day, restart xfinity app
-            $scriptpath/adb-sendkey.sh HOME
         fi
         $scriptpath/adb-sendkey.sh MENU
         $scriptpath/adb-sendkey.sh LEFT
