@@ -97,7 +97,11 @@ mkdir -p $SCRIPTDIR
 cp $scriptpath/scripts/* $SCRIPTDIR
 
 mkdir -p /etc/systemd/system
-envsubst < $scriptpath/systemd/leancap-scan.service > /etc/systemd/system/leancap-scan.service
+envsubst < $scriptpath/systemd/leancap-scan.service > /tmp/leancap-scan.service
+if ! diff /tmp/leancap-scan.service /etc/systemd/system/leancap-scan.service ; then
+    cp /tmp/leancap-scan.service /etc/systemd/system/leancap-scan.service
+    systemctl daemon-reload
+fi
 
 mkdir -p /etc/udev/rules.d
 cp -n $scriptpath/udev/* /etc/udev/rules.d/
