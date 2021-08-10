@@ -68,7 +68,7 @@ while true ; do
             # Only check once per day
             if [[ "$lastfavcheck" != "$today" ]] ; then
                 # Simple check for mythbackend running
-                if pidof mythbackend >/dev/null ; then
+                if (( now - startup > 300 )) && pidof mythbackend >/dev/null ; then
                     $scriptpath/leancap_checkfavorites.sh
                     lastfavcheck="$today"
                 fi
