@@ -1,7 +1,5 @@
 # MythTV-LeanCapture
 
-# ***This is a work in progress, not ready for use yet***
-
 Users of cable systems in the USA, and Comcast in particular, require a cable card device such as Ceton or Silicondust to record programming. Ceton and Silicondust devices are no longer manufactured and it seems cable cards are being phased out.
 
 Here is an alternative method for recording channels on Comcast. It may be extendable to other providers.
@@ -66,7 +64,7 @@ Note that Ubuntu has an obsolete version of adb in apt. Do not use the out of da
 
 Once the prerequisites have been installed, install the scripts by running
 
-    sudo ./install.sh.
+    sudo ./install.sh
 
 The install.sh script tests for the presence of required versions and stops if they are not present.
 
@@ -95,7 +93,7 @@ In order to operate your fire stick while connected to MythTV:
 1. Switch to user mythtv and run adb against the fire stick Ethernet address.
 
         sudo -u mythtv bash
-        adb connect <IP address  or name>
+        adb connect <IP address or name>
 
 1. Respond to the confirmation message that appears on the fire stick display in vlc, and confirm that it must always allow connect from that system.
 
@@ -235,7 +233,7 @@ Enable the leancap-scan service:
 
 Reboot so that the udev setting can take effect and the leancap-scan service can be started. Look in the log directory /var/log/mythtv_scripts to see if there are any errors displayed in the leancap_scan or leancap_ready logs.
 
-You must not open the video device with vlc if any recording is scheduled to tart. Recordings cann be done while it is open in vlc.
+You must not open the video device with vlc if any recording is scheduled to start. Recordings cannot be done while it is open in vlc.
 
 ### Fire Stick 
 
@@ -246,14 +244,14 @@ Any time you need to do any work on a fire stick (reset resolution, update, etc.
 - Make sure nothing is scheduled to record in the near future.
 - Stop the service:
 
-    sudo systemctl stop leancap-scan.service
+        sudo systemctl stop leancap-scan.service
 
 - Run vlc and open the video capture device (/dev/video*). You can find which the capture device is by looking in /var/opt/mythtv/leancapx.conf where x is the number of the one you are working on.
 - Use the fire stick remote to perform any needed work.
 - Close vlc
 - Start the service again:
 
-    sudo systemctl stop leancap-scan.service
+        sudo systemctl start leancap-scan.service
 
 ### Manual Recordings
 
@@ -261,7 +259,7 @@ This can be done without MythTV. You don't need MythTV installed. You can run th
 
 If you are not using MythTV backend on the machine, install the software as described above. You do not need to create leanchans.txt. You will not do the MythTV configuration. Do not enable the leancap_scan service.
 
-Manually run the scan using terminal. This has to be done if you have rebooted or replugged usb devices since it was last run:
+Manually run the scan using terminal. This has to be done again if you have rebooted or replugged usb devices since it was last run:
 
     /opt/mythtv/leancap/leancap_scan.sh
 
@@ -287,9 +285,9 @@ When recording ends for any reason, whether time limit, blank screen or control-
 
 This can be done without MythTV. You don't need MythTV installed. You can run this on a separate machine. This does require you to be a Comcast customer and to have the Xfinity Cloud DVR feature in your plan. Using the fire stick app, the android app or Firefox browser, you can search program names and set them to record from your subscribed channels.
 
-One you have one or more programs recorded on Xfinity, you can use this script to get them onto mkv files on your computer. Why do this? Xfinity only gives 20 hours of recording by default and also only allows you to keep your recordings for 1 year.
+When you have one or more programs recorded on Xfinity, you can use this script to get them into mkv files on your computer. Why do this? Xfinity only gives 20 hours of recording by default and also only allows you to keep your recordings for 1 year.
 
-Manually run the scan using terminal. This has to be done if you have rebooted or replugged usb devices since it was last run:
+Manually run the scan using terminal. This has to be done again if you have rebooted or replugged usb devices since it was last run:
 
     /opt/mythtv/leancap/leancap_scan.sh
 
@@ -301,7 +299,7 @@ This will immediately navigate to your recordings on the fire stick and record t
 
 While recording is in progress you can check it by opening the mkv files with vlc. Note the files are named with only season and episode until the recording ends, at which time the subtitle is added to the name.
 
-There is no option to prevent recordings being deleted from XFinity after being recorded to your local drive. XFinity has an undelete option but that does not work once all shows have been deleted.
+There is no option to prevent recordings being deleted from Xfinity after being recorded to your local drive. Xfinity has a recover deleted option but that does not work once all shows have been deleted.
 
 If the process is interrupted (e.g. by control-C in the terminal window), one recording will be incomplete. You can start the script again and it will restart the incomplete recording from the beginning again, so you won't lose anything, just some time.
 
