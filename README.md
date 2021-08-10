@@ -16,16 +16,17 @@ Here is an alternative method for recording channels on Comcast. It may be exten
 
 - Only records stereo audio.
 - Does not support closed captions.
-- If the User interface of the Stream App changes significantly, this capture will need changes.
-- The fire stick sometimes needs powering off and on again if it loses its ethernet connection. This is not a hard failure, it can continue on wifi until reset.
-- Occasionally it resets its display resolution to the default. This is not a hard failure, it may use extra bandwidth until reset.
+- If the user interface of the Stream App changes significantly, this capture will need changes.
+- The fire stick sometimes needs powering off and on again if it loses its Ethernet connection. This is not a hard failure, it can continue on WiFi until reset.
+- Occasionally the fire stick resets its display resolution to the default. This is not a hard failure, it may use extra bandwidth until reset.
+- You have to set up a list of channels that you use for recordings.
 
 ## Hardware required
 
 - Amazon Fire Stick or Fire Stick 4K.
 - USB Capture device. There are many brands available from Amazon. Those that advertize 3840x2160 input and 1920x1080 output, costing $5 and up, have been verified to work. These are USB 2 devices. Running `lsusb` with any of them shows the device with `ID 534d:2109`.  
 - USB 2 or USB 3 extension cable, 6 inches or more. Stacking the fire stick behind the capture device directly off the MythTV backend without an extension cable is unstable.
-- Optional ethernet adapter for fire stick (recommended). You can either use the official Amazon fire stick ethernet adapter or a generic version, also available from Amazon.
+- Optional Ethernet adapter for fire stick (recommended). You can either use the official Amazon fire stick Ethernet adapter or a generic version, also available from Amazon.
 - You can use additional sets of the above three items to support multiple recordings at the same time.
 - MythTV backend on a Linux device. This must have a CPU capable of real-time encoding the number of simultaneous channels you will be recording.
 
@@ -45,15 +46,14 @@ A raspberry pi 2 shows events per second of 178. Do not try to run *LeanCapture*
 
 ## Hardware Installation
 
-Connect each fire stick to a capture device, ethernet adapter, and power supply. If you do not have an ethernet adapter you can use wifi. Connect each to a USB socket on the MythTV backend.
+Connect each fire stick to a capture device, Ethernet adapter, and power supply. If you do not have an Ethernet adapter you can use WiFi. Connect each to a USB socket on the MythTV backend.
 
 ## Software installation
 
-### MythTV Backend
-
-After installing MythTV backend, this set of scripts can be installed.
+### Linux Machine
 
 Prerequisite software for these scripts can be installed on Linux with the distribution package manager.
+
 - vlc or obs-studio
 - tesseract-ocr
 - gocr
@@ -62,9 +62,11 @@ Prerequisite software for these scripts can be installed on Linux with the distr
 - jp2a
 - adb version 1.0.41 or later
 
-Note that Ubuntu has an obsolete version of adb in apt. Get the latest version from https://developer.android.com/studio/releases/platform-tools . Place adb on your path, e.g. in /usr/local/bin.
+Note that Ubuntu has an obsolete version of adb in apt. Do not use the out of date version. It does not work with these scripts. Get the latest version from https://developer.android.com/studio/releases/platform-tools . Place adb on your path, e.g. in /usr/local/bin.
 
-Once the prerequisites have been installed, install the scripts using by running ./install.sh. This will need to be run with root or using sudo.
+Once the prerequisites have been installed, install the scripts by running
+
+    sudo ./install.sh.
 
 The install.sh script tests for the presence of required versions and stops if they are not present.
 
@@ -79,19 +81,23 @@ In order to operate your fire stick while connected to MythTV:
 1. Press Home on the Fire Stick Remote. 
 1. Run vlc on the backend. 
 1. Select Media, Open Capture device. Select the Video Device /dev/video0 or other even numbered device. Do not select an odd numbered device.
-2. Check if your fire stick home screen is displayed. If you have multiple fire sticks, press buttons on the remote to see whether the correct one is displayed. If not, open the next Capture Device (e.g. /dev/video2).
+1. Check if your fire stick home screen is displayed. If you have multiple fire sticks, press buttons on the remote to see whether the correct one is displayed. If not, open the next Capture Device (e.g. /dev/video2). **Note:** The picture may not look good, response may lag, and videos may display like slide shows. Do not worry, this is because vlc does not use optimal settings by default. The display will be good enough for installing apps and changing settings. When you do actual recordings it uses ffmpeg and they look much better.
+1. Connect to your WiFi system.
+1. Hook up Ethernet if you will be using that and ensure it connects. The WiFi connection will be used as a backup in case the Ethernet connection fails. This happens occasionally, the fire stick reverts to WiFi for no reason.
+1. Create a reserved IP address in your router for both the Ethernet and WiFi IP addresses.
+1. Make a note of the IP addresses for each fire stick.
+1. Optional - add the fire stick IP addresses with useful names to the backend hosts file to make configuration easier.
+1. Install and activate the Xfinity Stream App. You need a comcast cable subscription in order to activate it.
+1. Disable screen saver.
+1. Set screen resolution to the resolution you will be recording. The capture devices mentioned above can handle 1920x1080 at 30fps or 1280x720 at 60fps. The actual resolution recorded is controlled by a setting in /etc/opt/mythtv/leancap1.conf. If that is different from the fire tv setting, the video is resized by the capture device. You could leave the resolution here as the default and let the capture device do the resize, but you may then be using more internet bandwidth than needed.
+1. Disable automatic updates.
+1. Enable developer mode.
+1. Switch to user mythtv and run adb against the fire stick Ethernet address.
 
-- Connect to your wifi system.
-- Hook up ethernet if you will be using that and ensure it connects. The wifi connection will be used as a backup in case the ethernet connection fails. This happens occasionally, the fire stick reverts to wifi for no reason.
-- Create a reserved IP address in your router for both the ethernet and wifi IP addresses.
-- Make a note of the ip addresses fir each fire stick.
-- Optional - add the fire stick ip addresses with useful names to the backend hosts file to make configuration easier.
-- Install and activate the Xfinity Stream App. You need a comcast cable subscription in order to activate it.
-- Disable screen saver.
-- Set screen resolution to the resolution you will be recording. The capture devices mentioned above can handle 1920x1080 at 30fps or 1280x720 at 60fps. The actual resolution recorded is controlled by a setting in /etc/opt/mythtv/leancap1.conf. If that is different from the fire tv setting, the video is resized by the capture device. YOu could leave the resolution here as the default and let the capture device do the resize, but you may then be using more internet bandwidth than needed.
-- Disable automatic updates.
-- Enable developer mode.
-- Switch to user mythtv and run adb against the fire stick ethernet address. `sudo -u mythtv bash` then `adb connect <ip address  or name>` Respond to the confirmation message that appears on the fire stick display in vlc, and confirm that it must always allow connect from that system.
+        sudo -u mythtv bash
+        adb connect <IP address  or name>
+
+1. Respond to the confirmation message that appears on the fire stick display in vlc, and confirm that it must always allow connect from that system.
 
 ## Configuration
 
@@ -101,17 +107,17 @@ The "tuning" of channels on the stream app requires selecting the channel from a
 
 There is a script that runs at startup and once a day that will notify you by email, text message or log message if there are channels set up for recordings that are not in the favorites list. It looks two weeks ahead so you have time to get them added.
 
-The Xfinity app on the fire stick is not able to set up favorite channels. Either log in to the xfinity.com web site and select streaming to set up the favorites, or install the xfinity stream app on an android phone and set them up there. Note that the xfinity stream web site fails on Chrome under Linux, but it works on Firefox under Linux.
+The Xfinity app on the fire stick is not able to set up favorite channels. Either log in to the Xfinity.com web site and select streaming to set up the favorites, or install the Xfinity stream app on an android phone and set them up there. Note that the Xfinity stream web site fails on Chrome under Linux, but it works on Firefox under Linux.
 
 ### Linux
 
 #### /etc/opt/mythtv/leanchans.txt
 
-This needs to have a list of the favorite channels set up in the xfinity stream app. Type one number per line. They must be in numerical ascending order, with no leading zeroes. This must match what is set up in xfinity. Note that when you add a channel to favorites it sometimes adds the channel twice, an extra copy of the channel in the 1000 plus range. Add any extra numbers to leanchans.txt as well, so that there is a match between what is in xfinity and leanchans.txt.
+This needs to have a list of the favorite channels set up in the Xfinity stream app. Type one number per line. They must be in numerical ascending order, with no leading zeroes. This must match what is set up in Xfinity. Note that when you add a channel to favorites it sometimes adds the channel twice, an extra copy of the channel in the 1000 plus range. Add any extra numbers to leanchans.txt as well, so that there is a match between what is in Xfinity and leanchans.txt.
 
 #### /etc/opt/mythtv/leancap.conf
 
-- DATADIR and LOGDIR: I recommend leave these as is. Change them if you need to store data files and logs in a different location. Note that the default directories are created by install. If you change the names here, you must create those direcyoreis manually and change ownership to mythtv.
+- DATADIR and LOGDIR: I recommend leave these as is. Change them if you need to store data files and logs in a different location. Note that the default directories are created by install. If you change the names here, you must create those directories manually and change ownership to mythtv.
 - VID_RECDIR: Optional. You need to specify a video storage directory here if you want to use leanxdvr or leanfire. These are not part of the lean recorder. leanxdvr can be used for recording programs from the Xfinity cloud DVR and adding them to your videos collection. leanfire can be used for recording other content from the fire stick (e.g. Youtube videos).
 - Email settings: Fill these in to get emails and text messages when there is a problem with the capture device. If you do not want emails or text messages, set EMAIL1 nd EMAIL2 to empty. The messages will go to notify.py.log in the log directory.
 
@@ -122,7 +128,6 @@ There are comment lines in the default file explaining the settings. You need to
 #### /etc/udev/rules.d/89-pulseaudio-usb.rules
 
 This file prevents pulseaudio grabbing the audio output of your capture devices. Run `lsusb` and see if there is a value of `ID 534d:2109` in the results. This identifies the specific capture device I have listed above. If that is present you need not change this file, it is correctly set up. Otherwise identify the device id by running `lsusb -v|less` and search for "Video". Look for `ID xxxx:xxxx` in the corresponding entry and enter those values in the 89-pulseaudio-usb.rules file.
-
 
 ### MythTV
 
@@ -224,7 +229,7 @@ Repeat the tuning test on other tuners.
 
 ### Activate the setup.
 
-Enable the leancap-scan service
+Enable the leancap-scan service:
 
     sudo systemctl enable leancap-scan.service
 
@@ -236,7 +241,76 @@ You must not open the video device with vlc if any recording is scheduled to tar
 
 While the fire stick is set up as a capture device, it is dedicated to that task. You cannot use it for any other apps. Put the remote in a safe place where nobody will touch it. To be extra sure remove its battery.
 
-Any time you need to do any work on the fire stick (reset resolution, update, etc.), you  need to do as follows.
+Any time you need to do any work on a fire stick (reset resolution, update, etc.), you  need to do as follows.
 
-### Replugging any USB devices
+- Make sure nothing is scheduled to record in the near future.
+- Stop the service:
 
+    sudo systemctl stop leancap-scan.service
+
+- Run vlc and open the video capture device (/dev/video*). You can find which the capture device is by looking in /var/opt/mythtv/leancapx.conf where x is the number of the one you are working on.
+- Use the fire stick remote to perform any needed work.
+- Close vlc
+- Start the service again:
+
+    sudo systemctl stop leancap-scan.service
+
+### Manual Recordings
+
+This can be done without MythTV. You don't need MythTV installed. You can run this on a separate machine. Also you do not need to be an Xfinity or Comcast user, this can be used to record anything that shows on a fire stick.
+
+If you are not using MythTV backend on the machine, install the software as described above. You do not need to create leanchans.txt. You will not do the MythTV configuration. Do not enable the leancap_scan service.
+
+Manually run the scan using terminal. This has to be done if you have rebooted or replugged usb devices since it was last run:
+
+    /opt/mythtv/leancap/leancap_scan.sh
+
+Note the leancap_scan will fail if you do not have Xfinity installed and activated. In that case you will have to manually place the AUDIO_IN and VIDEO_IN values in the leancap1.conf file. You can find out the values by experimenting with vlc. Note that these can change when rebooting or replugging usb devices.
+
+If that is successful, run the leanfire in terminal:
+
+    /opt/mythtv/leancap/leanfire.sh
+
+This will display a message ending with "Type Y to start"
+
+Start vlc and open the fire stick capture device. Use the remote to navigate to the show or video you want to record. Get to the point where pressing enter on your remote would start playback. Do not press enter on your remote.
+
+Type Y <enter> in the terminal window. vlc will close, the script will send the Enter button and ffmpeg will start recording. Leave the terminal window open. In file manager look for the video directory (directory specified by VID_RECDIR= in /etc/opt/mythtv/leancapture.conf). You should see an mkv file there with the current date and time as name. Refresh until that file is at least 1MB, then you can open it with vlc. See if your recording is going OK. Close vlc and let it continue recording.
+
+There is a time limit of 6 hours. Recording stops after 6 hours or after playback stops. When playing a video from Xfinity, normally at the end it stops on a blank screen. When this happens the recording will stop. Other services like Hulu, will automatically start the next episode or some other show when the show ends, in which case the next show will also record.
+
+To check if your recording is done and if it is busy recording some other show you don't want, open the mkv file in vlc and skip to near the end. If if is recording stuff you don't want, press Control-C in the terminal window and that will end recording.
+
+When recording ends for any reason, whether time limit, blank screen or control-C, the script navigates the fire stick back to the home screen.
+
+### Xfinity DVR
+
+This can be done without MythTV. You don't need MythTV installed. You can run this on a separate machine. This does require you to be a Comcast customer and to have the Xfinity Cloud DVR feature in your plan. Using the fire stick app, the android app or Firefox browser, you can search program names and set them to record from your subscribed channels.
+
+One you have one or more programs recorded on Xfinity, you can use this script to get them onto mkv files on your computer. Why do this? Xfinity only gives 20 hours of recording by default and also only allows you to keep your recordings for 1 year.
+
+Manually run the scan using terminal. This has to be done if you have rebooted or replugged usb devices since it was last run:
+
+    /opt/mythtv/leancap/leancap_scan.sh
+
+If that is successful, run the leanxdvr in terminal:
+
+    /opt/mythtv/leancap/leanxdvr.sh
+
+This will immediately navigate to your recordings on the fire stick and record them into files in the video directory (directory specified by VID_RECDIR= in /etc/opt/mythtv/leancapture.conf). Each file is placed in a subdirectory of the series name and the file is named with the season, episode and subtitle. You need not do anything, it will transfer all your recordings and delete them from Xfinity.
+
+While recording is in progress you can check it by opening the mkv files with vlc. Note the files are named with only season and episode until the recording ends, at which time the subtitle is added to the name.
+
+There is no option to prevent recordings being deleted from XFinity after being recorded to your local drive. XFinity has an undelete option but that does not work once all shows have been deleted.
+
+If the process is interrupted (e.g. by control-C in the terminal window), one recording will be incomplete. You can start the script again and it will restart the incomplete recording from the beginning again, so you won't lose anything, just some time.
+
+### Unplugging or Replugging any USB devices
+
+If any usb capture devices are unplugged or replugged, you need to restart the service:
+
+    sudo systemctl restart leancap-scan.service
+
+or, if this is not a backend, just run the scan again:
+
+    /opt/mythtv/leancap/leancap_scan.sh
