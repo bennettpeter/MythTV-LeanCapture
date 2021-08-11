@@ -71,11 +71,13 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
     fi
     $scriptpath/adb-sendkey.sh POWER
     $scriptpath/adb-sendkey.sh HOME
+    $scriptpath/adb-sendkey.sh DPAD_CENTER
     adb disconnect $ANDROID_DEVICE
 done
 
 capseq=0
 pidlist=
+assigned=
 # Invoke app and check where the result is
 for conffile in /etc/opt/mythtv/$reqname.conf ; do
     recname=$(basename $conffile .conf)
@@ -101,9 +103,12 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
     launchXfinity
     sleep 2
     match=N
-    for trynum in 1 2 3 4 5; do
+    remotefix=
+    for (( trynum = 0; trynum < 5; trynum++ )) ; do
         for (( x=0; x<20; x=x+2 )) ; do
             VIDEO_IN=/dev/video${x}
+            # Ignore already used ports
+            if [[ "$assigned" == *"$VIDEO_IN"* ]] ; then contnue ; fi
             if [[ ! -e $VIDEO_IN ]] ; then continue ; fi
             echo `$LOGDATE` "Trying: $VIDEO_IN"
             capturepage video
@@ -111,8 +116,20 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
                 match=Y
                 break
             elif [[ "$pagename" == "We"*"detect your remote" ]] ; then
-                $scriptpath/adb-sendkey.sh DPAD_CENTER
-                sleep 1
+                # We don't know if this message comes from the device
+                # currently processing, so send the enter once and start over
+                if [[ "$remotefix" != *"$VIDEO_IN"* ]] ; then
+                    # HOME in case this is not the one
+                    $scriptpath/adb-sendkey.sh HOME
+                    # DPAD_CENTER in case this is the one
+                    $scriptpath/adb-sendkey.sh DPAD_CENTER
+                    # HOME so we can start over
+                    $scriptpath/adb-sendkey.sh HOME
+                    launchXfinity
+                    sleep 2
+                    remotefix="$remotefix $VIDEO_IN"
+                    trynum=0
+                fi
             fi
             sleep 1
         done
@@ -149,16 +166,25 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
 
     echo "VIDEO_IN=$VIDEO_IN" > $DATADIR/${recname}.conf
     echo "AUDIO_IN=$AUDIO_IN" >> $DATADIR/${recname}.conf
+    assigned="$assigned $VIDEO_IN"
     echo `$LOGDATE` Successfully created parameters in $DATADIR/${recname}.conf.
     unlocktuner
-    # When rinnung as a service, start up the leancap_ready processes
-    if (( ! isterminal )) ; then
-        # script that runs forever to keep device in a ready state
-        let capseq++
-        $scriptpath/leancap_ready.sh $recname $capseq &
-        pidlist="$pidlist $!"
-    fi
 done
+
+# When running as a service, start up the leancap_ready processes
+if (( ! isterminal )) ; then
+    for conffile in /etc/opt/mythtv/$reqname.conf ; do
+        recname=$(basename $conffile .conf)
+        numlines=$(wc -l < $DATADIR/${recname}.conf)
+        if (( numlines > 0 )) ; then
+            # script that runs forever to keep device in a ready state
+            let capseq++
+            $scriptpath/leancap_ready.sh $recname $capseq &
+            pidlist="$pidlist $!"
+        fi
+    done
+fi
+
 
 $LOGDATE > $LOCKBASEDIR/scandate
 
