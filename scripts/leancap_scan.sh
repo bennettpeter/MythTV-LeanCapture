@@ -108,7 +108,7 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
         for (( x=0; x<20; x=x+2 )) ; do
             VIDEO_IN=/dev/video${x}
             # Ignore already used ports
-            if [[ "$assigned" == *"$VIDEO_IN"* ]] ; then contnue ; fi
+            if [[ "$assigned" == *"$VIDEO_IN"* ]] ; then continue ; fi
             if [[ ! -e $VIDEO_IN ]] ; then continue ; fi
             echo `$LOGDATE` "Trying: $VIDEO_IN"
             capturepage video
