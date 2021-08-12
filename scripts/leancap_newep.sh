@@ -26,7 +26,10 @@ if locktuner ; then
     exit
 fi
 
-gettunestatus
+# Do not use gettunestatus here because that tries to lock and fails
+# if it cannot
+
+source $DATADIR/${recname}_tune.stat
 
 if [[ "$tunestatus" == tuned ]] ; then
     now=$(date +%s)
