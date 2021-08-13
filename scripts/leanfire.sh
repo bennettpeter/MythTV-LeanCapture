@@ -66,6 +66,7 @@ if ! adb devices | grep $ANDROID_DEVICE ; then
     exit 2
 fi
 
+CROP=" "
 capturepage adb
 rc=$?
 if (( rc == 1 )) ; then exit $rc ; fi
@@ -124,6 +125,8 @@ for (( xx = 0 ; xx < loops ; xx++ )) ; do
             break 2
         fi
         if (( lowcount > 3 )) ; then
+            CROP=" "
+            capturepage adb
             echo `$LOGDATE` "Playback paused"
             if (( xx < responses )) ; then break ; fi
             break 2
@@ -140,6 +143,7 @@ for (( xx = 0 ; xx < loops ; xx++ )) ; do
         fi
     done
     sleep 1
+    CROP=" "
     capturepage adb
     echo `$LOGDATE` "Sending enter to start next episode"
     sleep 1
