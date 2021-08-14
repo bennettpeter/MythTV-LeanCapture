@@ -125,8 +125,6 @@ for (( xx = 0 ; xx < loops ; xx++ )) ; do
             break 2
         fi
         if (( lowcount > 3 )) ; then
-            CROP=" "
-            capturepage adb
             echo `$LOGDATE` "Playback paused"
             if (( xx < responses )) ; then break ; fi
             break 2
@@ -138,6 +136,11 @@ for (( xx = 0 ; xx < loops ; xx++ )) ; do
         if (( diff < 4000000 )) ; then
             let lowcount=lowcount+1
             echo "*** Less than 4 MB *** lowcount=$lowcount" >> $VID_RECDIR/${recfile}_size.log
+            CROP=" "
+            capturepage adb
+            if (( imagesize > 0 )) ; then
+                echo `$LOGDATE` "Playback maybe paused, count $lowcount"
+            fi
         else
             lowcount=0
         fi
