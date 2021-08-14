@@ -180,6 +180,7 @@ function getparms {
 # Return 1 if wrong resolution is found
 function capturepage {
     pagename=
+    imagesize=0
     local source_req=$1
     local rc=0
     if [[ "$CROP" == "" ]] ; then
