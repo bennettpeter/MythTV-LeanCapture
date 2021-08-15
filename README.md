@@ -9,6 +9,7 @@ Here is an alternative method for recording channels on Comcast. It may be exten
 - Do not need a cable card device
 - You can record all channnels, including those Comcast has converted to IPTV.
 - Avoids pixelation caused by poor signals.
+- All recordings use H264 encoding. They use less disk space than recordings from a cable card device, including programs that Comcast already encodes in H264.
 
 ## Disadvantages
 

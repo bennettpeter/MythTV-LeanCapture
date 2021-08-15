@@ -29,7 +29,8 @@ fi
 # Do not use gettunestatus here because that tries to lock and fails
 # if it cannot
 
-source $DATADIR/${recname}_tune.stat
+tunefile=$DATADIR/${recname}_tune.stat
+source $tunefile
 
 if [[ "$tunestatus" == tuned ]] ; then
     now=$(date +%s)
