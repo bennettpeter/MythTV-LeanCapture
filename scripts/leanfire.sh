@@ -139,8 +139,8 @@ for (( xx = 0 ; xx < loops ; xx++ )) ; do
             CROP=" "
             capturepage adb
             if (( imagesize > 0 )) ; then
-                # Hulu default message after 4-5 hours
-                if grep "YES, CONTINUE WATCHING" $DATADIR/${recname}_capture_crop.txt ; then
+                # Hulu default message after 4-5 hours, or after end of series
+                if egrep "YES, CONTINUE WATCHING|More to Watch" $DATADIR/${recname}_capture_crop.txt ; then
                     echo `$LOGDATE` "Playback paused"
                     if (( xx < responses )) ; then break ; fi
                     break 2
