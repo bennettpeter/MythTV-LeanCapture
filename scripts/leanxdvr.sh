@@ -222,7 +222,7 @@ while  true ; do
             echo `$LOGDATE` "ffmpeg is gone, exit"
             exit 2
         fi
-        if (( lowcount > 0 && now > endtime )) || (( lowcount > 2 )) ; then
+        if (( lowcount > 0 && now > endtime )) || (( lowcount > 4 )) ; then
             kill $ffmpeg_pid
             sleep 2
             capturepage
@@ -282,7 +282,7 @@ while  true ; do
         let diff=newsize-filesize
         filesize=$newsize
         echo `$LOGDATE` "size: $filesize  Incr: $diff" >> "$sizelog"
-        if (( diff < 5000000 )) ; then
+        if (( diff < 6000000 )) ; then
             let lowcount++
             echo "*** Less than 5 MB *** lowcount=$lowcount" >> "$sizelog"
             echo `$LOGDATE` "Less than 5 MB, lowcount=$lowcount"
