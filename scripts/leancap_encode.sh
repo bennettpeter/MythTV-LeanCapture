@@ -61,15 +61,31 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
 {
     sleep 20
     adb connect $ANDROID_DEVICE
-    capturepage adb
-    # Possible pagenames - "Playback Issue"* or name of a show
-    if [[ "$pagename" != "" ]] ; then
-        echo `$LOGDATE` "ERROR: playback failed, retrying."
-        $scriptpath/notify.py "Xfinity Problem" \
-            "leancap_encode: Playback Failed on ${recname}, retrying" &
-        # Try to tune again, once only.
-        $scriptpath/leancap_tune.sh $recname $tunechan NOLOCK
-    fi
+    # Loop to check if recording is working.
+    # When recording is working, nothing is displayed
+    # from capture. If anything is captured, something
+    # went wrong.
+    errored=0
+    while (( 1 )) ; do
+        if ! ps -q $ffmpeg_pid >/dev/null ; then
+            echo `$LOGDATE` "ffmpeg terminated"
+            break
+        fi
+        capturepage adb
+        # Possible pagenames - "Playback Issue"* or name of a show
+        if [[ "$pagename" != "" ]] ; then
+            echo `$LOGDATE` "ERROR: playback failed, retrying."
+            if (( errored == 0 )) ; then
+                $scriptpath/notify.py "Xfinity Problem" \
+                    "leancap_encode: Playback Failed on ${recname}, retrying" &
+            fi
+            let errored++
+            # Try to tune again
+            $scriptpath/adb-sendkey.sh BACK
+            sleep 1
+            $scriptpath/leancap_tune.sh $recname $tunechan NOLOCK
+        fi
+        sleep 30
+    done
 } &>> $logfile
 
-wait $ffmpeg_pid
