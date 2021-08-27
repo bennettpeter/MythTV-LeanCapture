@@ -18,7 +18,6 @@ Here is an alternative method for recording channels on Comcast. It may be exten
 - If the user interface of the Stream App changes significantly, this capture will need changes.
 - The fire stick sometimes needs powering off and on again if it loses its Ethernet connection. This is not a hard failure, it can continue on WiFi until reset.
 - Occasionally the fire stick resets its display resolution to the default. This is not a hard failure, it may use extra bandwidth until reset.
-- You have to set up a list of channels that you use for recordings.
 
 ## Hardware required
 
@@ -98,11 +97,35 @@ In order to operate your fire stick while connected to MythTV:
 
 1. Respond to the confirmation message that appears on the fire stick display in vlc, and confirm that it must always allow connect from that system.
 
+## Operation modes
+
+Channel tuning in the xfinity stream app is by arrowing up an down through a list. There is no way of keying a channel number. This can be time consuming since there are hundreds of channels.
+
+The scripts support two ways of channel tuning. They tune using either the xfnity "Favorite Channels" or "All Channels". You need to decide on one or the other. You can switch at any time. The default is "All Channels"
+
+The system uses OCR to see the channel numbers. Occasionally a number is interpreted incorrectly. In all cases I have tried, the error is corrected by the script automatically. However there is a possibility this may cause a failure.
+
+### Using Favorite Channels
+
+- Only moves up and down 1 channel at a time so can be time consuming.
+- Less risk of OCR errors due to checking against a list of known favorite channels.
+- You have to add all channels you will record to the xfinity favorites
+- You need to set up a list of the favorite channels in a text files and this must be kept in sync with the xfinity favorites.
+- A test of moving from channel 704 to 781 took 16 seconds.
+
+### Using All Channels
+
+- No restrictions on what channels you can use.
+- Moves up and down 50 channels at a time.
+- Tuning can take 20 seconds if moving from channel 2 to channel 945. Moving to a channel with a number close to the prior channel used is much quicker.
+- A test of moving from channel 704 to 781 took 12 seconds.
+- Possibility of a failure to tune due to OCR errors.
+
 ## Configuration
 
-### Xfinity
+### Xfinity setup if using Favorite Channels
 
-The "tuning" of channels on the stream app requires selecting the channel from a list. There is no option of entering a channel number. Since the list of channels can run into the hundreds, tuning could take minutes. To avoid this problem, we use the "favorite channels", where you can select the actual channels you will record.
+The "tuning" of channels on the stream app requires selecting the channel from a list. There is no option of entering a channel number. To avoid this problem, we can use the "favorite channels", where you can select the actual channels you will record.
 
 There is a script that runs at startup and once a day that will notify you by email, text message or log message if there are channels set up for recordings that are not in the favorites list. It looks two weeks ahead so you have time to get them added.
 
@@ -112,12 +135,15 @@ The Xfinity app on the fire stick is not able to set up favorite channels. Eithe
 
 #### /etc/opt/mythtv/leanchans.txt
 
+This only needs to be set up if you are using Favorite Channels.
+
 This needs to have a list of the favorite channels set up in the Xfinity stream app. Type one number per line. They must be in numerical ascending order, with no leading zeroes. This must match what is set up in Xfinity. Note that when you add a channel to favorites it sometimes adds the channel twice, an extra copy of the channel in the 1000 plus range. Add any extra numbers to leanchans.txt as well, so that there is a match between what is in Xfinity and leanchans.txt.
 
 #### /etc/opt/mythtv/leancap.conf
 
 - DATADIR and LOGDIR: I recommend leave these as is. Change them if you need to store data files and logs in a different location. Note that the default directories are created by install. If you change the names here, you must create those directories manually and change ownership to mythtv.
 - VID_RECDIR: Optional. You need to specify a video storage directory here if you want to use leanxdvr or leanfire. These are not part of the lean recorder. leanxdvr can be used for recording programs from the Xfinity cloud DVR and adding them to your videos collection. leanfire can be used for recording other content from the fire stick (e.g. Youtube videos).
+- NAVTYPE: Enter "Favorite Channels" or "All Channels". Default "All Channels".
 - Email settings: Fill these in to get emails and text messages when there is a problem with the capture device. If you do not want emails or text messages, set EMAIL1 nd EMAIL2 to empty. The messages will go to notify.py.log in the log directory.
 
 #### /etc/opt/mythtv/leancap1.conf

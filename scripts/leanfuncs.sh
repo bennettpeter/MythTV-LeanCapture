@@ -7,6 +7,20 @@ OCR_RESOLUTION=1280x720
 updatetunetime=0
 ADB_ENDKEY=
 LOCKBASEDIR=/run/lock/leancap
+# Keys : 6 DOWNS for favorite or 5 DOWNS for All
+case "$NAVTYPE" in
+    "Favorite Channels")
+        NAVKEYS="DOWN DOWN DOWN DOWN DOWN DOWN"
+        ;;
+    "All Channels")
+        NAVKEYS="DOWN DOWN DOWN DOWN DOWN"
+        ;;
+    *)
+        NAVTYPE="All Channels"
+        NAVKEYS="DOWN DOWN DOWN DOWN DOWN"
+        ;;
+esac
+
 
 function exitfunc {
     local rc=$?
@@ -298,6 +312,7 @@ function launchXfinity {
 # 1 Desired page name, e.g. "Favorite Channels"
 # 2 Keystrokes in menu
 #   favorites:  "DOWN DOWN DOWN DOWN DOWN DOWN"
+#   All channels: "DOWN DOWN DOWN DOWN DOWN"
 #   recordings: "DOWN"
 # e.g. navigate "Favorite Channels" "DOWN DOWN DOWN DOWN DOWN DOWN"
 #      navigate Recordings "DOWN"

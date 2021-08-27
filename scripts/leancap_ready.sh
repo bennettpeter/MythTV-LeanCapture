@@ -66,7 +66,8 @@ while true ; do
         # Only check this on one tuner
         if (( capseq == 1 )) ; then
             # Only check once per day
-            if [[ "$lastfavcheck" != "$today" ]] ; then
+            if [[ "$NAVTYPE" == "Favorite Channels" \
+                && "$lastfavcheck" != "$today" ]] ; then
                 # Simple check for mythbackend running
                 if (( now - startup > 300 )) && pidof mythbackend >/dev/null ; then
                     $scriptpath/leancap_checkfavorites.sh
@@ -77,7 +78,7 @@ while true ; do
         $scriptpath/adb-sendkey.sh MENU
         $scriptpath/adb-sendkey.sh LEFT
         $scriptpath/adb-sendkey.sh RIGHT
-        navigate "Favorite Channels" "DOWN DOWN DOWN DOWN DOWN DOWN"
+        navigate "$NAVTYPE" "$NAVKEYS"
         rc=$?
         if (( rc > mrc )) ; then mrc=$rc ; fi
         if (( rc > errored ))  ; then
