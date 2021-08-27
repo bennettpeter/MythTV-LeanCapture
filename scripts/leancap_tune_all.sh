@@ -76,6 +76,10 @@ for (( xx=0; xx<5; xx++ )) ; do
     jumpsize=50
     trycount=0
     while (( currchan != channum )) ; do
+        if (( currchan == 0 )) ; then
+            # get out of the Filter box
+            $scriptpath/adb-sendkey.sh DOWN DOWN DOWN
+        fi
         # Note this assumes a 1280-x720 resolution
         CROP="-crop 86x600+208+120"
         TESSPARM="-c tessedit_char_whitelist=0123456789"
@@ -99,12 +103,6 @@ for (( xx=0; xx<5; xx++ )) ; do
 
         topchan=${channels[0]}
         prior_currchan=$currchan
-        if (( currchan == 0 )) ; then
-            $scriptpath/adb-sendkey.sh DOWN DOWN DOWN
-            CROP="-crop 86x600+208+120"
-            TESSPARM="-c tessedit_char_whitelist=0123456789"
-            capturepage
-        fi
         getchannelselection
         if (( selection == -1 )) ; then
             echo `$LOGDATE` "ERROR: Cannot determine channel selection, trying again"
@@ -126,6 +124,11 @@ for (( xx=0; xx<5; xx++ )) ; do
         if (( distance == 0 )) ; then
             tuned=Y
             break
+        fi
+        # divide big numbers by two based on the theory that only
+        # half of the channel numbers are used.
+        if (( distance > 20 || distance < -20 )) ; then
+            let distance=distance/2
         fi
         # Is the channel on the page?
         isonpage=0
@@ -159,6 +162,8 @@ for (( xx=0; xx<5; xx++ )) ; do
             else
                 trycount=0
             fi
+            # Each time we reverse direction halve the number of
+            # channels jumped
             let jumpsize=jumpsize/2
         fi
         if (( jumpsize < 1 )) ; then
