@@ -75,17 +75,11 @@ for (( xx=0; xx<5; xx++ )) ; do
     direction=N
     errorpassed=0
     while (( currchan != channum )) ; do
-        # Note this assumes a 1280-x720 resolution
-        CROP="-crop 86x600+208+120"
-        TESSPARM="-c tessedit_char_whitelist=0123456789"
-        capturepage
-        onscreen=$(cat $DATADIR/${recname}_capture_crop.txt)
-        channels=($onscreen)
-        arrsize=${#channels[@]}
-        if (( arrsize != 5 )) ; then
-            channels=($(gocr -C 0-9 -l 200 $DATADIR/${recname}_capture_crop.png))
-            arrsize=${#channels[@]}
+        if (( currchan == 0 )) ; then
+            # get out of the Filter box
+            $scriptpath/adb-sendkey.sh DOWN DOWN DOWN
         fi
+        getchannellist
         if (( arrsize != 5 )) ; then
             echo `$LOGDATE` "Wrong number of channels, trying again"
             $scriptpath/adb-sendkey.sh MENU
@@ -138,12 +132,6 @@ for (( xx=0; xx<5; xx++ )) ; do
 
         topchan=${channels[0]}
         prior_currchan=$currchan
-        if (( currchan == 0 )) ; then
-            $scriptpath/adb-sendkey.sh DOWN DOWN DOWN
-            CROP="-crop 86x600+208+120"
-            TESSPARM="-c tessedit_char_whitelist=0123456789"
-            capturepage
-        fi
         if (( currchan <= 0 )) ; then
             currchan=${channels[1]}
         else
@@ -173,7 +161,7 @@ for (( xx=0; xx<5; xx++ )) ; do
         echo `$LOGDATE` "Current channel: $currchan"
         getchannelselection
         selchan=0
-        if [[ "$selection" != "" ]] && (( selection >= 0 )) ; then
+        if (( selection >= 0 )) ; then
             selchan=${channels[selection]}
         fi
         echo `$LOGDATE` "Selection: $selection -> $selchan"

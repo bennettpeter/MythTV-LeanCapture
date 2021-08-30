@@ -420,9 +420,30 @@ function navigate {
     return 0
 }
 
-# Get channel selection. Must be preceded by capturepage to capture the menu.
+# Get channel list. Must be preceded by capturepage.
 # Return:
-# selection - index of selected item or blank if error
+# channels - array of 5 channels in list on screen
+# arrsize = size of array (should be 5)
+
+function getchannellist {
+    # Note this assumes a 1280-x720 resolution
+    CROP="-crop 86x600+208+120"
+    TESSPARM="-c tessedit_char_whitelist=0123456789"
+    capturepage
+    onscreen=$(cat $DATADIR/${recname}_capture_crop.txt)
+    # In case nothing found yet
+    channels=($onscreen)
+    arrsize=${#channels[@]}
+    if (( arrsize != 5 )) ; then
+        echo `$LOGDATE` "Tesseract OCR Error, trying gocr"
+        channels=($(gocr -C 0-9 -l 200 $DATADIR/${recname}_capture_crop.png))
+        arrsize=${#channels[@]}
+    fi
+}
+
+# Get channel selection. Must be preceded by capturepage.
+# Return:
+# selection - index of selected item,-2 if none selected, blank if error
 
 function getchannelselection {
     convert $DATADIR/${recname}_capture_crop.png $DATADIR/${recname}_capture_crop.jpg
@@ -432,16 +453,16 @@ function getchannelselection {
     selection=$(awk  '
         BEGIN {
             entry=-1
-            selectstart=-1
-            selectend=-1
+            selectstart=-2
+            selectend=-2
             error=-1
         }
         {
             if (length==10) {
                 if (priorleng==0) {
-                    if (selectstart==-1)
+                    if (selectstart==-2)
                         selectstart=entry+1
-                    else if (selectend==-1)
+                    else if (selectend==-2)
                         selectend=entry
                     else
                         error=entry
@@ -456,8 +477,9 @@ function getchannelselection {
         END {
             if (selectstart == selectend && error == -1)
                 print selectstart
-            else
+            else {
                 print "ERROR: selectstart:" selectstart " selectend:" selectend " error:" error > "/dev/stderr"
+            }
         }
         ' $DATADIR/${recname}_capture_crop.ascii)
 }
@@ -519,4 +541,28 @@ function getmenuselection {
     else
         echo `$LOGDATE` "Menu selection: ${menuitems[selection]}"
     fi
+}
+
+# search chanlist for the supplied channel and return the index
+# in variable chanindex
+# if chanlist has not been set up return the channel number
+# If not found return the prior index to that value
+function chansearch {
+    local target=$1
+    local ix1=0
+    local ix2=${#chanlist[@]}
+    if (( ix2 == 0 )) ; then
+        chanindex=$target
+        return
+    fi
+    for (( ; ; )) ; do
+        let chanindex=(ix1+ix2)/2
+        if (( target == ${chanlist[chanindex]} )) ; then return ; fi
+        if (( target < ${chanlist[chanindex]} )) ; then
+            ix2=$chanindex
+        else
+            ix1=$chanindex
+        fi
+        if (( ix2 - ix1 < 2 )) ; then return ; fi
+    done
 }

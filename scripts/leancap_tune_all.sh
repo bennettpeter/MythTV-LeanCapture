@@ -5,14 +5,11 @@
 # can record from any channel in your lineup
 # Parameter 1 - recorder name
 # Parameter 2 - channel number
-# Parameter 3 - LOCK or NOLOCK, default is LOCK
+# Parameter 3 - LOCK, NOLOCK, NOPLAY. default is LOCK. NOPLAY implies LOCK
 
 recname=$1
 channum=$2
 lockreq=$3
-if [[ "$lockreq" != NOLOCK ]] ; then
-    lockreq=LOCK
-fi
 
 . /etc/opt/mythtv/leancapture.conf
 scriptname=`readlink -e "$0"`
@@ -31,7 +28,7 @@ echo `$LOGDATE` "Request to tune channel $channum "
 # idle
 # tuned
 
-if [[ "$lockreq" == LOCK ]] ; then
+if [[ "$lockreq" != NOLOCK ]] ; then
     if ! locktuner 120 ; then
         echo `$LOGDATE` "Encoder $recname is locked, exiting"
         exit 2
@@ -64,34 +61,31 @@ true > $tunefile
 
 adb connect $ANDROID_DEVICE
 
-leanchans=($(cat /etc/opt/mythtv/leanchans.txt))
+chanlistfile=$DATADIR/"$NAVTYPE".txt
+if [[ -f "$chanlistfile" ]] ; then
+    chanlist=($(cat "$chanlistfile"))
+else
+    echo `$LOGDATE` "WARNING No channel list file found. Run leancap_chanlist.sh"
+fi
+
+chansearch $channum
+ixchannum=$chanindex
+
 for (( xx=0; xx<5; xx++ )) ; do
     if [[ "$tuned" == Y ]] ; then  break; fi
 
     navigate "$NAVTYPE" "$NAVKEYS"
-    ##favorites - channel numbers##
     currchan=0
     direction=N
     errorpassed=0
-    jumpsize=50
+    jumpsize=100
     trycount=0
     while (( currchan != channum )) ; do
         if (( currchan == 0 )) ; then
             # get out of the Filter box
             $scriptpath/adb-sendkey.sh DOWN DOWN DOWN
         fi
-        # Note this assumes a 1280-x720 resolution
-        CROP="-crop 86x600+208+120"
-        TESSPARM="-c tessedit_char_whitelist=0123456789"
-        capturepage
-        onscreen=$(cat $DATADIR/${recname}_capture_crop.txt)
-        # In case nothing found yet
-        channels=($onscreen)
-        arrsize=${#channels[@]}
-        if (( arrsize != 5 )) ; then
-            channels=($(gocr -C 0-9 -l 200 $DATADIR/${recname}_capture_crop.png))
-            arrsize=${#channels[@]}
-        fi
+        getchannellist
         if (( arrsize != 5 )) ; then
             echo `$LOGDATE` "Wrong number of channels, trying again"
             $scriptpath/adb-sendkey.sh MENU
@@ -104,7 +98,7 @@ for (( xx=0; xx<5; xx++ )) ; do
         topchan=${channels[0]}
         prior_currchan=$currchan
         getchannelselection
-        if (( selection == -1 )) ; then
+        if (( selection < 0 )) ; then
             echo `$LOGDATE` "ERROR: Cannot determine channel selection, trying again"
             $scriptpath/adb-sendkey.sh MENU
             $scriptpath/adb-sendkey.sh LEFT
@@ -120,16 +114,12 @@ for (( xx=0; xx<5; xx++ )) ; do
             let currchan=channels[selection-1]+1
         fi
         echo `$LOGDATE` "Current channel: $currchan"
-        let distance=channum-currchan
-        if (( distance == 0 )) ; then
+        if (( channum == currchan )) ; then
             tuned=Y
             break
         fi
-        # divide big numbers by two based on the theory that only
-        # half of the channel numbers are used.
-        if (( distance > 20 || distance < -20 )) ; then
-            let distance=distance/2
-        fi
+        chansearch $currchan
+        let distance=ixchannum-chanindex
         # Is the channel on the page?
         isonpage=0
         for (( xy=0; xy<arrsize; xy++ )) ; do
@@ -184,7 +174,9 @@ if [[ "$tuned" == Y ]] ; then
     echo "tunestatus=tuned" >> $tunefile
     echo `$LOGDATE` "Complete tuning channel: $channum on recorder: $recname"
     # Start playback
-    $scriptpath/adb-sendkey.sh DPAD_CENTER
+    if [[ "$lockreq" != NOPLAY ]] ; then
+        $scriptpath/adb-sendkey.sh DPAD_CENTER
+    fi
     rc=0
 else
     true > $tunefile
