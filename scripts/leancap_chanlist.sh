@@ -69,6 +69,7 @@ fileseq=0
 for (( ; ; )) ; do
     echo `$LOGDATE` "Channels: ${channels[@]} arrsize: $arrsize"
     valid=-1
+    msg=()
     for (( ix=0 ; ix<arrsize ; ix++ )) ; do
         err=0
         priorchan=$currchan
@@ -81,14 +82,14 @@ for (( ; ; )) ; do
             err=1
         fi
         if (( err )) ; then
-            let num=fileseq+ix
+            let num=fileseq+ix+1
             let numerrors++
             let numseqerrors++
             if (( numseqerrors <= 1 )) ; then
                 let fix=priorchan+1
                 echo "Changing  $currchan to $fix"
                 channels[ix]="$fix"
-                echo Line $num $currchan changed to $fix >> "$errfile"
+                msg[ix]="Line $num $currchan changed to $fix"
                 currchan="$fix"
             fi
         else
@@ -105,7 +106,13 @@ for (( ; ; )) ; do
     fi
 
     for (( ix=0 ; ix<last ; ix++ )) ; do
+        if (( ${channels[ix]} > MAXCHANNUM )) ; then
+            break 2
+        fi
         echo "${channels[ix]}" >> "$chanlistfile"
+        if [[ "${msg[ix]}" != "" ]] ; then
+            echo "${msg[ix]}" >> "$errfile"
+        fi
         let fileseq++
     done
     if (( numseqerrors > 1 )) ; then
@@ -115,7 +122,6 @@ for (( ; ; )) ; do
 
     getchannelselection
     let distance=3-selection+5
-    keypress=
     keypress=
     for (( xy=0; xy<distance; xy++ )) ; do
         keypress="$keypress DOWN"

@@ -95,7 +95,6 @@ for (( xx=0; xx<5; xx++ )) ; do
         fi
         echo `$LOGDATE` "channels: ${channels[@]}"
 
-        topchan=${channels[0]}
         prior_currchan=$currchan
         getchannelselection
         if (( selection < 0 )) ; then
@@ -105,14 +104,8 @@ for (( xx=0; xx<5; xx++ )) ; do
             $scriptpath/adb-sendkey.sh RIGHT
             continue 2
         fi
+        repairchannellist
         currchan=${channels[selection]}
-        # Check for out of sequence caused by OCR error
-        if (( selection > 0 && currchan < channels[selection-1] )) ; then
-            # Set to next possible number. This will either be the actual
-            # channel selected if numbers are sequential at this point,
-            # or else an invalid number in the correct sequence.
-            let currchan=channels[selection-1]+1
-        fi
         echo `$LOGDATE` "Current channel: $currchan"
         if (( channum == currchan )) ; then
             tuned=Y

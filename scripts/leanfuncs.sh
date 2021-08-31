@@ -7,6 +7,10 @@ OCR_RESOLUTION=1280x720
 updatetunetime=0
 ADB_ENDKEY=
 LOCKBASEDIR=/run/lock/leancap
+if [[ "$MAXCHANNUM" == "" ]] ; then
+    MAXCHANNUM=999
+fi
+
 # Keys : 6 DOWNS for favorite or 5 DOWNS for All
 case "$NAVTYPE" in
     "Favorite Channels")
@@ -434,7 +438,13 @@ function getchannellist {
     # In case nothing found yet
     channels=($onscreen)
     arrsize=${#channels[@]}
+    local ix
     if (( arrsize != 5 )) ; then
+        # If we hit the maximum then do not use gocr because likely
+        # we have hit the TV Go channels which do not have numbers
+        for (( ix=0; ix<arrsize; ix++ )) ; do
+            if (( channels[ix] >= MAXCHANNUM )) ; then return ; fi
+        done
         echo `$LOGDATE` "Tesseract OCR Error, trying gocr"
         channels=($(gocr -C 0-9 -l 200 $DATADIR/${recname}_capture_crop.png))
         arrsize=${#channels[@]}
@@ -564,5 +574,19 @@ function chansearch {
             ix1=$chanindex
         fi
         if (( ix2 - ix1 < 2 )) ; then return ; fi
+    done
+}
+
+# If a channel number is corrupted by being lower than it should be,
+# Fix by comparing with the channl list
+function repairchannellist {
+    if (( ${#chanlist[@]} == 0 )) ; then return ; fi
+    for (( ix=1; ix<arrsize; ix++ )) ; do
+        if (( channels[ix] < channels[ix-1] )) ; then
+            chansearch channels[ix-1]
+            if (( channels[ix-1] == chanlist[chanindex] )) ; then
+                channels[ix]=${chanlist[chanindex+1]}
+            fi
+        fi
     done
 }
