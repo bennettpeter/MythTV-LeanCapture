@@ -85,7 +85,6 @@ export MYTHTVUSER SCRIPTDIR
 
 mkdir -p /etc/opt/mythtv
 cp -n $scriptpath/settings/leancapture.conf /etc/opt/mythtv/
-cp -n $scriptpath/settings/leanchans.txt /etc/opt/mythtv/
 cp -n $scriptpath/settings/private.conf /etc/opt/mythtv/
 chmod 600 /etc/opt/mythtv/private.conf
 chown $MYTHTVUSER:$MYTHTVGROUP /etc/opt/mythtv/private.conf

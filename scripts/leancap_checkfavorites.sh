@@ -20,6 +20,7 @@ if [[ "$rc" != 0 ]] ; then
     exit
 fi
 
+chanlistfile=$DATADIR/"$NAVTYPE".txt
 wc=$(cat $DATADIR/recording_channels.txt | wc -c)
 if (( wc == 0 )) ; then
     $scriptpath/notify.py "Upcoming Recordings Error" \
@@ -33,7 +34,7 @@ fi
 # in both cases the first number on the line is the one wanted
 # to be added to favorites
 
-diff -yN $DATADIR/recording_channels.txt /etc/opt/mythtv/leanchans.txt > $DATADIR/channel_diff.txt
+diff -yN $DATADIR/recording_channels.txt "$chanlistfile" > $DATADIR/channel_diff.txt
 missing_chans=$(grep "[<|]" $DATADIR/channel_diff.txt | sed "s/ .*//g")
 missing_chans=$(echo $missing_chans)
 if [[ "$missing_chans" != "" ]] ; then

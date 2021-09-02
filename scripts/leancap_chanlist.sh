@@ -57,8 +57,10 @@ for (( ; ; )) ; do
 done
 
 chanlistfile=$DATADIR/"$NAVTYPE".txt
+chanlistfilegen=$DATADIR/"$NAVTYPE"_gen.txt
+newchanlistfilegen=$DATADIR/"$NAVTYPE"_new_gen.txt
 errfile=$DATADIR/"$NAVTYPE"_errors.txt
-true > "$chanlistfile"
+true > "$newchanlistfilegen"
 true > "$errfile"
 
 currchan=0
@@ -83,7 +85,6 @@ for (( ; ; )) ; do
         fi
         if (( err )) ; then
             let num=fileseq+ix+1
-            let numerrors++
             let numseqerrors++
             if (( numseqerrors <= 1 )) ; then
                 let fix=priorchan+1
@@ -109,9 +110,10 @@ for (( ; ; )) ; do
         if (( ${channels[ix]} > MAXCHANNUM )) ; then
             break 2
         fi
-        echo "${channels[ix]}" >> "$chanlistfile"
+        echo "${channels[ix]}" >> "$newchanlistfilegen"
         if [[ "${msg[ix]}" != "" ]] ; then
             echo "${msg[ix]}" >> "$errfile"
+            let numerrors++
         fi
         let fileseq++
     done
@@ -132,5 +134,20 @@ for (( ; ; )) ; do
     priorchannels="${channels[@]}"
 done
 
-echo `$LOGDATE` "Errors listed below. See $errfile"
+if [[ -f "$chanlistfilegen" ]] ; then
+    if diff "$newchanlistfilegen" "$chanlistfilegen" ; then
+        echo `$LOGDATE` "Channel list same as before. No problems."
+        exit 0
+    fi
+fi
+cp "$newchanlistfilegen" "$chanlistfilegen"
+if (( numerrors == 0 )) ; then
+    cp "$chanlistfilegen" "$chanlistfile"
+else
+    echo `$LOGDATE` "Number of errors: $numerrors. Errors listed below. See $errfile"
+    $scriptpath/notify.py "Channel list needs fixing" \
+"leancap_chanlist: Channel list has changed and new list has errors. See $errfile. \
+cp $chanlistfilegen $chanlistfile then fix the errors there." &
+fi
+
 cat "$errfile"

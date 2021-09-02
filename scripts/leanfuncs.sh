@@ -53,6 +53,7 @@ function exitfunc {
 # Param 1 = number of extra attempts (1 sec each)
 # 0 or blank = 1 attempt
 function locktuner {
+    lockpid=
     if [[ "$recname" == "" ]] ; then return 1 ; fi
     attempts=$1
     mkdir -p $LOCKBASEDIR
@@ -84,6 +85,7 @@ function locktuner {
             fi
         fi
     done
+    lockpid=$pid
     return 1
 }
 
@@ -585,6 +587,7 @@ function repairchannellist {
         if (( channels[ix] < channels[ix-1] )) ; then
             chansearch channels[ix-1]
             if (( channels[ix-1] == chanlist[chanindex] )) ; then
+                echo "INFO incorrect Channel ${channels[ix]} changed to ${chanlist[chanindex+1]}"
                 channels[ix]=${chanlist[chanindex+1]}
             fi
         fi
