@@ -15,14 +15,14 @@ Here is an alternative method for recording channels on Comcast. It may be exten
 
 - Only records stereo audio.
 - Does not support closed captions.
-- If the user interface of the Stream App changes significantly, this capture will need changes.
+- If the user interface of the Stream App changes significantly, this code will need changes.
 - The fire stick sometimes needs powering off and on again if it loses its Ethernet connection. This is not a hard failure, it can continue on WiFi until reset.
 - Occasionally the fire stick resets its display resolution to the default. This is not a hard failure, it may use extra bandwidth until reset.
 
 ## Hardware required
 
-- Amazon Fire Stick or Fire Stick 4K.
-- USB Capture device. There are many brands available from Amazon. Those that advertize 3840x2160 input and 1920x1080 output, costing $5 and up, have been verified to work. These are USB 2 devices. Running `lsusb` with any of them shows the device with `ID 534d:2109`.  
+- Amazon Fire Stick or Fire Stick 4K. Note that this has only been tested with Fire Stick 4K. If a non-4K fire stick is used, it may take longer to tune and some timeouts in the code may need to be changed.
+- USB Capture device. There are many brands available from Amazon. Those that advertize 3840x2160 input and 1920x1080 output, costing $5 and up, have been verified to work. These are USB 2 devices. Running `lsusb` with any of them mounted shows the device with `ID 534d:2109`.
 - USB 2 or USB 3 extension cable, 6 inches or more. Stacking the fire stick behind the capture device directly off the MythTV backend without an extension cable is unstable.
 - Optional Ethernet adapter for fire stick (recommended). You can either use the official Amazon fire stick Ethernet adapter or a generic version, also available from Amazon.
 - You can use additional sets of the above three items to support multiple recordings at the same time.
@@ -62,13 +62,13 @@ Prerequisite software for these scripts can be installed on Linux with the distr
 
 Note that Ubuntu has an obsolete version of adb in apt. Do not use the out of date version. It does not work with these scripts. Get the latest version from https://developer.android.com/studio/releases/platform-tools . Place adb on your path, e.g. in /usr/local/bin.
 
-Once the prerequisites have been installed, install the scripts by running
+Once the prerequisites have been installed, install the scripts by cloning from github and running
 
     sudo ./install.sh
 
 The install.sh script tests for the presence of required versions and stops if they are not present.
 
-The install script assumes the mythbackend user id is mthtv, and group id is mythtv. It assumes script directory /opt/mythtv/leancap. You can use different values by setting appropriate environment variables before running install.sh.
+The install script assumes the mythbackend user id is mythtv, and group id is mythtv. It assumes script directory /opt/mythtv/leancap. You can use different values by setting appropriate environment variables before running install.sh the first time.
 
 If there is a new or updated version of the scripts, just run the ./install.sh again. It will not overwrite settings files you have updated.
 
@@ -97,53 +97,24 @@ In order to operate your fire stick while connected to MythTV:
 
 1. Respond to the confirmation message that appears on the fire stick display in vlc, and confirm that it must always allow connect from that system.
 
-## Operation modes
+## Operation mode
 
 Channel tuning in the xfinity stream app is by arrowing up an down through a list. There is no way of keying a channel number. This can be time consuming since there are hundreds of channels.
 
-The scripts support two ways of channel tuning. They tune using either the xfnity "Favorite Channels" or "All Channels". You need to decide on one or the other. You can switch at any time. The default is "All Channels"
-
 The system uses OCR to see the channel numbers. Occasionally a number is interpreted incorrectly. In all cases I have tried, the error is corrected by the script automatically. However there is a possibility this may cause a failure.
 
-### Using Favorite Channels
-
-- Only moves up and down 1 channel at a time so can be time consuming.
-- Less risk of OCR errors due to checking against a list of known favorite channels.
-- You have to add all channels you will record to the xfinity favorites
-- You need to set up a list of the favorite channels in a text files and this must be kept in sync with the xfinity favorites.
-- A test of moving from channel 704 to 781 took 16 seconds.
-
-### Using All Channels
-
-- No restrictions on what channels you can use.
-- Moves up and down 50 channels at a time.
-- Tuning can take 20 seconds if moving from channel 2 to channel 945. Moving to a channel with a number close to the prior channel used is much quicker.
-- A test of moving from channel 704 to 781 took 12 seconds.
-- Possibility of a failure to tune due to OCR errors.
+There is a script to download a list of channel numbers from the fire stick and store it on the backend. This speeds up the tuning process and is used for correcting OCR errors. With the list in place, it can tune from channel 15 to channel 702 in 9 seconds. Without the list it takes 23 seconds. Also without the list there is a risk of tuning the wrong channel due to OCR errors.
 
 ## Configuration
 
-### Xfinity setup if using Favorite Channels
-
-The "tuning" of channels on the stream app requires selecting the channel from a list. There is no option of entering a channel number. To avoid this problem, we can use the "favorite channels", where you can select the actual channels you will record.
-
-There is a script that runs at startup and once a day that will notify you by email, text message or log message if there are channels set up for recordings that are not in the favorites list. It looks two weeks ahead so you have time to get them added.
-
-The Xfinity app on the fire stick is not able to set up favorite channels. Either log in to the Xfinity.com web site and select streaming to set up the favorites, or install the Xfinity stream app on an android phone and set them up there. Note that the Xfinity stream web site fails on Chrome under Linux, but it works on Firefox under Linux.
-
 ### Linux
-
-#### /etc/opt/mythtv/leanchans.txt
-
-This only needs to be set up if you are using Favorite Channels.
-
-This needs to have a list of the favorite channels set up in the Xfinity stream app. Type one number per line. They must be in numerical ascending order, with no leading zeroes. This must match what is set up in Xfinity. Note that when you add a channel to favorites it sometimes adds the channel twice, an extra copy of the channel in the 1000 plus range. Add any extra numbers to leanchans.txt as well, so that there is a match between what is in Xfinity and leanchans.txt.
 
 #### /etc/opt/mythtv/leancap.conf
 
 - DATADIR and LOGDIR: I recommend leave these as is. Change them if you need to store data files and logs in a different location. Note that the default directories are created by install. If you change the names here, you must create those directories manually and change ownership to mythtv.
 - VID_RECDIR: Optional. You need to specify a video storage directory here if you want to use leanxdvr or leanfire. These are not part of the lean recorder. leanxdvr can be used for recording programs from the Xfinity cloud DVR and adding them to your videos collection. leanfire can be used for recording other content from the fire stick (e.g. Youtube videos).
-- NAVTYPE: Enter "Favorite Channels" or "All Channels". Default "All Channels".
+- NAVTYPE: Leave as "All Channels". Default "All Channels".
+- MAXCHANNUM: Enter the highest channel number you use. I recommend using 999. Comcast has a policy of numbering all channels with numbers below 1000, and then duplicating the channels in numbers above that. If you want to use those higher numbers for recording, set this to the highest number channel available. If you set it higher than what is present in Comcast, you will get errors in the leancap_chanlist script.
 - Email settings: Fill these in to get emails and text messages when there is a problem with the capture device. If you do not want emails or text messages, set EMAIL1 nd EMAIL2 to empty. The messages will go to notify.py.log in the log directory.
 
 #### /etc/opt/mythtv/leancap1.conf
@@ -188,15 +159,13 @@ For each EXTERNAL entry, set up as follows:
 - Preset Tuner to Channel: Leave Blank
 - Scan for Channels: Do not use
 - Fetch Channels from Listings Source: Do not use
-- Starting Channel: Set a value that will be in your favorite  channels (see *Xfinity* above).
+- Starting Channel: Set a value that is in your channel list.
 - Interactions Between Inputs
     - Max Recordings: 2
     - Schedule as Group: Checked
-    - Input Priority: 0
+    - Input Priority: 0 or other value as needed to determine which device is used.
     - Schedule Order: Set to sequence order for using vs other capture cards. Set to 0 to prevent recordings on this device.
     - Live TV Order:  Set to sequence order for using vs other capture cards. Set to 0 to prevent Live TV on this device.
-
-If you use this device for Live TV, bear in mind that you can only select channels that are in the favorite list.
 
 ## Operation
 
@@ -227,7 +196,7 @@ Note that while running the test it is important that vlc **not** be open on the
 
 You should seee a bunch of screen messages, ending with
 
-    Favorite Channels
+    All Channels
     *****
     disconnected fire-office-eth
 
@@ -237,18 +206,36 @@ Run vlc and open the video card. You should see the page of "Favorite Channels" 
 
 Repeat the menu navigation test for each tuner if you have more than one.
 
+### Setup the channel list.
+
+This creates your channel list in /var/opt/mythtv/All Channels.txt
+
+    sudo -u mythtv bash
+    /opt/mythtv/leancap/leancap_chanlist.sh leancap1
+
+This takes about 3 minutes. After it has run, it may report errors. The errors are reported and also stored in /var/opt/mythtv/All Channels_errors.txt. For example:
+
+    Line 63 12 changed to 110
+
+This tells you an error was found in line 63 of the output file and needs to be fixed. The number 12 was changed to 110 to fix the error but this is probably not the correct fix. Copy /var/opt/mythtv/All Channels_gen.txt to /var/opt/mythtv/All Channels.txt and fix the errors there. Edit that file, look for line 63. Look at your comcast channel lineup and if the number it put there (e.g.110) is incorrect, fix it
+
 ### Third test to check tuning.
 
 Note that while running the test it is important that vlc **not** be open on the video card.
 
-Make sure you have set up some channels in favorites (see *Xfinity* above), and that the same list of  channels is in `/etc/opt/mythtv/leanchans.txt`
+Make sure you have set up the channel list in `/var/opt/mythtv/All Channels.txt` as described above.
 
     sudo -u mythtv bash
     /opt/mythtv/leancap/leancap_tune.sh leancap1 704
 
-where 704 is the number of one of your channels that have been added to the favorites.
+where 704 is the number of one of your channels that is in your list.
 
 You should see a bunch of messages ending with "Complete tuning channel: 704 on recorder: leancap1". Start vlc and open the video card. You should see video playing from the selected channel. Press the back button on your fire remote to end it or it will continue playing for ever. Close vlc.
+
+Note you can also add a NOPLAY parameter to tune the channel and leave it selected in the list:
+
+    sudo -u mythtv bash
+    /opt/mythtv/leancap/leancap_tune.sh leancap1 704 NOPLAY
 
 Repeat the tuning test on other tuners.
 
@@ -261,6 +248,8 @@ Enable the leancap-scan service:
 Reboot so that the udev setting can take effect and the leancap-scan service can be started. Look in the log directory /var/log/mythtv_scripts to see if there are any errors displayed in the leancap_scan or leancap_ready logs.
 
 You must not open the video device with vlc if any recording is scheduled to start. Recordings cannot be done while it is open in vlc.
+
+Periodically run the script to setup the channel list, in case it changes. The script is set up so that if there is no change, nothing will be done. If there is a change and there is no error that needs fixing, it will automatically overwrite the list. In there is a change and there is an error it will email you. Also the script is set up so that if a recording needs to start while the script is running, the script will stop so that recording can continue.
 
 ### Fire Stick 
 
@@ -284,7 +273,7 @@ Any time you need to do any work on a fire stick (reset resolution, update, etc.
 
 This can be done without MythTV. You don't need MythTV installed. You can run this on a separate machine. Also you do not need to be an Xfinity or Comcast user, this can be used to record anything that shows on a fire stick.
 
-If you are not using MythTV backend on the machine, install the software as described above. You do not need to create leanchans.txt. You will not do the MythTV configuration. Do not enable the leancap_scan service.
+If you are not using MythTV backend on the machine, install the software as described above. You will not do the MythTV configuration. Do not enable the leancap_scan service.
 
 Manually run the scan using terminal. This has to be done again if you have rebooted or replugged usb devices since it was last run:
 
@@ -292,7 +281,7 @@ Manually run the scan using terminal. This has to be done again if you have rebo
 
 Note the leancap_scan will fail if you do not have Xfinity installed and activated. In that case you will have to manually place the AUDIO_IN and VIDEO_IN values in the leancap1.conf file. You can find out the values by experimenting with vlc. Note that these can change when rebooting or replugging usb devices.
 
-If that is successful, run the leanfire in terminal:
+If that is successful, run leanfire in terminal:
 
     /opt/mythtv/leancap/leanfire.sh
 
@@ -328,7 +317,7 @@ While recording is in progress you can check it by opening the mkv files with vl
 
 There is no option to prevent recordings being deleted from Xfinity after being recorded to your local drive. Xfinity has a recover deleted option but that does not work once all shows have been deleted.
 
-If the process is interrupted (e.g. by control-C in the terminal window), one recording will be incomplete. You can start the script again and it will restart the incomplete recording from the beginning again, so you won't lose anything, just some time.
+If the process is interrupted (e.g. by control-C in the terminal window), one recording will be incomplete. You can start the script again and it will restart the incomplete recording from the beginning again, so you won't lose anything.
 
 ### Unplugging or Replugging any USB devices
 
