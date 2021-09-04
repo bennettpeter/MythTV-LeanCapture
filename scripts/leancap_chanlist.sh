@@ -141,13 +141,15 @@ if [[ -f "$chanlistfilegen" ]] ; then
     fi
 fi
 cp "$newchanlistfilegen" "$chanlistfilegen"
+# if chanlistfile does not exist copy it regardless of errors
+cp -n "$chanlistfilegen" "$chanlistfile"
 if (( numerrors == 0 )) ; then
     cp "$chanlistfilegen" "$chanlistfile"
 else
     echo `$LOGDATE` "Number of errors: $numerrors. Errors listed below. See $errfile"
     $scriptpath/notify.py "Channel list needs fixing" \
-"leancap_chanlist: Channel list has changed and new list has errors. See $errfile. \
-cp $chanlistfilegen $chanlistfile then fix the errors there." &
+        "leancap_chanlist: New list has errors." &
+    echo `$LOGDATE` "cp $chanlistfilegen $chanlistfile then fix the errors there."
 fi
 
 cat "$errfile"
