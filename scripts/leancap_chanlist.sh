@@ -135,7 +135,10 @@ for (( ; ; )) ; do
 done
 
 if [[ -f "$chanlistfilegen" ]] ; then
-    if diff "$newchanlistfilegen" "$chanlistfilegen" ; then
+    oldcnt=$(wc -l < "$chanlistfile")
+    newcnt=$(wc -l < "$newchanlistfilegen")
+    if diff "$newchanlistfilegen" "$chanlistfilegen" \
+        && (( oldcnt == newcnt )) ; then
         echo `$LOGDATE` "Channel list same as before. No problems."
         exit 0
     fi
