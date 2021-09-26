@@ -109,13 +109,8 @@ for (( xx=0; xx<5; xx++ )) ; do
         prior_currchan=$currchan
         getchannelselection
         if (( selection < 0 )) ; then
-            echo `$LOGDATE` "ERROR: Cannot determine channel selection, trying again"
-            adb disconnect $ANDROID_DEVICE
-            sleep 0.5
-            adb connect $ANDROID_DEVICE
-            $scriptpath/adb-sendkey.sh MENU
-            $scriptpath/adb-sendkey.sh LEFT
-            $scriptpath/adb-sendkey.sh RIGHT
+            echo `$LOGDATE` "ERROR: Cannot determine channel selection, Launch Xfinity again"
+            launchXfinity
             continue 2
         fi
         repairchannellist
