@@ -14,10 +14,18 @@ Here is an alternative method for recording channels on Comcast. It may be exten
 ## Disadvantages
 
 - Only records stereo audio.
-- Does not support closed captions.
+- Does not support closed captions. *Note* It is possible to record with captions enabled to get "Burned in" captions, but some change to the code will be needed. Let me know by opening a ticket if you need this.
 - If the user interface of the Stream App changes significantly, this code will need changes.
 - The fire stick sometimes needs powering off and on again if it loses its Ethernet connection. This is not a hard failure, it can continue on WiFi until reset.
 - Occasionally the fire stick resets its display resolution to the default. This is not a hard failure, it may use extra bandwidth until reset.
+
+## Other Uses
+
+The code here can be used for other purposes than MythTV capture.
+
+- Download a list of your available channels and use the list to populate the MythTV listings with all of the channels you are permitted to watch, and only those channels. This way you do not miss anything you are permitted to watch, and you don't have failed recordings when it tries to record from an unauthorized channel. See "Setup the channel list" below.
+- Transfer your Xfinity cloud DVR recordings to your local hard drive and watch them using MythTV or any other video player. See "Xfinity DVR" below.
+- Transfer videos or movies from Peacock, Amazon, Hulu, etc. to your local hard drive and watch them using MythTV or any other video player. See "Manual Recordings" below.
 
 ## Hardware required
 
@@ -167,6 +175,20 @@ For each EXTERNAL entry, set up as follows:
     - Schedule Order: Set to sequence order for using vs other capture cards. Set to 0 to prevent recordings on this device.
     - Live TV Order:  Set to sequence order for using vs other capture cards. Set to 0 to prevent Live TV on this device.
 
+#### Frontend Setup
+
+In mythfrontend, set up the following. Note this is a global setting, you do not need to set it up in each front end. This will attempt to prevent losing some 40 seconds when one show follows another on a different channel, by allocating a different tuner. This is only useful if you have two or more capture devices. If it is not possible to avoid back to back recordings it will do them anyway and you may lose 40 seconds from the beginning of the second recording.
+
+mythfrontend -> Setup -> Video -> Recording Priorities -> Set Recording Priorities -> Scheduler Options -> Avoid Back to Back Recordings -> Different Channels
+
+The following setting will reduce the chances of losing the first seconds of a show due to the time taken to tune:
+
+mythfrontend -> Setup -> Video -> General -> General (Advanced) : Set time to record before start of show to 60.
+
+The following setting available on V32 will prevent MythTV from marking a recording as failed if the first 60 seconds are missing due to tuning delay
+
+mythfrontend -> Setup -> Video -> General -> General (Advanced) : Set maximum start gap to 60 and minimum recording quality to 95.
+
 ## Operation
 
 If you have a cable card or other capture device, you can leave that in place while you test the new device or devices, or use it in conjunction with the LeanCapture device. To prevent recordings from using the new devices set the Schedule Order and Live TV order to 0.
@@ -218,6 +240,16 @@ This takes about 3 minutes. After it has run, it may report errors. The errors a
     Line 63 12 changed to 110
 
 This tells you an error was found in line 63 of the output file and needs to be fixed. The number 12 was changed to 110 to fix the error but this is probably not the correct fix. Copy /var/opt/mythtv/All Channels_gen.txt to /var/opt/mythtv/All Channels.txt and fix the errors there. Edit that file, look for line 63. Look at your comcast channel lineup and if the number it put there (e.g.110) is incorrect, fix it
+
+After setting up the channel list, you have a listing of all the channels that you can receive. If you are using schedules direct with tv_grab_zz_sdjson_sqlite, you can use this list to make sure that all of your channels are in the listings and none of the channels you are not permitted to view have listings. Copy the "/var/opt/mythtv/All Channels.txt" file to a new file in another location. Edit that file to create sql statements as follows. This assumes you have already set up the channels in sqlite:
+
+    update channels set selected = 0;
+    update channels set selected = 1 where channum = 2;
+
+Repeat the second line for all channels in the list. Run it against your sqlite database (assuming channelfile is the file you created):
+
+    sudo -u mythtv bash
+    sqlite3 SchedulesDirect.DB < channelfile
 
 ### Third test to check tuning.
 
