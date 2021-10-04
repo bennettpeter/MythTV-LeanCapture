@@ -109,8 +109,14 @@ for (( xx=0; xx<5; xx++ )) ; do
         prior_currchan=$currchan
         getchannelselection
         if (( selection < 0 )) ; then
-            echo `$LOGDATE` "ERROR: Cannot determine channel selection, Launch Xfinity again"
-            launchXfinity
+            echo `$LOGDATE` "ERROR: Cannot determine channel selection, try again"
+            savefile=$DATADIR/$($LOGDATE)_${recname}_capture.png
+            cp $DATADIR/${recname}_capture.png "$savefile"
+            echo `$LOGDATE` "$savefile created for debugging"
+            #~ launchXfinity
+            $scriptpath/adb-sendkey.sh MENU
+            $scriptpath/adb-sendkey.sh LEFT
+            $scriptpath/adb-sendkey.sh RIGHT
             continue 2
         fi
         repairchannellist
