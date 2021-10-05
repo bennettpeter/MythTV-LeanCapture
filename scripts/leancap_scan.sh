@@ -170,9 +170,11 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
     echo `$LOGDATE` Successfully created parameters in $DATADIR/${recname}.conf.
     unlocktuner
 done
-
+if [[ "$ISMYTHBACKEND" == "" ]] ; then
+    ISMYTHBACKEND=1
+fi
 # When running as a service, start up the leancap_ready processes
-if (( ! isterminal )) ; then
+if (( ! isterminal && ISMYTHBACKEND )) ; then
     for conffile in /etc/opt/mythtv/$reqname.conf ; do
         recname=$(basename $conffile .conf)
         numlines=$(wc -l < $DATADIR/${recname}.conf)
@@ -184,7 +186,6 @@ if (( ! isterminal )) ; then
         fi
     done
 fi
-
 
 $LOGDATE > $LOCKBASEDIR/scandate
 

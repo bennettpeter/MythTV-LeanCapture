@@ -36,7 +36,7 @@ logfile=$LOGDIR/${scriptname}_${recname}.log
             echo `$LOGDATE` "ERROR leancap_scan not yet run, tuner disabled"
                 break
             fi
-            echo `$LOGDATE` "leancap_scan not yet run, waiting 5 seconds"
+            echo `$LOGDATE` "leancap_scan not yet run, waiting 2 seconds"
             sleep 2
         fi
     done

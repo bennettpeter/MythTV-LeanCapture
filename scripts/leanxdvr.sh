@@ -2,7 +2,12 @@
 # This will take all xfinity cloud recordings
 # and record them to local files.
 
+# Parameters
+# 1 recorder name, e.g. leancap1. Default to leancap1
+# 2 NOPLAY forces no recording to be done, stops after selecting a show
+
 recname=$1
+option=$2
 
 if [[ "$recname" == "" ]] ; then
     recname=leancap1
@@ -20,10 +25,6 @@ scriptname=`basename "$scriptname" .sh`
 source $scriptpath/leanfuncs.sh
 ADB_ENDKEY=HOME
 initialize
-if ! getparms PRIMARY ; then
-    exit 2
-fi
-ffmpeg_pid=
 
 function getrecordings {
     navigate Recordings "DOWN"
@@ -31,26 +32,40 @@ function getrecordings {
     capturepage
 }
 
+function my_exit {
+    rc=$1
+    if (( rc > 0 && ! isterminal )) ; then
+        $scriptpath/notify.py "leanxdvr failed" \
+        "leanxdvr: see error log for recorder: $recname" &
+    fi
+    exit $rc
+}
+
+if ! getparms PRIMARY ; then
+    my_exit 2
+fi
+ffmpeg_pid=
+
 # Tuner kept locked through entire recording
 if ! locktuner ; then
     echo `$LOGDATE` "ERROR Encoder $recname is already locked by another process."
-    exit 2
+    my_exit 2
 fi
 gettunestatus
 
 if [[ "$tunestatus" != idle ]] ; then
     echo `$LOGDATE` "ERROR: Tuner in use. Status $tunestatus"
-    exit 2
+    my_exit 2
 fi
 
 adb connect $ANDROID_DEVICE
 if ! adb devices | grep $ANDROID_DEVICE ; then
     echo `$LOGDATE` "ERROR: Unable to connect to $ANDROID_DEVICE"
-    exit 2
+    my_exit 2
 fi
 capturepage adb
 rc=$?
-if (( rc == 1 )) ; then exit $rc ; fi
+if (( rc == 1 )) ; then my_exit $rc ; fi
 
 # Kill vlc
 wmctrl -c vlc
@@ -63,29 +78,38 @@ getrecordings
 retries=0
 while  true ; do
     # Select First Recording
-    title=$(head -3 $DATADIR/${recname}_capture_crop.txt  | tail -1)
-    if [[ "$title" == "Deleted Recordings" ]] ; then
-        break;
-    elif [[ "$title" == "You have no completed recordings"* ]] ; then
-        status=$(grep -m 1 "% Full [0-9]* Recordings" $DATADIR/${recname}_capture_crop.txt)
-        if [[ "$status" != "0% Full 0 Recordings" ]] ; then
-            if (( retries > 2 )) ; then
-                echo `$LOGDATE` "ERROR: Inconsistent recordings page"
-                exit 2
+    linesel=3
+    title=
+    while true ; do
+        title=$(head -$linesel $DATADIR/${recname}_capture_crop.txt  | tail -1)
+        if [[ "$title" == "Deleted Recordings" ]] ; then
+            break 2;
+        elif [[ "$title" == "You have no completed recordings"* ]] ; then
+            status=$(grep -m 1 "% Full [0-9]* Recordings" $DATADIR/${recname}_capture_crop.txt)
+            if [[ "$status" != "0% Full 0 Recordings" ]] ; then
+                if (( retries > 2 )) ; then
+                    echo `$LOGDATE` "ERROR: Inconsistent recordings page"
+                    my_exit 2
+                fi
+                echo `$LOGDATE` Force stop xfinity
+                # This fails on old version of adb.
+                adb -s $ANDROID_DEVICE shell am force-stop com.xfinity.cloudtvr.tenfoot
+                let retries++
+                sleep 2
+                getrecordings
+                continue 2
+            else
+                break 2
             fi
-            echo `$LOGDATE` Force stop xfinity
-            # This fails on old version of adb.
-            adb -s $ANDROID_DEVICE shell am force-stop com.xfinity.cloudtvr.tenfoot
-            let retries++
-            sleep 2
-            getrecordings
-            continue
-        else
-            break
+        elif [[ "$title" == "" ]] ; then
+            break 2
         fi
-    elif [[ "$title" == "" ]] ; then
-        break
-    fi
+        if [[ ! "$title" =~ $XDVRSKIP ]] ; then
+            break;
+        fi
+        $scriptpath/adb-sendkey.sh DOWN
+        let linesel+=2
+    done
     retries=0
     # Possible forms of title
     # Two and a Half Men (13) © Recording Now 12:00 - 12:30p
@@ -103,7 +127,7 @@ while  true ; do
     fi
     $scriptpath/adb-sendkey.sh DPAD_CENTER
     if ! waitforpage "$title" ; then
-        exit 2
+        my_exit 2
     fi
     if (( numepisodes > 1 )) ; then
         for (( xx=0; xx<numepisodes; xx++ )) ; do
@@ -162,8 +186,13 @@ while  true ; do
         echo `$LOGDATE` "Duplicate recording file, appending _$xx"
     done
     
-    echo `$LOGDATE` "Starting recording of $title/$season_episode"
+    if [[ "$option" == NOPLAY ]] ; then
+        echo `$LOGDATE` "Selected $title/$season_episode - NOPLAY requested, exiting"
+        ADB_ENDKEY=
+        my_exit 2
+    fi
 
+    echo `$LOGDATE` "Starting recording of $title/$season_episode"
     # Start Recording
    
     $scriptpath/adb-sendkey.sh DPAD_CENTER
@@ -216,11 +245,11 @@ while  true ; do
         now=`date +%s`
         if (( now > maxendtime )) ; then
             echo `$LOGDATE` "Recording for too long, kill it"
-            exit 2
+            my_exit 2
         fi
         if ! ps -q $ffmpeg_pid >/dev/null ; then
             echo `$LOGDATE` "ffmpeg is gone, exit"
-            exit 2
+            my_exit 2
         fi
         capturepage adb
         if [[ "$pagename" != "" ]] || (( lowcount > 0 && now > endtime )) || (( lowcount > 4 )) ; then
@@ -238,7 +267,7 @@ while  true ; do
                     while ! grep "Delete Now"  $DATADIR/${recname}_capture_crop.txt ; do
                         if (( ++xx > 30 )) ; then
                             echo `$LOGDATE` "ERROR Cannot get to Delete Now page"
-                            exit 2
+                            my_exit 2
                         fi
                         sleep 1
                         capturepage
@@ -271,11 +300,11 @@ while  true ; do
                     break
                 else
                     echo `$LOGDATE` "ERROR: Playback seems to be stuck, exiting"
-                    exit 2
+                    my_exit 2
                 fi
             else
                 echo `$LOGDATE` "ERROR: Cannot capture screen at end of playback, exiting"
-                exit 2
+                my_exit 2
             fi
         fi
         sleep 60
@@ -297,7 +326,7 @@ while  true ; do
         $scriptpath/adb-sendkey.sh BACK
     fi
     if ! waitforpage "Recordings" ; then
-        exit 2
+        my_exit 2
     fi
     sleep 5
     capturepage
