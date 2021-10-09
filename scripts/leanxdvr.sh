@@ -78,6 +78,7 @@ getrecordings
 retries=0
 while  true ; do
     # Select First Recording
+    $scriptpath/adb-sendkey.sh UP UP UP UP
     linesel=3
     title=
     while true ; do
