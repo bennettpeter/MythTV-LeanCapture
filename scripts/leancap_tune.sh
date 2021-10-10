@@ -96,6 +96,8 @@ for (( xx=0; xx<5; xx++ )) ; do
             # get out of the Filter box
             $scriptpath/adb-sendkey.sh DOWN DOWN DOWN
         fi
+        # To test incorrect selection condition:
+        #~ $scriptpath/adb-sendkey.sh RIGHT
         getchannellist
         if (( arrsize != 5 )) ; then
             echo `$LOGDATE` "Wrong number of channels, trying again"
@@ -105,18 +107,31 @@ for (( xx=0; xx<5; xx++ )) ; do
             continue 2
         fi
         echo `$LOGDATE` "channels: ${channels[@]}"
-
-        prior_currchan=$currchan
         getchannelselection
-        if (( selection < 0 )) ; then
-            echo `$LOGDATE` "ERROR: Cannot determine channel selection, try again"
-            savefile=$DATADIR/$($LOGDATE)_${recname}_capture.png
-            cp $DATADIR/${recname}_capture.png "$savefile"
-            echo `$LOGDATE` "$savefile created for debugging"
-            #~ launchXfinity
-            $scriptpath/adb-sendkey.sh MENU
+        if (( selection < 0)) ; then
+            cp $DATADIR/${recname}_capture.png $DATADIR/${recname}_capture_channels.png
+        fi
+        for (( xx2=0; selection<0 && xx2<5; xx2++ )) ; do
+            echo `$LOGDATE` "No channel selection, moving cursor"
+            # Move cursor left in case a program is selected instead of a channel
             $scriptpath/adb-sendkey.sh LEFT
-            $scriptpath/adb-sendkey.sh RIGHT
+            capturepage
+            if [[ "$pagename" == "$NAVTYPE" ]] ; then
+                getchannellist
+                getchannelselection
+            else
+                break
+            fi
+        done
+        if (( selection < 0)) ; then
+            echo `$LOGDATE` "ERROR: Cannot determine channel selection, try again"
+            savefile=$DATADIR/$($LOGDATE)_${recname}_capture_channels.png
+            cp $DATADIR/${recname}_capture_channels.png "$savefile"
+            echo `$LOGDATE` "$savefile created for debugging"
+            launchXfinity
+            #~ $scriptpath/adb-sendkey.sh MENU
+            #~ $scriptpath/adb-sendkey.sh LEFT
+            #~ $scriptpath/adb-sendkey.sh RIGHT
             continue 2
         fi
         repairchannellist
