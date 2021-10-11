@@ -60,6 +60,11 @@ if ! which jp2a >/dev/null ; then
     err=1
 fi
 
+if ! which pv >/dev/null ; then
+    echo ERROR pv is not installed
+    err=1
+fi
+
 if ! which vlc >/dev/null && ! which obs >/dev/null; then
     echo WARNING you will need vlc or obs-studio installed to configure your system
 fi

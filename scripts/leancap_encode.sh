@@ -47,15 +47,25 @@ logfile=$LOGDIR/${scriptname}_${recname}.log
 # Update the tune time at end
 updatetunetime=1
 
+progressfile=$LOGDIR/${scriptname}_${recname}_progress.log
+echo `$LOGDATE` "Start ffmpeg channel $tunechan" >> $progressfile
+
 ffmpeg -hide_banner -loglevel error -f v4l2 -thread_queue_size 256 -input_format $INPUT_FORMAT \
   -framerate $FRAMERATE -video_size $RESOLUTION \
   -use_wallclock_as_timestamps 1 \
   -i $VIDEO_IN -f alsa -ac 2 -ar 48000 -thread_queue_size 1024 \
   -itsoffset $AUDIO_OFFSET -i $AUDIO_IN \
   -c:v libx264 -vf format=yuv420p -preset faster -crf 23 -c:a aac \
-  -f mpegts - &
+  -f mpegts - | pv -b -n -i 30 2>> $progressfile &
 
+# This is actually the pv pid, but killing pv kills ffmpeg so all is ok.
 ffmpeg_pid=$!
+
+# Alternative but unnecessary way of getting actual ffmpeg pid
+#~ sleep 1
+#~ psresult=($(ps -o pid,cmd --no-headers  --ppid $$ | grep ffmpeg | grep -v grep))
+#~ ffmpeg_pid=${psresult[0]}
+
 echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
 
 {
@@ -84,6 +94,12 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
             $scriptpath/adb-sendkey.sh BACK
             sleep 1
             $scriptpath/leancap_tune.sh $recname $tunechan NOLOCK
+        fi
+        size=($(tail -2 $progressfile))
+        # numeric check
+        if [[ "${size[0]}" =~ ^[0-9]+$ && "${size[1]}" =~ ^[0-9]+$ ]] ; then
+            let diff=size[1]-size[0]
+            echo `$LOGDATE` "Size: ${size[1]} Incr: $diff"
         fi
         sleep 30
     done
