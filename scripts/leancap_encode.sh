@@ -76,30 +76,50 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
     # from capture. If anything is captured, something
     # went wrong.
     errored=0
+    lowcount=0
     while (( 1 )) ; do
         if ! ps -q $ffmpeg_pid >/dev/null ; then
             echo `$LOGDATE` "ffmpeg terminated"
             break
         fi
-        capturepage adb
-        # Possible pagenames - "Playback Issue"* or name of a show
-        if [[ "$pagename" != "" ]] ; then
-            echo `$LOGDATE` "ERROR: playback failed, retrying."
-            if (( errored == 0 )) ; then
-                $scriptpath/notify.py "Xfinity Problem" \
-                    "leancap_encode: Playback Failed on ${recname}, retrying" &
-            fi
-            let errored++
-            # Try to tune again
-            $scriptpath/adb-sendkey.sh BACK
-            sleep 1
-            $scriptpath/leancap_tune.sh $recname $tunechan NOLOCK
-        fi
+        #~ capturepage adb
+        #~ # Possible pagenames - "Playback Issue"* or name of a show
+        #~ if [[ "$pagename" != "" ]] ; then
+            #~ echo `$LOGDATE` "ERROR: playback failed, retrying."
+            #~ if (( errored == 0 )) ; then
+                #~ $scriptpath/notify.py "Xfinity Problem" \
+                    #~ "leancap_encode: Playback Failed on ${recname}, retrying" &
+            #~ fi
+            #~ let errored++
+            #~ # Try to tune again
+            #~ $scriptpath/adb-sendkey.sh BACK
+            #~ sleep 1
+            #~ $scriptpath/leancap_tune.sh $recname $tunechan NOLOCK
+        #~ fi
         size=($(tail -2 $progressfile))
         # numeric check
         if [[ "${size[0]}" =~ ^[0-9]+$ && "${size[1]}" =~ ^[0-9]+$ ]] ; then
             let diff=size[1]-size[0]
             echo `$LOGDATE` "Size: ${size[1]} Incr: $diff"
+            if (( diff < MINBYTES )) ; then
+                let lowcount=lowcount+1
+                if (( lowcount > 3 )) ; then
+                    # 4 in a row.
+                    echo `$LOGDATE` "ERROR: increment less that $MINBYTES, retrying."
+                    if (( errored == 0 )) ; then
+                        $scriptpath/notify.py "Xfinity Problem" \
+                            "leancap_encode: Playback Failed on ${recname}, retrying" &
+                        errored=1
+                    fi
+                    # Try to tune again
+                    launchXfinity
+                    sleep 2
+                    $scriptpath/leancap_tune.sh $recname $tunechan NOLOCK
+                    lowcount=0
+                fi
+            else
+                lowcount=0
+            fi
         fi
         sleep 30
     done

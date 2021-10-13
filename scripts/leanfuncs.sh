@@ -10,6 +10,9 @@ LOCKBASEDIR=/run/lock/leancap
 if [[ "$MAXCHANNUM" == "" ]] ; then
     MAXCHANNUM=999
 fi
+if [[ "$MINBYTES" == "" ]] ; then
+    MINBYTES=1500000
+fi
 
 # Keys : 6 DOWNS for favorite or 5 DOWNS for All
 case "$NAVTYPE" in
