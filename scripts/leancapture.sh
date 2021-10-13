@@ -55,7 +55,7 @@ logfile=$LOGDIR/${scriptname}_${recname}.log
         rc=2
     fi
 
-    if [[ "$rc" != 0 ]] ; then exit $rc ; fi
+    if (( rc > 1 )) ; then exit $rc ; fi
 } &>>$logfile
 
 echo `$LOGDATE` mythexternrecorder  --exec --conf /etc/opt/mythtv/${recname}.conf "${@}" >>$logfile
