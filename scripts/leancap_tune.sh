@@ -152,6 +152,11 @@ for (( xx=0; xx<5; xx++ )) ; do
                 break
             fi
         done
+        # currchan 0 indicates we have wandered into the Unnumbered
+        # tv-go channels at the end, so go up.
+        if (( currchan == 0 )) ; then
+            distance=-100
+        fi
         if (( distance < 0 )) ; then
             direction=UP
             let distance=-distance
