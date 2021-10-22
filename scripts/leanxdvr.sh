@@ -139,10 +139,10 @@ while  true ; do
     fi
     sleep 1
     capturepage
-    season_episode=`grep "^[S$][^ ]* *| *Ep[^ ]*$" $DATADIR/${recname}_capture_crop.txt | tail -1`
-    season_episode=$(echo $season_episode | sed "s/| / /;s/ |/ /;s/ *Ep/E/;s/\\$/S/")
+    season_episode=$(grep "^[S\$5][^ ]* *| *Ep[^ ]*$" $DATADIR/${recname}_capture_crop.txt | tail -1)
+    season_episode=$(echo $season_episode | sed "s/| / /;s/ |/ /;s/ *Ep/E/;s/\\$/S/;s/^5/S/")
     # Lowercase l should be 1 and other fixes
-    season_episode=$(echo $season_episode | sed "s/[liI|]/1/g;s/St/S11/;s/Et/E1/;s/s/8/g")
+    season_episode=$(echo $season_episode | sed "s/[liI|]/1/g;s/St/S11/;s/Et/E1/;s/s/8/g;s/^5/S/")
     if [[ "$season_episode" == "" ]] ; then
         season_episode=`date "+%Y%m%d_%H%M%S"`
         echo `$LOGDATE` "Bad episode number, using $season_episode instead."
