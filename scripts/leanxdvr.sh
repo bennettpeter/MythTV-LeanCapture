@@ -4,14 +4,20 @@
 
 # Parameters
 # 1 recorder name, e.g. leancap1. Default to leancap1
-# 2 NOPLAY forces no recording to be done, stops after selecting a show
+# 2 maximum number of recordings to make. Default 6
+# 3 NOPLAY forces no recording to be done, stops after selecting a show
 
 recname=$1
-option=$2
+maxrecordings=$2
+option=$3
 
 if [[ "$recname" == "" ]] ; then
     recname=leancap1
 fi
+if [[ "$maxrecordings" == "" ]] ; then
+    maxrecordings=6
+fi
+
 # Maximum time for 1 recording. 6 hours.
 MAXTIME=360
 let maxduration=MAXTIME*60
@@ -76,7 +82,8 @@ getrecordings
 
 # See if there are any recordings
 retries=0
-while  true ; do
+numrecorded=0
+while  (( numrecorded < maxrecordings )) ; do
     # Select First Recording
     $scriptpath/adb-sendkey.sh UP UP UP UP
     linesel=3
@@ -130,6 +137,8 @@ while  true ; do
     if ! waitforpage "$title" ; then
         my_exit 2
     fi
+    # Fix title in case of missing periods e.g. P.D.
+    title="$pagename"
     if (( numepisodes > 1 )) ; then
         for (( xx=0; xx<numepisodes; xx++ )) ; do
             $scriptpath/adb-sendkey.sh DOWN
@@ -321,6 +330,8 @@ while  true ; do
             lowcount=0
         fi
     done
+    let numrecorded++
+    echo `$LOGDATE` "Number of recordings done:$numrecorded, maximum:$maxrecordings"
     sleep 5
     capturepage
     if [[ "$pagename" != "Recordings" ]] ; then
@@ -332,5 +343,5 @@ while  true ; do
     sleep 5
     capturepage
 done
-echo `$LOGDATE` "Complete - No more Recordings"
+echo `$LOGDATE` "Complete - $numrecorded Recorded"
 
