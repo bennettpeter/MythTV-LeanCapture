@@ -266,15 +266,20 @@ function capturepage {
 
 function waitforpage {
     wanted="$1"
+    # Ignore periods in the name
+    fixwanted=$(echo "$1" | sed 's/\.//g')
+    fixpagename=
     local xx=0
-    while [[ "$pagename" != "$wanted" ]] && (( xx++ < 90 )) ; do
+    while [[ "$fixpagename" != "$fixwanted" ]] && (( xx++ < 90 )) ; do
         capturepage
         if [[ "$pagename" == "We"*"detect your remote" ]] ; then
             $scriptpath/adb-sendkey.sh DPAD_CENTER
         fi
+        # Ignore periods in the name
+        fixpagename=$(echo "$pagename" | sed 's/\.//g')
         sleep 0.5
     done
-    if [[ "$pagename" != "$wanted" ]] ; then
+    if [[ "$fixpagename" != "$fixwanted" ]] ; then
         echo `$LOGDATE` "ERROR - Cannot get to $wanted Page"
         return 2
     fi
