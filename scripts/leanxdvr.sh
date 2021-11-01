@@ -134,6 +134,7 @@ while  (( numrecorded < maxrecordings )) ; do
         echo `$LOGDATE` "There are $numepisodes episodes of $title."
     fi
     $scriptpath/adb-sendkey.sh DPAD_CENTER
+    CROP="-gravity Northeast -crop 95%x10%"
     if ! waitforpage "$title" ; then
         my_exit 2
     fi

@@ -200,6 +200,7 @@ function getparms {
 # VIDEO_IN - set to blank will prevent capture from /dev/video
 # TESSPARM - set to "-c tessedit_char_whitelist=0123456789" to restrict to numerics
 # CROP - crop parameter (default -gravity East -crop 95%x100%)
+# TSSPARM amd CROP are cleared at the end of the function.;
 # Return 1 if wrong resolution is found
 function capturepage {
     pagename=
@@ -270,7 +271,9 @@ function waitforpage {
     fixwanted=$(echo "$1" | sed 's/\.//g')
     fixpagename=
     local xx=0
-    while [[ "$fixpagename" != "$fixwanted" ]] && (( xx++ < 90 )) ; do
+    savecrop="$CROP"
+    while [[ "$fixpagename" != "$fixwanted" ]] && (( xx++ < 20 )) ; do
+        CROP="$savecrop"
         capturepage
         if [[ "$pagename" == "We"*"detect your remote" ]] ; then
             $scriptpath/adb-sendkey.sh DPAD_CENTER
@@ -279,6 +282,7 @@ function waitforpage {
         fixpagename=$(echo "$pagename" | sed 's/\.//g')
         sleep 0.5
     done
+    CROP=
     if [[ "$fixpagename" != "$fixwanted" ]] ; then
         echo `$LOGDATE` "ERROR - Cannot get to $wanted Page"
         return 2
