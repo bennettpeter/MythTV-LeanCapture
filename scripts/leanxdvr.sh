@@ -170,8 +170,18 @@ while  (( numrecorded < maxrecordings )) ; do
         fi
         season_episode=S${season}E${episode}
     fi
+    orig_airdate=$(grep -o "([0-9/]*)" $DATADIR/${recname}_capture_crop.txt | head -1)
+    orig_airdate=$(echo "$orig_airdate" | sed "s/(//;s/)//")
+    if [[ "$orig_airdate" != "" ]] ; then
+        orig_airdate=$(date -d "$orig_airdate" "+%y%m%d")
+    fi
     mkdir -p "$VID_RECDIR/$title"
-    recfile="$VID_RECDIR/$title/$season_episode.mkv"
+    if [[ "$orig_airdate" == "" ]] ; then
+        recfilebase="$season_episode.mkv"
+    else
+        recfilebase="$orig_airdate $season_episode.mkv"
+    fi
+    recfile="$VID_RECDIR/$title/$recfilebase.mkv"
     convert $DATADIR/${recname}_capture.png -gravity East -crop 25%x100% -negate -brightness-contrast 0x20 $DATADIR/${recname}_capture_details.png
     tesseract $DATADIR/${recname}_capture_details.png  - 2>/dev/null | sed '/^ *$/d' > $DATADIR/${recname}_details.txt
     echo `$LOGDATE` "Episode Details:"
@@ -193,7 +203,7 @@ while  (( numrecorded < maxrecordings )) ; do
     xx=
     while [[ -f "$recfile" ]] ; do
         let xx++
-        recfile="$VID_RECDIR/$title/${season_episode}_$xx.mkv"
+        recfile="$VID_RECDIR/$title/${recfilebase}_$xx.mkv"
         echo `$LOGDATE` "Duplicate recording file, appending _$xx"
     done
     
@@ -299,15 +309,16 @@ while  (( numrecorded < maxrecordings )) ; do
                     $scriptpath/adb-sendkey.sh DPAD_CENTER
                     if [[ "$subtitle" != "" ]] ; then
                         echo `$LOGDATE` "Rename recording file with subtitle"
-                        newrecfile="$VID_RECDIR/$title/$season_episode $subtitle.mkv"
+                        recfilebase="$recfilebase $subtitle"
+                        newrecfile="$VID_RECDIR/$title/$recfilebase.mkv"
                         while [[ -f "$newrecfile" ]] ; do
                             let xx++
-                            newrecfile="$VID_RECDIR/$title/${season_episode}  ${subtitle}_$xx.mkv"
+                            newrecfile="$VID_RECDIR/$title/${recfilebase}_$xx.mkv"
                             echo `$LOGDATE` "Duplicate recording file, appending _$xx"
                         done
                         mv -n "$recfile" "$newrecfile"
                     fi
-                    echo `$LOGDATE` "Recording Complete of $title/$season_episode $subtitle"
+                    echo `$LOGDATE` "Recording Complete of $title/$recfilebase"
                     break
                 else
                     echo `$LOGDATE` "ERROR: Playback seems to be stuck, exiting"
