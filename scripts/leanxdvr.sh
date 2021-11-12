@@ -177,9 +177,9 @@ while  (( numrecorded < maxrecordings )) ; do
     fi
     mkdir -p "$VID_RECDIR/$title"
     if [[ "$orig_airdate" == "" ]] ; then
-        recfilebase="$season_episode.mkv"
+        recfilebase="$season_episode"
     else
-        recfilebase="$orig_airdate $season_episode.mkv"
+        recfilebase="$orig_airdate $season_episode"
     fi
     recfile="$VID_RECDIR/$title/$recfilebase.mkv"
     convert $DATADIR/${recname}_capture.png -gravity East -crop 25%x100% -negate -brightness-contrast 0x20 $DATADIR/${recname}_capture_details.png
@@ -208,12 +208,12 @@ while  (( numrecorded < maxrecordings )) ; do
     done
     
     if [[ "$option" == NOPLAY ]] ; then
-        echo `$LOGDATE` "Selected $title/$season_episode - NOPLAY requested, exiting"
+        echo `$LOGDATE` "Selected $title $season_episode - NOPLAY requested, exiting"
         ADB_ENDKEY=
         my_exit 2
     fi
 
-    echo `$LOGDATE` "Starting recording of $title/$season_episode"
+    echo `$LOGDATE` "Starting recording of $title $season_episode"
     # Start Recording
    
     $scriptpath/adb-sendkey.sh DPAD_CENTER
@@ -253,7 +253,7 @@ while  (( numrecorded < maxrecordings )) ; do
             starttime=`date +%s`
         fi
     fi
-    
+    sleep 10
     let maxendtime=starttime+maxduration
     if (( duration == 0 )) ; then
         duration=maxduration
