@@ -125,7 +125,7 @@ for (( xx = 0 ; xx < loops ; xx++ )) ; do
             break 2
         fi
         if (( lowcount > 3 )) ; then
-            echo `$LOGDATE` "Playback paused"
+            echo `$LOGDATE` "Playback paused too long"
             if (( xx < responses )) ; then break ; fi
             break 2
         fi
@@ -140,8 +140,9 @@ for (( xx = 0 ; xx < loops ; xx++ )) ; do
             capturepage adb
             if (( imagesize > 0 )) ; then
                 # Hulu default message after 4-5 hours, or after end of series
-                if egrep "YES, CONTINUE WATCHING|More to Watch" $DATADIR/${recname}_capture_crop.txt ; then
-                    echo `$LOGDATE` "Playback paused"
+                if egrep "YES, CONTINUE WATCHING|More to Watch|Watch Again on" \
+                        $DATADIR/${recname}_capture_crop.txt ; then
+                    echo `$LOGDATE` "Playback ended with prompt"
                     if (( xx < responses )) ; then break ; fi
                     break 2
                 fi
