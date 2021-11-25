@@ -420,6 +420,12 @@ function navigate {
             break
             ;;
         *)
+            if [[ "$pagereq" == Search ]] ; then
+                if grep "Press and hold.*to say words and phrases" $DATADIR/${recname}_capture_crop.txt ; then
+                    pagename=Search_keyboard
+                    break
+                fi
+            fi
             if (( expect == 1 )) ; then
                 let expect++
                 # landed on wrong page - back and try again once only
@@ -431,14 +437,14 @@ function navigate {
             ;;
         esac
     done
-    if [[ "$pagename" != "$pagereq" ]] ; then
+    if [[ "$pagename" != "${pagereq}"* ]] ; then
         echo `$LOGDATE` "ERROR: Unable to reach $pagereq: $recname."
         return 3
     fi
     return 0
 }
 
-# Get channel list. Must be preceded by capturepage.
+# Get channel list.
 # Return:
 # channels - array of 5 channels in list on screen
 # arrsize = size of array (should be 5)

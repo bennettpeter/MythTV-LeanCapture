@@ -1,18 +1,59 @@
 #!/bin/bash
 # Record from fire stick
 
-responses="$1"
-minutes="$2"
-recname="$3"
-if [[ "$recname" == "" ]] ; then
-    recname=leancap1
-fi
+responses=0
+minutes=360
+recname=leancap1
+endkey=HOME
+waitforstart=1
 
-echo "*** $0 ***"
-echo "Input parameters:"
-echo "Number of responses (default 0)"
-echo "Maximum Number of minutes [default 360*(responses+1)]"
-echo "Recorder id (default leancap1)"
+while (( "$#" >= 1 )) ; do
+    case $1 in
+        --responses|-r)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                responses="$2"
+                shift||rc=$?
+            fi
+            ;;
+        --time|-t)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                minutes="$2"
+                shift||rc=$?
+            fi
+            ;;
+        --recname|-n)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                recname="$2"
+                shift||rc=$?
+            fi
+            ;;
+        --nohome)
+            endkey=
+            ;;
+        --nowait)
+            waitforstart=0
+            ;;
+        *)
+            echo "Invalid option $1"
+            error=y
+            ;;
+    esac
+    shift||rc=$?
+done
+
+if [[ "$error" == y ]] ; then
+    echo "*** $0 ***"
+    echo "Input parameters:"
+    echo "--responses|-r nn : Number of responses (default 0)"
+    echo "--time|-t nn : Maximum Number of minutes [default 360]"
+    echo "--recname|-n xxxxxxxx : Recorder id (default leancap1)"
+    echo "--nohome : Do not return to HOME at exit"
+    echo "--nowait : Start immediately without prompt"
+    exit 2
+fi
 
 . /etc/opt/mythtv/leancapture.conf
 
@@ -26,7 +67,8 @@ let responses=responses
 let minutes=minutes
 # Default to 360 minutes - 6 hours
 if (( $minutes == 0 )) ; then
-    let minutes=360*\(responses+1\)
+    echo "Invalid time value $minutes"
+    exit 2
 fi
 echo
 let seconds=minutes*60
@@ -36,9 +78,11 @@ if (( responses > 10 )) ; then
     exit 2
 fi
 echo "This script will press DPAD_CENTER to start. Do not press it."
-echo "Type Y to start"
-read -e resp
-if [[ "$resp" != Y ]] ; then exit 2 ; fi
+if (( waitforstart )) ; then
+    echo "Type Y to start"
+    read -e resp
+    if [[ "$resp" != Y ]] ; then exit 2 ; fi
+fi
 
 initialize
 if ! getparms PRIMARY ; then
@@ -71,14 +115,17 @@ capturepage adb
 rc=$?
 if (( rc == 1 )) ; then exit $rc ; fi
 
-# Kill vlc
-wmctrl -c vlc
 wmctrl -c obs
-sleep 2
+
+# Kill vlc
+while pidof vlc ; do
+    wmctrl -c vlc
+    sleep 2
+done
 
 recfile=`$LOGDATE`
 echo `$LOGDATE` "Starting recording of ${recfile}"
-ADB_ENDKEY=HOME
+ADB_ENDKEY="$endkey"
 $scriptpath/adb-sendkey.sh DPAD_CENTER
 
 ffmpeg -hide_banner -loglevel error \
