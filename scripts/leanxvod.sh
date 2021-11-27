@@ -188,18 +188,29 @@ fi
 sleep 2
 CROP="-gravity SouthEast -crop 70%x100%"
 capturepage
-if ! grep "^Ep$episode" $DATADIR/${recname}_capture_crop.txt ; then
-    echo `$LOGDATE` "ERROR: Cannot find episode $episode"
-    exit 2
-fi
+#~ if ! grep "^Ep$episode" $DATADIR/${recname}_capture_crop.txt ; then
+    #~ echo `$LOGDATE` "ERROR: Cannot find episode $episode"
+    #~ exit 2
+#~ fi
 
 # Expand the episode
 $scriptpath/adb-sendkey.sh DPAD_CENTER
 sleep 1
 CROP="-gravity SouthEast -crop 70%x100%"
 capturepage
-subtitle=$(grep "^Ep$episode" $DATADIR/${recname}_capture_crop.txt)
-if [[ "$subtitle" != Ep${episode}* ]] ; then
+match=0
+subtitle=$(grep "^Ep$episode " $DATADIR/${recname}_capture_crop.txt)
+if [[ "$subtitle" == Ep${episode}* ]] ; then
+    match=1
+fi
+# In case it misinterpreted 7 as /
+if (( ! match && episode == 7)) ; then
+    subtitle=$(grep "^Ep/ " $DATADIR/${recname}_capture_crop.txt)
+    if [[ "$subtitle" == Ep/* ]] ; then
+        match=1
+    fi
+fi
+if (( !match )) ; then
     echo `$LOGDATE` "ERROR: Cannot find episode $episode details"
     exit 2
 fi
@@ -214,6 +225,7 @@ fi
 
 duration=$(grep -o "[0-9]*min$" $DATADIR/${recname}_capture_crop.txt)
 duration=${duration%min}
+echo "Episode duration: $duration minutes"
 
 if (( ${#season} == 1 )) ; then
     season=0$season
@@ -223,7 +235,14 @@ if (( ${#episode} == 1 )) ; then
 fi
 season_episode=S${season}E${episode}
 
-recfile="$VID_RECDIR/$title/$orig_airdate $season_episode $subtitle.mkv"
+recfilebase="$VID_RECDIR/$title/$orig_airdate $season_episode $subtitle"
+recfile="$recfilebase.mkv"
+xx=
+while [[ -f "$recfile" ]] ; do
+    let xx++
+    recfile="${recfilebase}_$xx.mkv"
+    echo `$LOGDATE` "Duplicate recording file, appending _$xx"
+done
 
 if ((noplay )) ; then
     echo `$LOGDATE` "Selected $recfile - NOPLAY requested, exiting"
