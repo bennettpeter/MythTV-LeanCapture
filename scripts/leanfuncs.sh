@@ -200,7 +200,8 @@ function getparms {
 # VIDEO_IN - set to blank will prevent capture from /dev/video
 # TESSPARM - set to "-c tessedit_char_whitelist=0123456789" to restrict to numerics
 # CROP - crop parameter (default -gravity East -crop 95%x100%)
-# TSSPARM amd CROP are cleared at the end of the function.;
+# TSSPARM amd CROP are cleared at the end of the function.
+# USE_GOCR: Set to 1 to use GOCR instead of tesseract
 # Return 1 if wrong resolution is found
 function capturepage {
     pagename=
@@ -246,7 +247,13 @@ function capturepage {
         convert $DATADIR/${recname}_capture.png $CROP -negate -brightness-contrast 0x20 $DATADIR/${recname}_capture_crop.png
     fi
     if [[ `stat -c %s $DATADIR/${recname}_capture_crop.png` != 0 ]] ; then
-        tesseract -c page_separator="" $DATADIR/${recname}_capture_crop.png  - $TESSPARM 2>/dev/null | sed '/^ *$/d' > $DATADIR/${recname}_capture_crop.txt
+        if (( $USE_GOCR )) ; then
+            gocr $DATADIR/${recname}_capture_crop.png 2>/dev/null \
+                | sed '/^ *$/d' > $DATADIR/${recname}_capture_crop.txt
+        else
+            tesseract -c page_separator="" $DATADIR/${recname}_capture_crop.png  - $TESSPARM 2>/dev/null \
+                | sed '/^ *$/d' > $DATADIR/${recname}_capture_crop.txt
+        fi
         if [[ `stat -c %s $DATADIR/${recname}_capture_crop.txt` == 0 ]] ; then
             echo `$LOGDATE` Blank Screen from $cap_source
         elif diff -q $DATADIR/${recname}_capture_crop.txt $DATADIR/${recname}_capture_crop_prior.txt >/dev/null ; then
@@ -262,6 +269,7 @@ function capturepage {
     fi
     TESSPARM=
     CROP=
+    USE_GOCR=
     return $rc
 }
 
@@ -280,6 +288,14 @@ function waitforpage {
         fi
         # Ignore periods in the name
         fixpagename=$(echo "$pagename" | sed 's/\.//g')
+        if [[ "$fixpagename" != "$fixwanted" ]] ; then
+            # Try GOCR because tesseract does not recognize short names
+            # like "Bull"
+            USE_GOCR=1
+            CROP="$savecrop"
+            capturepage
+            fixpagename=$(echo "$pagename" | sed 's/\.//g')
+        fi
         sleep 0.5
     done
     CROP=

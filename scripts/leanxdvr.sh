@@ -170,7 +170,7 @@ while  (( numrecorded < maxrecordings )) ; do
         fi
         season_episode=S${season}E${episode}
     fi
-    orig_airdate=$(grep -o "([0-9/]*)" $DATADIR/${recname}_capture_crop.txt | head -1)
+    orig_airdate=$(grep -o "([0-9]*/[0-9/]*)" $DATADIR/${recname}_capture_crop.txt | head -1)
     orig_airdate=$(echo "$orig_airdate" | sed "s/(//;s/)//")
     if [[ "$orig_airdate" != "" ]] ; then
         orig_airdate=$(date -d "$orig_airdate" "+%y%m%d")

@@ -81,6 +81,7 @@ scriptname=`basename "$scriptname" .sh`
 source $scriptpath/leanfuncs.sh
 ADB_ENDKEY=HOME
 initialize
+echo `$LOGDATE` "RECORD: Title $title, S${season}E${episode}"
 if ! getparms PRIMARY ; then
     exit 2
 fi
@@ -97,8 +98,6 @@ if [[ "$tunestatus" != idle ]] ; then
     echo `$LOGDATE` "ERROR: Tuner in use. Status $tunestatus"
     exit 2
 fi
-
-echo `$LOGDATE` "Record for $minutes minutes and respond $responses times."
 
 adb connect $ANDROID_DEVICE
 if ! adb devices | grep $ANDROID_DEVICE ; then
@@ -123,6 +122,7 @@ sleep 1
 $scriptpath/adb-sendkey.sh DOWN
 $scriptpath/adb-sendkey.sh DOWN
 $scriptpath/adb-sendkey.sh DPAD_CENTER
+CROP="-gravity NorthWest -crop 70%x10%"
 if ! waitforpage "$title" ; then
     echo `$LOGDATE` "ERROR: Unable to get to $title"
     exit 2
@@ -133,6 +133,15 @@ $scriptpath/adb-sendkey.sh DPAD_CENTER
 sleep 2
 CROP="-gravity SouthEast -crop 70%x100%"
 capturepage
+# In case it got into "Set Series recording" by accident
+if [[ "$pagename" == "Series Info Episodes [upcoming" ]] ; then
+    $scriptpath/adb-sendkey.sh BACK
+    $scriptpath/adb-sendkey.sh UP
+    $scriptpath/adb-sendkey.sh RIGHT
+    $scriptpath/adb-sendkey.sh DPAD_CENTER
+    CROP="-gravity SouthEast -crop 70%x100%"
+    capturepage
+fi
 top=($(grep -m 1 Season $DATADIR/${recname}_capture_crop.txt))
 let topseason=top[1]
 let diff=topseason-season
@@ -210,13 +219,31 @@ if (( ! match && episode == 7)) ; then
         match=1
     fi
 fi
+# In case it misinterpreted 7 as 7/
+if (( ! match && episode == 7)) ; then
+    subtitle=$(grep "^Ep7/ " $DATADIR/${recname}_capture_crop.txt)
+    if [[ "$subtitle" == Ep7/* ]] ; then
+        match=1
+    fi
+fi
+# In case it misinterpreted 7 as ?
+if (( ! match && episode == 7)) ; then
+    subtitle=$(grep "^Ep? " $DATADIR/${recname}_capture_crop.txt)
+    if [[ "$subtitle" == Ep* ]] ; then
+        match=1
+    fi
+fi
 if (( !match )) ; then
     echo `$LOGDATE` "ERROR: Cannot find episode $episode details"
     exit 2
 fi
 subtitle=${subtitle#Ep* }
+# Replace slashes with dashes
+subtitle=$(echo $subtitle | sed "s@/@-@g")
 
-orig_airdate=$(grep -o "(.*/.*/.*)" $DATADIR/${recname}_capture_crop.txt)
+# Use only 1 slash because if it is the current year they do not show
+# the year.
+orig_airdate=$(grep -o "([0-9]*/[0-9/]*)" $DATADIR/${recname}_capture_crop.txt)
 if [[ "$orig_airdate" != "" ]] ; then
     orig_airdate=${orig_airdate#(}
     orig_airdate=${orig_airdate%)}
@@ -235,7 +262,12 @@ if (( ${#episode} == 1 )) ; then
 fi
 season_episode=S${season}E${episode}
 
-recfilebase="$VID_RECDIR/$title/$orig_airdate $season_episode $subtitle"
+# Add a space if there is an airdate
+if [[ "$orig_airdate" != "" ]] ; then
+    orig_airdate="$orig_airdate "
+fi
+
+recfilebase="$VID_RECDIR/$title/$orig_airdate$season_episode $subtitle"
 recfile="$recfilebase.mkv"
 xx=
 while [[ -f "$recfile" ]] ; do
