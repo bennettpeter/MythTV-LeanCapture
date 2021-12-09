@@ -18,6 +18,7 @@ Here is an alternative method for recording channels on Comcast. It may be exten
 - If the user interface of the Stream App changes significantly, this code will need changes.
 - The fire stick sometimes needs powering off and on again if it loses its Ethernet connection. This is not a hard failure, it can continue on WiFi until reset.
 - Occasionally the fire stick resets its display resolution to the default. This is not a hard failure, it may use extra bandwidth until reset.
+- Other occasional problems are documented in the Troubleshooting section below.
 
 ## Other Uses
 
@@ -329,6 +330,10 @@ To check if your recording is done and if it is busy recording some other show y
 
 When recording ends for any reason, whether time limit, blank screen or control-C, the script navigates the fire stick back to the home screen.
 
+There are some input parameters available to vary the defaults. To see the syntax run:
+
+    /opt/mythtv/leancap/leanfire.sh -h
+
 ### Xfinity DVR
 
 This can be done without MythTV. You don't need MythTV installed. You can run this on a separate machine. This does require you to be a Comcast customer and to have the Xfinity Cloud DVR feature in your plan. Using the fire stick app, the android app or Firefox browser, you can search program names and set them to record from your subscribed channels.
@@ -351,6 +356,28 @@ There is no option to prevent recordings being deleted from Xfinity after being 
 
 If the process is interrupted (e.g. by control-C in the terminal window), one recording will be incomplete. You can start the script again and it will restart the incomplete recording from the beginning again, so you won't lose anything.
 
+### XFinity Video on Demand
+
+Some series are available fro streaming for a time after the broadcast. Some may also be available for an extended time. There is a script to record from these.
+
+The same comments apply as for XFinity DVR regarding installation and running scan.
+
+Run this command in terminal. Without parameters it shows you the command syntax.
+
+    /opt/mythtv/leancap/leanxvod.sh
+
+Required parameters are title, season, episode. It is best to first logon to the fire stick and search the XFinity application to make sure what is available. Only "free to you" episodes can be recorded here.
+
+You can record a bunch of episodes by putting them in a script and running it. For example put the following in a file and run it. This is useful if you missed some episodes.
+
+    #!/bin/bash
+    /opt/mythtv/leancap/leanxvod.sh -t "Young Sheldon" --season 5 --episode 5
+    /opt/mythtv/leancap/leanxvod.sh -t "Young Sheldon" --season 5 --episode 6
+    /opt/mythtv/leancap/leanxvod.sh -t "Chicago P.D." --season 9 --episode 7
+    /opt/mythtv/leancap/leanxvod.sh -t "Chicago P.D." --season 9 --episode 8
+
+Each episode is written to a file in a subdirectory of the VID_RECDIR from leancapture.conf. Each recording is placed in a sub directory names for the series title, with the recording being named with original airdate, season and episode, and subtitle.
+
 ### Unplugging or Replugging any USB devices
 
 If any usb capture devices are unplugged or replugged, you need to restart the service:
@@ -360,3 +387,29 @@ If any usb capture devices are unplugged or replugged, you need to restart the s
 or, if this is not a backend, just run the scan again:
 
     /opt/mythtv/leancap/leancap_scan.sh
+
+The series name must be an exact match. The script is prone to OCR errors. There is code to fix errors that I found, but there could still be problems. If there is an error the script cannot recover from, it will terminate without recording.
+
+Please feel free to open a support ticket for any specific errors.
+
+If a recording fails, you can use the leanfire to record it (see Manual Recordings above), but that will require you to manually find the show on the fire stick before starting the recording. You cannot set up a script to record multiple episodes this way.
+
+## Troubleshooting
+
+- Fire stick loses ethernet connection. Randomly, once every few months, a fire stick reverts to wifi. This may not be a problem. It can still record over wifi, but it is best to reset it to ethernet. An email is sent by the scripts when this happens. This happens equally with Amazon's ethernet adapter and third party ethernet adapters.  The only solution I have found is to disconnect power from teh fire stick and reconnect. Rebooting the fire stick from the settings menu does not fix it, it still only recognizes wifi after the reboot.  If anybody finds a better solution please let me know.
+- Fire stick reverts to default resolution. Randomly, once every few months, a fire stick reverts to auto resolution, even if you have set it specifically. Recordings still continue as normal, videos being resized in the usb adapter. The scripts send an email message when this happens. The solution is to use the settings on the fire stick to reset it to your desired resolution.
+- Interruptions during recording. If Xfinity stops because of a network error, sometimes it displays a message that says "Try again later" or something equally useless. The script will try re-tuning after a couple of minutes. It will keep trying to re-tune until the end of the show. This has happened only a couple of times in six months with hundreds of recordings. This may also happen if you lose internet connection. Also if you accidentally press home or return on the remote. When this happens the script sends an email message to let you know it is retrying.
+- Recordings happen without audio. This has happened once to me. All recordings from a certain time onwards were silent. The problem was in the capture device. Re-powering the fire stick and rebooting the backend made no difference. It was solved by unplugging the usb device and replugging it, thereby effectively rebooting the usb device. I have added code to a userjob that runs after every recording to check if there is audio and send an email if there is not. That user job is at https://github.com/bennettpeter/mythscripts/blob/master/install/opt/mythtv/bin/userjob_recording.sh . Note that this job is highly dependent on my own setup. The relevant code from the job is below. You need to figure out how to get the variables set up. You will need ffmpeg and sox installed.
+
+Code to check for audio
+
+    # Examine 1 minute of audio at 5 minutes in
+    # Returns "Mean    norm:          0.010537"
+    soxstat=($(ffmpeg -i "$fullfilename" \
+        -ss 00:05:00 -t 00:01:00.0 -vn -ac 2 -f au - 2>/dev/null \
+        | sox -t au - -t au /dev/null  stat |& grep norm:))
+    if [[ ${soxstat[2]} != ?.?????? ]] ; then
+        "$scriptpath/notify.py" "sox failed" "$title $subtitle - sox said ${soxstat[@]}"
+    elif [[ ${soxstat[2]} < 0.001000 ]] ; then
+        "$scriptpath/notify.py" "$type failed" "$title $subtitle has audio level ${soxstat[2]}"
+    fi
