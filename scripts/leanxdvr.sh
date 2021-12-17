@@ -296,7 +296,8 @@ while  (( numrecorded < maxrecordings )) ; do
     capturepage adb
     # Get past resume prompt and start over
     if [[ `stat -c %s $DATADIR/${recname}_capture_crop.png` != 0 ]] ; then
-        if  grep "^Start Over" $DATADIR/${recname}_capture_crop.txt ; then
+        if  grep "Resume" $DATADIR/${recname}_capture_crop.txt \
+            ||  grep "Start" $DATADIR/${recname}_capture_crop.txt ; then
             echo `$LOGDATE` "Selecting Start Over from Resume Prompt"
             $scriptpath/adb-sendkey.sh DOWN
             $scriptpath/adb-sendkey.sh DPAD_CENTER
