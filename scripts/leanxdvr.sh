@@ -2,20 +2,58 @@
 # This will take all xfinity cloud recordings
 # and record them to local files.
 
-# Parameters
-# 1 recorder name, e.g. leancap1. Default to leancap1
-# 2 maximum number of recordings to make. Default 6
-# 3 NOPLAY forces no recording to be done, stops after selecting a show
+recname=leancap1
+maxrecordings=10
+maxendtime=$(date -d +6hours +%s)
+error=
+noplay=0
 
-recname=$1
-maxrecordings=$2
-option=$3
+while (( "$#" >= 1 )) ; do
+    case $1 in
+        --recname|-n)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                recname="$2"
+                shift||rc=$?
+            fi
+            ;;
+        -maxendtime|-e)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                maxendtime=$(date -d "$2" +%s)
+                if [[ $maxendtime == "" ]] ; then echo "ERROR Invalid time $2" ; error=y ; fi
+                shift||rc=$?
+            fi
+            ;;
+        -maxrecs|-m)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                maxrecordings="$2"
+                shift||rc=$?
+            fi
+            ;;
+        --noplay)
+            noplay=1
+            ;;
+        *)
+            echo "Invalid option $1"
+            error=y
+            ;;
+    esac
+    shift||rc=$?
+done
 
-if [[ "$recname" == "" ]] ; then
-    recname=leancap1
-fi
-if [[ "$maxrecordings" == "" ]] ; then
-    maxrecordings=6
+if [[ "$error" == y ]] ; then
+    echo "*** $0 ***"
+    echo "Record all xfinity cloud recordings to this machine."
+    echo "Input parameters:"
+    echo "--recname|-n xxxxxxxx : Recorder id (default leancap1)"
+    echo "--maxendtime|-e xxxx : End time. Stop before this time."
+    echo "  To set a maximum period specify 'n hours'. Otherwise end"
+    echo "  date & time in any format. Default 6 hours."
+    echo "--maxrecs|-m : Maximum Number of recordings [default 10]"
+    echo "--noplay : Exit immediately before playback, for testing."
+    exit 2
 fi
 
 # Maximum time for 1 recording. 6 hours.
@@ -31,6 +69,8 @@ scriptname=`basename "$scriptname" .sh`
 source $scriptpath/leanfuncs.sh
 ADB_ENDKEY=HOME
 initialize
+
+echo `$LOGDATE` "Recorder:$recname maxendtime:$(date -d @$maxendtime)"
 
 function getrecordings {
     navigate Recordings "DOWN"
@@ -90,7 +130,9 @@ while  (( numrecorded < maxrecordings )) ; do
     title=
     while true ; do
         title=$(head -$linesel $DATADIR/${recname}_capture_crop.txt  | tail -1)
+        echo `$LOGDATE` "title: $title"
         if [[ "$title" == "Deleted Recordings" ]] ; then
+            echo `$LOGDATE` "Reached Deleted Recordings - Stop run"
             break 2;
         elif [[ "$title" == "You have no completed recordings"* ]] ; then
             status=$(grep -m 1 "% Full [0-9]* Recordings" $DATADIR/${recname}_capture_crop.txt)
@@ -107,16 +149,19 @@ while  (( numrecorded < maxrecordings )) ; do
                 getrecordings
                 continue 2
             else
+                echo `$LOGDATE` "No more Recordings - Stop run"
                 break 2
             fi
         elif [[ "$title" == "" ]] ; then
             break 2
         fi
-        if [[ ! "$title" =~ $XDVRSKIP ]] ; then
+        if [[ $XDVRSKIP == "" || ! $title =~ $XDVRSKIP ]] ; then
+            # Accept this show
             break;
         fi
+        echo `$LOGDATE` "Bypass Show $title based on $XDVRSKIP"
         $scriptpath/adb-sendkey.sh DOWN
-        let linesel+=2
+        let linesel++
     done
     retries=0
     # Possible forms of title
@@ -195,10 +240,15 @@ while  (( numrecorded < maxrecordings )) ; do
     if [[ "$duration" =~ ^[0-9]*min$ ]] ; then
         duration=${duration%min}
         let duration=duration*60
-        echo `$LOGDATE` "Duration: $duration"
+        echo `$LOGDATE` "Duration: $duration seconds"
     else
-        duration=0
-        echo `$LOGDATE` "Warning: Cannot determine duration."
+        duration=3600
+        echo `$LOGDATE` "Warning: Cannot determine duration. Default to 60 min"
+    fi
+    now=$(date +%s)
+    if (( now+duration > maxendtime )) ; then
+        echo `$LOGDATE` "End time will be later than max end time. Stopping."
+        break
     fi
     xx=
     while [[ -f "$recfile" ]] ; do
@@ -207,7 +257,7 @@ while  (( numrecorded < maxrecordings )) ; do
         echo `$LOGDATE` "Duplicate recording file, appending _$xx"
     done
     
-    if [[ "$option" == NOPLAY ]] ; then
+    if (( noplay )) ; then
         echo `$LOGDATE` "Selected $title $season_episode - NOPLAY requested, exiting"
         ADB_ENDKEY=
         my_exit 2
@@ -355,5 +405,5 @@ while  (( numrecorded < maxrecordings )) ; do
     sleep 5
     capturepage
 done
-echo `$LOGDATE` "Complete - $numrecorded Recorded"
+echo `$LOGDATE` "Complete - done:$numrecorded, maximum:$maxrecordings"
 
