@@ -58,9 +58,9 @@ done
 
 chanlistfile=$DATADIR/"$NAVTYPE".txt
 chanlistfilegen=$DATADIR/"$NAVTYPE"_gen.txt
-newchanlistfilegen=$DATADIR/"$NAVTYPE"_new_gen.txt
 errfile=$DATADIR/"$NAVTYPE"_errors.txt
-true > "$newchanlistfilegen"
+fixupfile=$DATADIR/"$NAVTYPE"_fixups.txt
+true > "$chanlistfilegen"
 true > "$errfile"
 
 currchan=0
@@ -80,8 +80,16 @@ for (( ; ; )) ; do
             echo `$LOGDATE` "ERROR - invalid channel $currchan"
             err=1
         elif (( currchan < priorchan )) ; then
-            echo `$LOGDATE` "WARNING out of sequence, channel $currchan is after $priorchan"
-            err=1
+            echo `$LOGDATE` "WARNING out of sequence, channel $priorchan is before $currchan"
+            fixup=($(grep "^$priorchan $currchan" "$fixupfile"))
+            if [[ ${fixup[2]} != "" ]] ; then
+                fix="${fixup[2]}"
+                echo "Fixups: Changing  $currchan to $fix"
+                channels[ix]="$fix"
+                currchan="$fix"
+            else
+                err=1
+            fi
         fi
         if (( err )) ; then
             let num=fileseq+ix+1
@@ -90,7 +98,7 @@ for (( ; ; )) ; do
                 let fix=priorchan+1
                 echo "Changing  $currchan to $fix"
                 channels[ix]="$fix"
-                msg[ix]="Line $num $currchan changed to $fix"
+                msg[ix]="error: Line $num $currchan changed to $fix"
                 currchan="$fix"
             fi
         else
@@ -110,7 +118,7 @@ for (( ; ; )) ; do
         if (( ${channels[ix]} > MAXCHANNUM )) ; then
             break 2
         fi
-        echo "${channels[ix]}" >> "$newchanlistfilegen"
+        echo "${channels[ix]}" >> "$chanlistfilegen"
         if [[ "${msg[ix]}" != "" ]] ; then
             echo "${msg[ix]}" >> "$errfile"
             let numerrors++
@@ -134,18 +142,11 @@ for (( ; ; )) ; do
     priorchannels="${channels[@]}"
 done
 
-if [[ -f "$chanlistfilegen" ]] ; then
-    oldcnt=$(wc -l < "$chanlistfile")
-    newcnt=$(wc -l < "$newchanlistfilegen")
-    echo "Channel Changes < means removed > means added:"
-    if diff "$chanlistfilegen" "$newchanlistfilegen" \
-        && (( oldcnt == newcnt )) ; then
-        echo `$LOGDATE` "Channel list same as before. No problems."
-        exit 0
-    fi
+echo "Channel Changes < means removed > means added:"
+if diff "$chanlistfile" "$chanlistfilegen" ; then
+    echo `$LOGDATE` "Channel list same as before. No problems."
+    exit 0
 fi
-cp "$newchanlistfilegen" "$chanlistfilegen"
-# if chanlistfile does not exist copy it regardless of errors
 cp -n "$chanlistfilegen" "$chanlistfile"
 if (( numerrors == 0 )) ; then
     cp "$chanlistfilegen" "$chanlistfile"
@@ -154,6 +155,7 @@ else
     $scriptpath/notify.py "Channel list needs fixing" \
         "leancap_chanlist: New list has errors. See $logfile" &
     echo `$LOGDATE` "cp $chanlistfilegen $chanlistfile then fix the errors there."
+    echo "Add a line with priorchannel, currentchannel, fixcurrentchannel to $fixupfile"
 fi
 
 cat "$errfile"
