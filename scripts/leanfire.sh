@@ -74,7 +74,7 @@ echo
 let seconds=minutes*60
 echo "Record for $minutes minutes and respond $responses times."
 if (( responses > 10 )) ; then
-    echo "ERROR Invalid response count $responses"
+    echo "ERROR Invalid response count $responses, maximum is 10"
     exit 2
 fi
 echo "This script will press DPAD_CENTER to start. Do not press it."
@@ -187,7 +187,7 @@ for (( xx = 0 ; xx < loops ; xx++ )) ; do
             capturepage adb
             if (( imagesize > 0 )) ; then
                 # Hulu default message after 4-5 hours, or after end of series
-                if egrep "YES, CONTINUE WATCHING|More to Watch|Watch Again on" \
+                if egrep "YES, CONTINUE WATCHING|More to Watch|Are you still watching" \
                         $DATADIR/${recname}_capture_crop.txt ; then
                     echo `$LOGDATE` "Playback ended with prompt"
                     if (( xx < responses )) ; then break ; fi

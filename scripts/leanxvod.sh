@@ -116,7 +116,7 @@ if [[ "$pagename" != Search* ]] ; then
 fi
 
 echo "Search String: $title"
-adb shell input text \""$title"\"
+adb -s $ANDROID_DEVICE shell input text \""$title"\"
 $scriptpath/adb-sendkey.sh MEDIA_PLAY_PAUSE
 sleep 1
 $scriptpath/adb-sendkey.sh DOWN
