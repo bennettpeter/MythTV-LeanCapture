@@ -17,7 +17,7 @@ while (( "$#" >= 1 )) ; do
                 shift||rc=$?
             fi
             ;;
-        -maxendtime|-e)
+        --maxendtime|-e)
             if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
             else
                 maxendtime=$(date -d "$2" +%s)
@@ -25,7 +25,7 @@ while (( "$#" >= 1 )) ; do
                 shift||rc=$?
             fi
             ;;
-        -maxrecs|-m)
+        --maxrecs|-m)
             if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
             else
                 maxrecordings="$2"
@@ -47,7 +47,7 @@ if [[ "$error" == y ]] ; then
     echo "*** $0 ***"
     echo "Record all xfinity cloud recordings to this machine."
     echo "Input parameters:"
-    echo "--recname|-n xxxxxxxx : Recorder id (default leancap1)"
+    echo "--recname|-n xxxxxxxx : Recorder name (default leancap1)"
     echo "--maxendtime|-e xxxx : End time. Stop before this time."
     echo "  To set a maximum period specify 'n hours'. Otherwise end"
     echo "  date & time in any format. Default 6 hours."
