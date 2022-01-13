@@ -173,7 +173,6 @@ for (( xx = 0 ; xx < loops ; xx++ )) ; do
         fi
         if (( lowcount > 3 )) ; then
             echo `$LOGDATE` "Playback paused too long"
-            if (( xx < responses )) ; then break ; fi
             break 2
         fi
         newsize=`stat -c %s $VID_RECDIR/${recfile}.mkv`
@@ -189,9 +188,15 @@ for (( xx = 0 ; xx < loops ; xx++ )) ; do
                 # Hulu default message after 4-5 hours, or after end of series
                 if egrep "YES, CONTINUE WATCHING|More to Watch|Are you still watching" \
                         $DATADIR/${recname}_capture_crop.txt ; then
-                    echo `$LOGDATE` "Playback ended with prompt"
+                    aecho `$LOGDATE` "Playback ended with prompt"
                     if (( xx < responses )) ; then break ; fi
                     break 2
+                elif egrep "An error has occurred during video playback" \
+                        $DATADIR/${recname}_capture_crop.txt ; then
+                    echo `$LOGDATE` "Sending enter to get past error message"
+                    $scriptpath/adb-sendkey.sh DPAD_CENTER
+                    sleep 30
+                    break
                 fi
                 echo `$LOGDATE` "Playback maybe paused, count $lowcount"
             fi
