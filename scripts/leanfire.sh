@@ -188,7 +188,7 @@ for (( xx = 0 ; xx < loops ; xx++ )) ; do
                 # Hulu default message after 4-5 hours, or after end of series
                 if egrep "YES, CONTINUE WATCHING|More to Watch|Are you still watching" \
                         $DATADIR/${recname}_capture_crop.txt ; then
-                    aecho `$LOGDATE` "Playback ended with prompt"
+                    echo `$LOGDATE` "Playback ended with prompt"
                     if (( xx < responses )) ; then break ; fi
                     break 2
                 elif egrep "An error has occurred during video playback" \
