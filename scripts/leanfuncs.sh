@@ -273,6 +273,7 @@ function capturepage {
     return $rc
 }
 
+# Wait for page title
 function waitforpage {
     wanted="$1"
     # Ignore periods in the name
@@ -304,6 +305,37 @@ function waitforpage {
         return 2
     fi
     echo `$LOGDATE` "Reached $wanted page"
+    return 0
+}
+
+# Wait for a multi-line or single-line string on the page
+#Param 1 = string, e.g. "CBS.*\nMy List.*\n"
+#Param 2 = name of page for logging
+# Rc 0 for success 2 for error
+function waitforstring {
+    local search="$1"
+    local name="$2"
+    local xx=0
+    local found=0
+    local savecrop="$CROP"
+    while (( xx++ < 40 )) ; do
+        CROP="$savecrop"
+        capturepage
+        if [[ "$pagename" == "We"*"detect your remote" ]] ; then
+            $scriptpath/adb-sendkey.sh DPAD_CENTER
+        fi
+        if grep -oPz "$search" $DATADIR/${recname}_capture_crop.txt ; then
+            found=1
+            break
+        fi
+        sleep 0.5
+    done
+    CROP=
+    if (( ! found )) ; then
+        echo `$LOGDATE` "ERROR - Cannot get to $name page"
+        return 2
+    fi
+    echo `$LOGDATE` "Reached $name page"
     return 0
 }
 

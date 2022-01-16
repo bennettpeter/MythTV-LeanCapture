@@ -1,15 +1,17 @@
 #!/bin/bash
-# Record from xfinity on demand
+# Record from Paramount Plus
 
 title=
 
-minutes=360
+minutes=120
 recname=leancap1
 endkey=HOME
 waitforstart=1
 season=
 episode=
 noplay=0
+fseason=0
+fdesc=
 
 while (( "$#" >= 1 )) ; do
     case $1 in
@@ -48,6 +50,20 @@ while (( "$#" >= 1 )) ; do
                 shift||rc=$?
             fi
             ;;
+        --fseason|-F)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                fseason="$2"
+                shift||rc=$?
+            fi
+            ;;
+        --fdesc|-D)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                fdesc="$2"
+                shift||rc=$?
+            fi
+            ;;
         --noplay)
             noplay=1
             ;;
@@ -59,16 +75,27 @@ while (( "$#" >= 1 )) ; do
     shift||rc=$?
 done
 
+if (( season < fseason )) ; then
+    echo "ERROR Season cannot be less than first season"
+    error=y
+fi
+
 if [[ "$error" == y || "$title" == "" || "$season" == "" \
-      || "$episode" == "" ]] ; then
+      || "$episode" == "" || $fseason == "" || $fdesc == "" ]] ; then
     echo "*** $0 ***"
+    echo "Record fom Paramount Plus"
+    echo "Disable autoplay on Paramount Plus"
+    echo "Make sure the title you supply shows up as the first result"
     echo "Input parameters:"
     echo "--title|-t xxxx : Title"
-    echo "--time nn : Maximum Number of minutes [default 360]"
+    echo "--time nn : Maximum Number of minutes [default 120]"
     echo "--recname|-n xxxxxxxx : Recorder id (default leancap1)"
     echo "--season|-S nn : Season without leading zeroes"
     echo "--episode|-E nn : Episode without leading zeroes"
     echo "--noplay : Exit immediately before playback, for testing."
+    echo "--fseason|-F nn : First season available on Paramount Plus"
+    echo "--fdesc|-D xxxx : A phrase from the descriptions that appear on the"
+    echo "    first page of episodes, to check if the correct page is found"
     exit 2
 fi
 
@@ -105,154 +132,127 @@ if ! adb devices | grep $ANDROID_DEVICE ; then
     exit 2
 fi
 
-# Force a launch first to get to the stNDRd start page
-$scriptpath/adb-sendkey.sh DOWN
+$scriptpath/adb-sendkey.sh POWER
+$scriptpath/adb-sendkey.sh HOME
+sleep 0.5
+adb -s $ANDROID_DEVICE shell am force-stop com.cbs.ott
 sleep 1
-navigate Search
-sleep 1
-if [[ "$pagename" != Search* ]] ; then
-    echo `$LOGDATE` "ERROR: Unable to get to Search Keyboard"
+adb -s $ANDROID_DEVICE shell am start -n com.cbs.ott/com.cbs.app.tv.ui.activity.SplashActivity
+if ! waitforstring "CBS.*\n" Paramount ; then
+    exit 2
+fi
+$scriptpath/adb-sendkey.sh LEFT
+$scriptpath/adb-sendkey.sh LEFT
+if ! waitforstring "\nSearch\nHome\n" Menu ; then
+    exit 2
+fi
+$scriptpath/adb-sendkey.sh UP
+$scriptpath/adb-sendkey.sh DPAD_CENTER
+$scriptpath/adb-sendkey.sh DPAD_CENTER
+#~ if ! waitforstring "\nPress and hold . to say words and phrases\n" Keyboard 
+if ! waitforstring "Delete" Keyboard \
+  $DATADIR/${recname}_capture_crop.txt ; then
     exit 2
 fi
 
 echo "Search String: $title"
 adb -s $ANDROID_DEVICE shell input text \""$title"\"
 $scriptpath/adb-sendkey.sh MEDIA_PLAY_PAUSE
-sleep 1
-$scriptpath/adb-sendkey.sh DOWN
+str=
+len=${#title}
+for (( x=0; x<len; x++)) ; do
+    str="$str RIGHT"
+done
+if [[ $str != "" ]] ; then $scriptpath/adb-sendkey.sh $str ; fi
+# Go to result
+$scriptpath/adb-sendkey.sh RIGHT
+# Select first item
+$scriptpath/adb-sendkey.sh DPAD_CENTER
+if ! waitforstring "\nEpisodes\n" "$title" ; then
+    exit 2
+fi
+# Down to episodes
 $scriptpath/adb-sendkey.sh DOWN
 $scriptpath/adb-sendkey.sh DPAD_CENTER
-CROP="-gravity NorthWest -crop 70%x10%"
-if ! waitforpage "$title" ; then
-    echo `$LOGDATE` "ERROR: Unable to get to $title"
+if ! waitforstring "\nSeason" "Episodes" ; then
     exit 2
 fi
-
-# Unzoom the top line
-$scriptpath/adb-sendkey.sh DPAD_CENTER
-sleep 2
-CROP="-gravity SouthEast -crop 70%x100%"
-capturepage
-# In case it got into "Set Series recording" by accident
-if [[ "$pagename" == "Series Info Episodes [upcoming" ]] ; then
-    $scriptpath/adb-sendkey.sh BACK
-    $scriptpath/adb-sendkey.sh UP
-    $scriptpath/adb-sendkey.sh RIGHT
-    $scriptpath/adb-sendkey.sh DPAD_CENTER
-    CROP="-gravity SouthEast -crop 70%x100%"
-    capturepage
-fi
-top=($(grep -m 1 Season $DATADIR/${recname}_capture_crop.txt))
-let topseason=top[1]
-let diff=topseason-season
-if (( diff < 0 )) ; then
-    echo `$LOGDATE` "ERROR: Invalid season $season"
-    exit 2
-fi
-    
-if (( diff > 0 )) ; then
-    keypress=
-    for (( xy=0; xy<diff; xy++ )) ; do
-        $scriptpath/adb-sendkey.sh DOWN
-    done
-fi
-sleep 2
-CROP="-gravity SouthEast -crop 70%x100%"
-capturepage
-if ! grep "Season $season" $DATADIR/${recname}_capture_crop.txt ; then
-    echo `$LOGDATE` "ERROR: Cannot find season $season"
-    exit 2
-fi
-# Expand the season
-$scriptpath/adb-sendkey.sh DPAD_CENTER
-sleep 4
-#Get to first ep
-if (( diff > 0 )) ; then
-    keypress=
-    for (( xy=0; xy<diff; xy++ )) ; do
-        $scriptpath/adb-sendkey.sh DOWN
-    done
-fi
-$scriptpath/adb-sendkey.sh DOWN
-CROP="-gravity SouthEast -crop 70%x100%"
-capturepage
-top=($(grep -m 1 ^Ep[0-9] $DATADIR/${recname}_capture_crop.txt))
-let topepisode=${top[0]#Ep}
-if (( topepisode == 0 )) ; then
-    echo `$LOGDATE` "ERROR: Cannot find episode in $top"
-    exit 2
-fi
-let diff=topepisode-episode
-if (( diff < 0 )) ; then
-    echo `$LOGDATE` "ERROR: Invalid episode $episode"
-    exit 2
-fi
-    
-if (( diff > 0 )) ; then
-    keypress=
-    for (( xy=0; xy<diff; xy++ )) ; do
-        $scriptpath/adb-sendkey.sh DOWN
-    done
-fi
-sleep 2
-CROP="-gravity SouthEast -crop 70%x100%"
-capturepage
-#~ if ! grep "^Ep$episode" $DATADIR/${recname}_capture_crop.txt ; then
-    #~ echo `$LOGDATE` "ERROR: Cannot find episode $episode"
+#~ first=$(grep -m 1 "Season " $DATADIR/${recname}_capture_crop.txt | sed "s/Season //")
+#~ if (( fseason != first )) ; then
+    #~ echo `$LOGDATE` "ERROR: Incorrect first season ($first) expected ($fseason)"
     #~ exit 2
 #~ fi
 
-# Expand the episode
+
+#~ if ! grep "$fdesc" $DATADIR/${recname}_capture_crop.txt ; then
+    #~ echo `$LOGDATE` "ERROR: Description ($fdesc) was not found."
+    #~ exit 2
+#~ fi
+#~ lineno=$(grep "Season " $DATADIR/${recname}_capture_crop.txt | grep -n "Season $season" | sed "s/:.*//")
+# Go to seasons
+$scriptpath/adb-sendkey.sh LEFT
+$scriptpath/adb-sendkey.sh LEFT
+
+#Get to correct season
+let lineno=season-fseason
+str=
+# Get to top of list with 20 UPs
+for (( x=0; x<20; x++)) ; do
+    str="$str UP"
+    #~ $scriptpath/adb-sendkey.sh UP
+done
+if [[ $str != "" ]] ; then $scriptpath/adb-sendkey.sh $str ; fi
 $scriptpath/adb-sendkey.sh DPAD_CENTER
-sleep 1
-CROP="-gravity SouthEast -crop 70%x100%"
-capturepage
-match=0
-subtitle=$(grep "^Ep$episode " $DATADIR/${recname}_capture_crop.txt)
-if [[ "$subtitle" == Ep${episode}* ]] ; then
-    match=1
-fi
-# In case it misinterpreted 7 as /
-if (( ! match && episode == 7)) ; then
-    subtitle=$(grep "^Ep/ " $DATADIR/${recname}_capture_crop.txt)
-    if [[ "$subtitle" == Ep/* ]] ; then
-        match=1
-    fi
-fi
-# In case it misinterpreted 7 as 7/
-if (( ! match && episode == 7)) ; then
-    subtitle=$(grep "^Ep7/ " $DATADIR/${recname}_capture_crop.txt)
-    if [[ "$subtitle" == Ep7/* ]] ; then
-        match=1
-    fi
-fi
-# In case it misinterpreted 7 as ?
-if (( ! match && episode == 7)) ; then
-    subtitle=$(grep "^Ep? " $DATADIR/${recname}_capture_crop.txt)
-    if [[ "$subtitle" == Ep* ]] ; then
-        match=1
-    fi
-fi
-if (( !match )) ; then
-    echo `$LOGDATE` "ERROR: Cannot find episode $episode details"
+CROP="-gravity East -crop 40%x100%"
+if ! waitforstring "$fdesc" "Description ($fdesc)" ; then
     exit 2
 fi
-subtitle=${subtitle#Ep* }
+$scriptpath/adb-sendkey.sh LEFT
+$scriptpath/adb-sendkey.sh LEFT
+str=
+for (( x=0; x<lineno; x++)) ; do
+    str="$str DOWN"
+    #~ $scriptpath/adb-sendkey.sh DOWN
+done
+if [[ $str != "" ]] ; then $scriptpath/adb-sendkey.sh $str ; fi
+# Go to episodes of that season
+$scriptpath/adb-sendkey.sh DPAD_CENTER
+sleep 5
+#Get to correct episode
+str=
+for (( x=1; x<episode; x++)) ; do
+    str="$str DOWN"
+    #~ $scriptpath/adb-sendkey.sh DOWN
+done
+if [[ $str != "" ]] ; then $scriptpath/adb-sendkey.sh $str ; fi
+CROP="-gravity East -crop 40%x100%"
+# Wait for episode to scroll into view
+sleep 5
+#~ if ! waitforstring "\n$epsrch\." "Correct Episode" ; then
+    #~ exit 2
+#~ fi
+capturepage
+lineno=$(grep -m 1 -n " [0-9][0-9]*min " $DATADIR/${recname}_capture_crop.txt | sed "s/:.*//")
+let lineno++
+#~ subtitle=$(grep -m 1 "^$epsrch\." $DATADIR/${recname}_capture_crop.txt | sed "s/.*\.//")
+subtitle=$(sed -n "$lineno,${lineno}p" $DATADIR/${recname}_capture_crop.txt | sed "s/[0-9]*\.//")
+echo "subtitle: $subtitle"
+#~ lineno=$(grep -m 1 -n "^$episode\." $DATADIR/${recname}_capture_crop.txt | sed "s/:.*//")
+dattim=$(sed -n "$lineno,999p" $DATADIR/${recname}_capture_crop.txt | grep -m 1 " [0-9][0-9]*min ")
+duration=$(echo "$dattim" | grep -o " [0-9][0-9]*min ")
+orig_airdate=$(echo "$dattim" | sed "s/$duration.*//")
+echo "origdate: $orig_airdate"
+
 # Replace slashes with dashes and lose extra spaces
 subtitle=$(echo $subtitle | sed "s@/@-@g")
 
-# Use only 1 slash because if it is the current year they do not show
-# the year.
-orig_airdate=$(grep -o "([0-9]*/[0-9/]*)" $DATADIR/${recname}_capture_crop.txt)
 if [[ "$orig_airdate" != "" ]] ; then
-    orig_airdate=${orig_airdate#(}
-    orig_airdate=${orig_airdate%)}
     orig_airdate=$(date -d "$orig_airdate" "+%y%m%d")
 fi
 
-duration=$(grep -o "[0-9]*min$" $DATADIR/${recname}_capture_crop.txt)
-duration=${duration%min}
-echo "Episode duration: $duration minutes"
+let durationsecs=$(date -d "1970-01-01 $duration" +%s)-$(date -d "1970-01-01" +%s)
+
+echo "Episode duration: $duration"
 
 if (( ${#season} == 1 )) ; then
     season=0$season
@@ -313,26 +313,13 @@ ffmpeg -hide_banner -loglevel error \
 sizelog=$VID_RECDIR/$($LOGDATE)_size.log
 ffmpeg_pid=$!
 starttime=`date +%s`
-sleep 10
-capturepage adb
-# Get past resume prompt and start over
-if [[ `stat -c %s $DATADIR/${recname}_capture_crop.png` != 0 ]] ; then
-    if  grep "Resume" $DATADIR/${recname}_capture_crop.txt \
-        ||  grep "Start" $DATADIR/${recname}_capture_crop.txt ; then
-        echo `$LOGDATE` "Selecting Start Over from Resume Prompt"
-        $scriptpath/adb-sendkey.sh DOWN
-        $scriptpath/adb-sendkey.sh DPAD_CENTER
-        starttime=`date +%s`
-    fi
-fi
-sleep 10
 let maxduration=minutes*60
 let maxendtime=starttime+maxduration
-if (( duration == 0 )) ; then
+if (( durationsecs == 0 )) ; then
     duration=maxduration
 fi
-let endtime=starttime+duration
-
+let endtime=starttime+durationsecs
+sleep 20
 filesize=0
 lowcount=0
 while true ; do
