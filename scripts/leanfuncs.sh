@@ -311,16 +311,18 @@ function waitforpage {
 # Wait for a multi-line or single-line string on the page
 #Param 1 = string, e.g. "CBS.*\nMy List.*\n"
 #Param 2 = name of page for logging
+#Param 3 = Param 1 for capturepage - adb or video or blank
 # Rc 0 for success 2 for error
 function waitforstring {
     local search="$1"
     local name="$2"
+    local cap_param="$3"
     local xx=0
     local found=0
     local savecrop="$CROP"
     while (( xx++ < 40 )) ; do
         CROP="$savecrop"
-        capturepage
+        capturepage $cap_param
         if [[ "$pagename" == "We"*"detect your remote" ]] ; then
             $scriptpath/adb-sendkey.sh DPAD_CENTER
         fi

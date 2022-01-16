@@ -150,8 +150,7 @@ $scriptpath/adb-sendkey.sh UP
 $scriptpath/adb-sendkey.sh DPAD_CENTER
 $scriptpath/adb-sendkey.sh DPAD_CENTER
 #~ if ! waitforstring "\nPress and hold . to say words and phrases\n" Keyboard 
-if ! waitforstring "Delete" Keyboard \
-  $DATADIR/${recname}_capture_crop.txt ; then
+if ! waitforstring "Delete" Keyboard ; then
     exit 2
 fi
 
@@ -204,7 +203,7 @@ done
 if [[ $str != "" ]] ; then $scriptpath/adb-sendkey.sh $str ; fi
 $scriptpath/adb-sendkey.sh DPAD_CENTER
 CROP="-gravity East -crop 40%x100%"
-if ! waitforstring "$fdesc" "Description ($fdesc)" ; then
+if ! waitforstring "$fdesc" "Description ($fdesc)" adb ; then
     exit 2
 fi
 $scriptpath/adb-sendkey.sh LEFT
@@ -228,21 +227,22 @@ if [[ $str != "" ]] ; then $scriptpath/adb-sendkey.sh $str ; fi
 CROP="-gravity East -crop 40%x100%"
 # Wait for episode to scroll into view
 sleep 5
-#~ if ! waitforstring "\n$epsrch\." "Correct Episode" ; then
-    #~ exit 2
-#~ fi
-capturepage
-lineno=$(grep -m 1 -n " [0-9][0-9]*min " $DATADIR/${recname}_capture_crop.txt | sed "s/:.*//")
-let lineno++
-#~ subtitle=$(grep -m 1 "^$epsrch\." $DATADIR/${recname}_capture_crop.txt | sed "s/.*\.//")
-subtitle=$(sed -n "$lineno,${lineno}p" $DATADIR/${recname}_capture_crop.txt | sed "s/[0-9]*\.//")
+capturepage adb
+#~ lineno=$(grep -m 1 -n " [0-9][0-9]*min " $DATADIR/${recname}_capture_crop.txt | sed "s/:.*//")
+#~ let lineno++
+subtitle=$(grep -m 1 "^$episode\." $DATADIR/${recname}_capture_crop.txt | sed "s/.*\.//")
+#~ subtitle=$(sed -n "$lineno,${lineno}p" $DATADIR/${recname}_capture_crop.txt | sed "s/[0-9]*\.//")
 echo "subtitle: $subtitle"
-#~ lineno=$(grep -m 1 -n "^$episode\." $DATADIR/${recname}_capture_crop.txt | sed "s/:.*//")
-dattim=$(sed -n "$lineno,999p" $DATADIR/${recname}_capture_crop.txt | grep -m 1 " [0-9][0-9]*min ")
-duration=$(echo "$dattim" | grep -o " [0-9][0-9]*min ")
-orig_airdate=$(echo "$dattim" | sed "s/$duration.*//")
-echo "origdate: $orig_airdate"
-
+lineno=$(grep -m 1 -n "^$episode\." $DATADIR/${recname}_capture_crop.txt | sed "s/:.*//")
+#default duration
+duration="20min"
+orig_airdate=
+if (( lineno > 0 )) ; then
+    dattim=$(sed -n "$lineno,999p" $DATADIR/${recname}_capture_crop.txt | grep -m 1 " [0-9][0-9]*min ")
+    duration=$(echo "$dattim" | grep -o " [0-9][0-9]*min ")
+    orig_airdate=$(echo "$dattim" | sed "s/$duration.*//")
+    echo "origdate: $orig_airdate"
+fi
 # Replace slashes with dashes and lose extra spaces
 subtitle=$(echo $subtitle | sed "s@/@-@g")
 
@@ -266,8 +266,10 @@ season_episode=S${season}E${episode}
 if [[ "$orig_airdate" != "" ]] ; then
     orig_airdate="$orig_airdate "
 fi
-
-recfilebase="$VID_RECDIR/$title/$orig_airdate$season_episode $subtitle"
+if [[ "$subtitle" != "" ]] ; then
+    subtitle=" $subtitle"
+fi
+recfilebase="$VID_RECDIR/$title/$orig_airdate$season_episode$subtitle"
 recfile="$recfilebase.mkv"
 xx=
 while [[ -f "$recfile" ]] ; do
@@ -333,7 +335,7 @@ while true ; do
         exit 2
     fi
     capturepage adb
-    if [[ "$pagename" != "" ]] || (( lowcount > 0 && now > endtime )) || (( lowcount > 4 )) ; then
+    if [[ "$pagename" != "" ]] || (( lowcount > 4 )) ; then
         kill $ffmpeg_pid
         sleep 2
         capturepage
