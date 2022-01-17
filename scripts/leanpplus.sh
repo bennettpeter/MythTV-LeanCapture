@@ -101,6 +101,11 @@ fi
 
 . /etc/opt/mythtv/leancapture.conf
 
+if [[ -f $VID_RECDIR/CANCEL_RECORDINGS ]] ; then
+    echo "Exiting because of file $VID_RECDIR/STOP_RECORDINGS"
+    exit 3
+fi
+
 scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`
 scriptname=`basename "$scriptname" .sh`
@@ -230,7 +235,7 @@ sleep 5
 capturepage adb
 #~ lineno=$(grep -m 1 -n " [0-9][0-9]*min " $DATADIR/${recname}_capture_crop.txt | sed "s/:.*//")
 #~ let lineno++
-subtitle=$(grep -m 1 "^$episode\." $DATADIR/${recname}_capture_crop.txt | sed "s/.*\.//")
+subtitle=$(grep -m 1 "^$episode\." $DATADIR/${recname}_capture_crop.txt | sed "s/[0-9]*\.//")
 #~ subtitle=$(sed -n "$lineno,${lineno}p" $DATADIR/${recname}_capture_crop.txt | sed "s/[0-9]*\.//")
 echo "subtitle: $subtitle"
 lineno=$(grep -m 1 -n "^$episode\." $DATADIR/${recname}_capture_crop.txt | sed "s/:.*//")
