@@ -9,7 +9,7 @@ endkey=HOME
 waitforstart=1
 season=
 episode=
-noplay=0
+wait=0
 fseason=0
 fdesc=
 
@@ -64,8 +64,8 @@ while (( "$#" >= 1 )) ; do
                 shift||rc=$?
             fi
             ;;
-        --noplay)
-            noplay=1
+        --wait)
+            wait=1
             ;;
         *)
             echo "Invalid option $1"
@@ -92,7 +92,8 @@ if [[ "$error" == y || "$title" == "" || "$season" == "" \
     echo "--recname|-n xxxxxxxx : Recorder id (default leancap1)"
     echo "--season|-S nn : Season without leading zeroes"
     echo "--episode|-E nn : Episode without leading zeroes"
-    echo "--noplay : Exit immediately before playback, for testing."
+    echo "--wait : Pause immediately before playback, for testing"
+    echo "    or to rewind in progress show to beginning."
     echo "--fseason|-F nn : First season available on Paramount Plus"
     echo "--fdesc|-D xxxx : A phrase from the descriptions that appear on the"
     echo "    first page of episodes, to check if the correct page is found"
@@ -246,6 +247,10 @@ if (( lineno > 0 )) ; then
     dattim=$(sed -n "$lineno,999p" $DATADIR/${recname}_capture_crop.txt | grep -m 1 " [0-9][0-9]*min ")
     duration=$(echo "$dattim" | grep -o " [0-9][0-9]*min ")
     orig_airdate=$(echo "$dattim" | sed "s/$duration.*//")
+    if echo $orig_airdate | grep "[0-9],[0-9]" ; then
+        # fix Jun 24,2021 to Jun 24, 2021 as the former is invalid for date
+        orig_airdate=$(echo $orig_airdate | sed "s/,/, /")
+    fi
     echo "origdate: $orig_airdate"
 fi
 # Replace slashes with dashes and lose extra spaces
@@ -283,10 +288,17 @@ while [[ -f "$recfile" ]] ; do
     echo `$LOGDATE` "Duplicate recording file, appending _$xx"
 done
 
-if ((noplay )) ; then
-    echo `$LOGDATE` "Selected $recfile - NOPLAY requested, exiting"
-    ADB_ENDKEY=
-    exit 2
+if (( wait )) ; then
+    echo "Ready to start recording of $recfile"
+    echo "Type Y to start, anything else to cancel"
+    echo "This script will press DPAD_CENTER to start. Do not press it."
+    read -e resp
+    if [[ "$resp" != Y ]] ; then exit 2 ; fi
+    # Kill vlc
+    while pidof vlc ; do
+        wmctrl -c vlc
+        sleep 2
+    done
 fi
 
 mkdir -p "$VID_RECDIR/$title"
