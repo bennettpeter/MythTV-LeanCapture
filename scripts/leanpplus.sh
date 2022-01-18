@@ -102,7 +102,7 @@ fi
 
 . /etc/opt/mythtv/leancapture.conf
 
-if [[ -f $VID_RECDIR/CANCEL_RECORDINGS ]] ; then
+if [[ -f $VID_RECDIR/STOP_RECORDINGS ]] ; then
     echo "Exiting because of file $VID_RECDIR/STOP_RECORDINGS"
     exit 3
 fi
