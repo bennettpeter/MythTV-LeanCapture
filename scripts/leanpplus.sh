@@ -182,18 +182,6 @@ $scriptpath/adb-sendkey.sh DPAD_CENTER
 if ! waitforstring "\nSeason" "Episodes" ; then
     exit 2
 fi
-#~ first=$(grep -m 1 "Season " $DATADIR/${recname}_capture_crop.txt | sed "s/Season //")
-#~ if (( fseason != first )) ; then
-    #~ echo `$LOGDATE` "ERROR: Incorrect first season ($first) expected ($fseason)"
-    #~ exit 2
-#~ fi
-
-
-#~ if ! grep "$fdesc" $DATADIR/${recname}_capture_crop.txt ; then
-    #~ echo `$LOGDATE` "ERROR: Description ($fdesc) was not found."
-    #~ exit 2
-#~ fi
-#~ lineno=$(grep "Season " $DATADIR/${recname}_capture_crop.txt | grep -n "Season $season" | sed "s/:.*//")
 # Go to seasons
 $scriptpath/adb-sendkey.sh LEFT
 $scriptpath/adb-sendkey.sh LEFT
@@ -204,7 +192,6 @@ str=
 # Get to top of list with 20 UPs
 for (( x=0; x<20; x++)) ; do
     str="$str UP"
-    #~ $scriptpath/adb-sendkey.sh UP
 done
 if [[ $str != "" ]] ; then $scriptpath/adb-sendkey.sh $str ; fi
 $scriptpath/adb-sendkey.sh DPAD_CENTER
@@ -217,7 +204,6 @@ $scriptpath/adb-sendkey.sh LEFT
 str=
 for (( x=0; x<lineno; x++)) ; do
     str="$str DOWN"
-    #~ $scriptpath/adb-sendkey.sh DOWN
 done
 if [[ $str != "" ]] ; then $scriptpath/adb-sendkey.sh $str ; fi
 # Go to episodes of that season
@@ -227,19 +213,23 @@ sleep 5
 str=
 for (( x=1; x<episode; x++)) ; do
     str="$str DOWN"
-    #~ $scriptpath/adb-sendkey.sh DOWN
 done
 if [[ $str != "" ]] ; then $scriptpath/adb-sendkey.sh $str ; fi
 CROP="-gravity East -crop 40%x100%"
 # Wait for episode to scroll into view
 sleep 5
 capturepage adb
-#~ lineno=$(grep -m 1 -n " [0-9][0-9]*min " $DATADIR/${recname}_capture_crop.txt | sed "s/:.*//")
-#~ let lineno++
-subtitle=$(grep -m 1 "^$episode\." $DATADIR/${recname}_capture_crop.txt | sed "s/[0-9]*\.//")
-#~ subtitle=$(sed -n "$lineno,${lineno}p" $DATADIR/${recname}_capture_crop.txt | sed "s/[0-9]*\.//")
+if (( episode == 1 )) ; then
+    srchstring="^1\.|^4\.|^41\."
+elif (( episode == 10 )) ; then
+    srchstring="^10\.|^410\."
+else
+    srchstring="^$episode\."
+fi
+
+subtitle=$(grep -E -m 1 "$srchstring" $DATADIR/${recname}_capture_crop.txt | sed "s/[0-9]*\.//")
 echo "subtitle: $subtitle"
-lineno=$(grep -m 1 -n "^$episode\." $DATADIR/${recname}_capture_crop.txt | sed "s/:.*//")
+lineno=$(grep -E -m 1 -n "$srchstring" $DATADIR/${recname}_capture_crop.txt | sed "s/:.*//")
 #default duration
 duration="20min"
 orig_airdate=
@@ -251,9 +241,11 @@ if (( lineno > 0 )) ; then
         # fix Jun 24,2021 to Jun 24, 2021 as the former is invalid for date
         orig_airdate=$(echo $orig_airdate | sed "s/,/, /")
     fi
+    # Remove any apostrophe
+    orig_airdate=$(echo $orig_airdate | sed "s/'//g")
     echo "origdate: $orig_airdate"
 fi
-# Replace slashes with dashes and lose extra spaces
+# Replace slashes with dashes and lose extra spaces including leading space
 subtitle=$(echo $subtitle | sed "s@/@-@g")
 
 if [[ "$orig_airdate" != "" ]] ; then
