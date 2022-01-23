@@ -320,6 +320,7 @@ function waitforstring {
     local xx=0
     local found=0
     local savecrop="$CROP"
+    echo `$LOGDATE` "waitforstring searching on $search"
     while (( xx++ < 40 )) ; do
         CROP="$savecrop"
         capturepage $cap_param
@@ -332,6 +333,8 @@ function waitforstring {
         fi
         sleep 0.5
     done
+    # Output a newline
+    echo
     CROP=
     if (( ! found )) ; then
         echo `$LOGDATE` "ERROR - Cannot get to $name page"
