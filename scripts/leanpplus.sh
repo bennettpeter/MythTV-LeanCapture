@@ -11,6 +11,7 @@ season=
 episode=
 wait=0
 fseason=0
+lseason=0
 fdesc=
 
 while (( "$#" >= 1 )) ; do
@@ -57,6 +58,13 @@ while (( "$#" >= 1 )) ; do
                 shift||rc=$?
             fi
             ;;
+        --lseason|-L)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                lseason="$2"
+                shift||rc=$?
+            fi
+            ;;
         --fdesc|-D)
             if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
             else
@@ -80,10 +88,22 @@ if (( season < fseason )) ; then
     error=y
 fi
 
+if (( season > lseason )) ; then
+    echo "ERROR Season cannot be more than last season"
+    error=y
+fi
+
+if (( lseason < fseason )) ; then
+    echo "ERROR Last season cannot be less than first season"
+    error=y
+fi
+
+
 if [[ "$error" == y || "$title" == "" || "$season" == "" \
-      || "$episode" == "" || $fseason == "" || $fdesc == "" ]] ; then
+      || "$episode" == "" || $fseason == 0 || $fdesc == "" \
+      || $lseason == 0 ]] ; then
     echo "*** $0 ***"
-    echo "Record fom Paramount Plus"
+    echo "Record from Paramount Plus"
     echo "Disable autoplay on Paramount Plus"
     echo "Make sure the title you supply shows up as the first result"
     echo "Input parameters:"
@@ -95,8 +115,13 @@ if [[ "$error" == y || "$title" == "" || "$season" == "" \
     echo "--wait : Pause immediately before playback, for testing"
     echo "    or to rewind in progress show to beginning."
     echo "--fseason|-F nn : First season available on Paramount Plus"
+    echo "--lseason|-L nn : Last season available on Paramount Plus"
     echo "--fdesc|-D xxxx : A phrase from the descriptions that appear on the"
     echo "    first page of episodes, to check if the correct page is found"
+    echo "Note:"
+    echo "If an episode is already in the middle from before, use the --wait"
+    echo "option, open vlc, start playback, skip back, get to the beginning,"
+    echo "pause, then type Y so it resumes and records."
     exit 2
 fi
 
@@ -182,33 +207,46 @@ $scriptpath/adb-sendkey.sh DPAD_CENTER
 if ! waitforstring "\nSeason" "Episodes" ; then
     exit 2
 fi
-# Go to seasons
-$scriptpath/adb-sendkey.sh LEFT
-$scriptpath/adb-sendkey.sh LEFT
+if (( lseason > fseason )) ; then
+    # Go to seasons
+    $scriptpath/adb-sendkey.sh LEFT
+    $scriptpath/adb-sendkey.sh LEFT
 
-#Get to correct season
-let lineno=season-fseason
-str=
-# Get to top of list with 20 UPs
-for (( x=0; x<20; x++)) ; do
-    str="$str UP"
-done
-if [[ $str != "" ]] ; then $scriptpath/adb-sendkey.sh $str ; fi
-$scriptpath/adb-sendkey.sh DPAD_CENTER
-CROP="-gravity East -crop 40%x100%"
-if ! waitforstring "$fdesc" "Description ($fdesc)" adb ; then
-    exit 2
+    #Get to correct season
+    let lineno=season-fseason
+    str=
+    # Get to top of list with 20 UPs
+    for (( x=0; x<20; x++)) ; do
+        str="$str UP"
+    done
+    $scriptpath/adb-sendkey.sh $str
+    $scriptpath/adb-sendkey.sh DPAD_CENTER
+    CROP="-gravity East -crop 40%x100%"
+    if ! waitforstring "$fdesc" "Description ($fdesc)" adb ; then
+        exit 2
+    fi
+    $scriptpath/adb-sendkey.sh LEFT
+    $scriptpath/adb-sendkey.sh LEFT
+    # Go to correct season
+    str=
+    for (( x=0; x<lineno; x++)) ; do
+        str="$str DOWN"
+    done
+    if [[ $str != "" ]] ; then $scriptpath/adb-sendkey.sh $str ; fi
+    # Go to episodes of that season
+    $scriptpath/adb-sendkey.sh DPAD_CENTER
+    sleep 5
+else
+    # Get to top of list with 20 UPs
+    for (( x=0; x<20; x++)) ; do
+        str="$str UP"
+    done
+    $scriptpath/adb-sendkey.sh $str
+    CROP="-gravity East -crop 40%x100%"
+    if ! waitforstring "$fdesc" "Description ($fdesc)" adb ; then
+        exit 2
+    fi
 fi
-$scriptpath/adb-sendkey.sh LEFT
-$scriptpath/adb-sendkey.sh LEFT
-str=
-for (( x=0; x<lineno; x++)) ; do
-    str="$str DOWN"
-done
-if [[ $str != "" ]] ; then $scriptpath/adb-sendkey.sh $str ; fi
-# Go to episodes of that season
-$scriptpath/adb-sendkey.sh DPAD_CENTER
-sleep 5
 #Get to correct episode
 str=
 for (( x=1; x<episode; x++)) ; do

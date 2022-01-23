@@ -59,11 +59,6 @@ while (( "$#" >= 1 )) ; do
     shift||rc=$?
 done
 
-if (( season < fseason )) ; then
-    echo "ERROR Season cannot be less than first season"
-    error=y
-fi
-
 if [[ "$error" == y || "$title" == "" || "$season" == "" \
       || "$episode" == ""  ]] ; then
     echo "*** $0 ***"
