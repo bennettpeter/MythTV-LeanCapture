@@ -65,7 +65,7 @@ if [[ "$error" == y || "$title" == "" || "$season" == "" \
     echo "Record fom Amazon Prime"
     echo "Disable autoplay on Amazon web site"
     echo "Make sure the title you supply shows up as the first result"
-    echo "     when searched as [Title Season n["
+    echo "     when searched as <Title Season n>"
     echo "Input parameters:"
     echo "--title|-t xxxx : Title"
     echo "--time nn : Maximum Number of minutes [default 120]"

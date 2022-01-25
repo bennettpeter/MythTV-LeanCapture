@@ -118,10 +118,6 @@ if [[ "$error" == y || "$title" == "" || "$season" == "" \
     echo "--lseason|-L nn : Last season available on Paramount Plus"
     echo "--fdesc|-D xxxx : A phrase from the descriptions that appear on the"
     echo "    first page of episodes, to check if the correct page is found"
-    echo "Note:"
-    echo "If an episode is already in the middle from before, use the --wait"
-    echo "option, open vlc, start playback, skip back, get to the beginning,"
-    echo "pause, then type Y so it resumes and records."
     exit 2
 fi
 
@@ -137,6 +133,11 @@ scriptpath=`dirname "$scriptname"`
 scriptname=`basename "$scriptname" .sh`
 
 source $scriptpath/leanfuncs.sh
+
+# In the evening, paramount plus app is very slow
+# Allow up to 60 seconds for screen transitions
+WAIT_ATTEMPTS=120
+
 ADB_ENDKEY=HOME
 initialize
 echo `$LOGDATE` "RECORD: Title $title, S${season}E${episode}"

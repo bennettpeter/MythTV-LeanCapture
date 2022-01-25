@@ -7,6 +7,9 @@ OCR_RESOLUTION=1280x720
 updatetunetime=0
 ADB_ENDKEY=
 LOCKBASEDIR=/run/lock/leancap
+if [[ "$WAIT_ATTEMPTS" == "" ]] ; then
+    WAIT_ATTEMPTS=20
+fi
 if [[ "$MAXCHANNUM" == "" ]] ; then
     MAXCHANNUM=999
 fi
@@ -281,7 +284,7 @@ function waitforpage {
     fixpagename=
     local xx=0
     savecrop="$CROP"
-    while [[ "$fixpagename" != "$fixwanted" ]] && (( xx++ < 20 )) ; do
+    while [[ "$fixpagename" != "$fixwanted" ]] && (( xx++ < WAIT_ATTEMPTS )) ; do
         CROP="$savecrop"
         capturepage
         if [[ "$pagename" == "We"*"detect your remote" ]] ; then
@@ -321,20 +324,20 @@ function waitforstring {
     local found=0
     local savecrop="$CROP"
     echo `$LOGDATE` "waitforstring searching on $search"
-    while (( xx++ < 40 )) ; do
+    while (( xx++ < WAIT_ATTEMPTS )) ; do
         CROP="$savecrop"
         capturepage $cap_param
         if [[ "$pagename" == "We"*"detect your remote" ]] ; then
             $scriptpath/adb-sendkey.sh DPAD_CENTER
         fi
         if grep -oPz "$search" $DATADIR/${recname}_capture_crop.txt ; then
+            # Output a newline
+            echo
             found=1
             break
         fi
         sleep 0.5
     done
-    # Output a newline
-    echo
     CROP=
     if (( ! found )) ; then
         echo `$LOGDATE` "ERROR - Cannot get to $name page"
