@@ -9,6 +9,7 @@ endkey=HOME
 waitforstart=1
 season=
 episode=
+offset=0
 wait=0
 fseason=0
 lseason=0
@@ -48,6 +49,13 @@ while (( "$#" >= 1 )) ; do
             if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
             else
                 episode="$2"
+                shift||rc=$?
+            fi
+            ;;
+        --offset|-O)
+            if [[ "$2" == "" || "$2" == -[a-zA-Z] ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                offset="$2"
                 shift||rc=$?
             fi
             ;;
@@ -112,6 +120,8 @@ if [[ "$error" == y || "$title" == "" || "$season" == "" \
     echo "--recname|-n xxxxxxxx : Recorder id (default leancap1)"
     echo "--season|-S nn : Season without leading zeroes"
     echo "--episode|-E nn : Episode without leading zeroes"
+    echo "--offset|-O nn : Episode offset. For example If episode 2 is"
+    echo "    missing then for episodes 3 onwards offset must be -1"
     echo "--wait : Pause immediately before playback, for testing"
     echo "    or to rewind in progress show to beginning."
     echo "--fseason|-F nn : First season available on Paramount Plus"
@@ -173,6 +183,12 @@ adb -s $ANDROID_DEVICE shell am start -n com.cbs.ott/com.cbs.app.tv.ui.activity.
 if ! waitforstring "CBS.*\n" Paramount ; then
     exit 2
 fi
+$scriptpath/adb-sendkey.sh LEFT
+$scriptpath/adb-sendkey.sh LEFT
+$scriptpath/adb-sendkey.sh LEFT
+$scriptpath/adb-sendkey.sh LEFT
+$scriptpath/adb-sendkey.sh LEFT
+$scriptpath/adb-sendkey.sh LEFT
 $scriptpath/adb-sendkey.sh LEFT
 $scriptpath/adb-sendkey.sh LEFT
 if ! waitforstring "\nSearch\nHome\n" Menu ; then
@@ -250,7 +266,12 @@ else
 fi
 #Get to correct episode
 str=
-for (( x=1; x<episode; x++)) ; do
+let relative=episode+offset
+if (( relative < 1 )) ; then
+    echo `$LOGDATE` "ERROR: episode $episode with offset $offset is invalid"
+    exit 2
+fi
+for (( x=1; x<relative; x++)) ; do
     str="$str DOWN"
 done
 if [[ $str != "" ]] ; then $scriptpath/adb-sendkey.sh $str ; fi
