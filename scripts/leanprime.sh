@@ -144,7 +144,7 @@ if ! grep "^Season $season" $DATADIR/${recname}_capture_crop.txt ; then
 fi
 # Go to episodes of this season
 $scriptpath/adb-sendkey.sh DPAD_CENTER
-if ! waitforstring "Seasons & Add to" "Season Detail"; then
+if ! waitforstring "Seasons &" "Season Detail"; then
     exit 2
 fi
 # Go to seasons & Episodes
