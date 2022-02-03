@@ -340,7 +340,7 @@ function waitforstring {
     done
     CROP=
     if (( ! found )) ; then
-        echo `$LOGDATE` "ERROR - Cannot get to $name page"
+        echo `$LOGDATE` "ERROR - Cannot get to $name page ($search)"
         return 2
     fi
     echo `$LOGDATE` "Reached $name page"
