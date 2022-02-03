@@ -5,11 +5,10 @@ title=
 
 minutes=120
 recname=leancap1
-endkey=HOME
-waitforstart=1
 season=
 episode=
 wait=0
+ADB_ENDKEY=
 
 while (( "$#" >= 1 )) ; do
     case $1 in
@@ -88,8 +87,10 @@ scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`
 scriptname=`basename "$scriptname" .sh`
 
+if (( ! wait )) ; then
+    ADB_ENDKEY=HOME
+fi
 source $scriptpath/leanfuncs.sh
-ADB_ENDKEY=HOME
 initialize
 echo `$LOGDATE` "RECORD: Title $title, S${season}E${episode}"
 if ! getparms PRIMARY ; then
@@ -121,7 +122,7 @@ sleep 0.5
 adb -s $ANDROID_DEVICE shell am force-stop com.amazon.firebat
 sleep 1
 adb -s $ANDROID_DEVICE shell am start -n com.amazon.firebat/.deeplink.DeepLinkRoutingActivity
-if ! waitforstring "^prime video.* Store Channels" "Prime Video" ; then
+if ! waitforstring "prime video.* Store.* Channels" "Prime Video" ; then
     exit 2
 fi
 $scriptpath/adb-sendkey.sh LEFT
@@ -237,6 +238,7 @@ if (( wait )) ; then
         wmctrl -c vlc
         sleep 2
     done
+    ADB_ENDKEY=HOME
 fi
 
 mkdir -p "$VID_RECDIR/$title"
