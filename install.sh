@@ -98,7 +98,9 @@ if [[ ! -f /etc/opt/mythtv/leancap1.conf ]] ; then
 fi
 
 mkdir -p $SCRIPTDIR
+rm -f $SCRIPTDIR/*
 cp $scriptpath/scripts/* $SCRIPTDIR
+chmod +x $SCRIPTDIR/*
 
 mkdir -p /etc/systemd/system
 envsubst < $scriptpath/systemd/leancap-scan.service > /tmp/leancap-scan.service
