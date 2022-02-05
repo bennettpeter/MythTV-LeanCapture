@@ -178,10 +178,10 @@ for (( xx = 0 ; xx < loops ; xx++ )) ; do
         newsize=`stat -c %s $VID_RECDIR/${recfile}.mkv`
         let diff=newsize-filesize
         filesize=$newsize
-        echo `$LOGDATE` "size: $filesize  Incr: $diff" >> $VID_RECDIR/${recfile}_size.log
+        echo `$LOGDATE` "size: $filesize  Incr: $diff"
         if (( diff < 4000000 )) ; then
             let lowcount=lowcount+1
-            echo "*** Less than 4 MB *** lowcount=$lowcount" >> $VID_RECDIR/${recfile}_size.log
+            echo `$LOGDATE` "Less than 4 MB, lowcount=$lowcount"
             CROP=" "
             capturepage adb
             if (( imagesize > 0 )) ; then

@@ -289,7 +289,6 @@ while  (( numrecorded < maxrecordings )) ; do
     -c:a aac \
     "$recfile" &
 
-    sizelog=$VID_RECDIR/$($LOGDATE)_size.log
     ffmpeg_pid=$!
     starttime=`date +%s`
     sleep 10
@@ -384,10 +383,9 @@ while  (( numrecorded < maxrecordings )) ; do
         newsize=`stat -c %s "$recfile"`
         let diff=newsize-filesize
         filesize=$newsize
-        echo `$LOGDATE` "size: $filesize  Incr: $diff" >> "$sizelog"
+        echo `$LOGDATE` "size: $filesize  Incr: $diff"
         if (( diff < 5000000 )) ; then
             let lowcount++
-            echo "*** Less than 5 MB *** lowcount=$lowcount" >> "$sizelog"
             echo `$LOGDATE` "Less than 5 MB, lowcount=$lowcount"
         else
             lowcount=0
