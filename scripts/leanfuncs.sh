@@ -17,6 +17,10 @@ if [[ "$MINBYTES" == "" ]] ; then
     MINBYTES=1500000
 fi
 
+if [[ "$X264_CRF" == "" ]] ; then
+    X264_CRF=22
+fi
+
 # Keys : 6 DOWNS for favorite or 5 DOWNS for All
 case "$NAVTYPE" in
     "Favorite Channels")

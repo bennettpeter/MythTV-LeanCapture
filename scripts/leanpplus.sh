@@ -377,7 +377,7 @@ ffmpeg -hide_banner -loglevel error \
 -c:v libx264 \
 -vf format=yuv420p \
 -preset faster \
--crf 23 \
+-crf $X264_CRF \
 -c:a aac \
 "$recfile" &
 
