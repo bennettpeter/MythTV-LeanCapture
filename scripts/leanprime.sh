@@ -129,7 +129,7 @@ $scriptpath/adb-sendkey.sh LEFT
 if ! waitforstring "Find movies, TV shows, categories, and people\n" Search ; then
     exit 2
 fi
-echo "Search String: $title"
+echo "Search String: $title Season $season"
 adb -s $ANDROID_DEVICE shell input text \""$title Season $season"\"
 $scriptpath/adb-sendkey.sh RIGHT RIGHT RIGHT RIGHT RIGHT RIGHT
 # Go to result
