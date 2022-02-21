@@ -177,6 +177,13 @@ fi
 $scriptpath/adb-sendkey.sh POWER
 $scriptpath/adb-sendkey.sh HOME
 sleep 0.5
+
+# Check resolution
+CROP=" "
+capturepage adb
+rc=$?
+if (( rc == 1 )) ; then exit $rc ; fi
+
 adb -s $ANDROID_DEVICE shell am force-stop com.cbs.ott
 sleep 1
 adb -s $ANDROID_DEVICE shell am start -n com.cbs.ott/com.cbs.app.tv.ui.activity.SplashActivity

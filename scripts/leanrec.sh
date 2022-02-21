@@ -118,6 +118,12 @@ if ! adb devices | grep $ANDROID_DEVICE ; then
     exit 2
 fi
 
+# Check resolution
+CROP=" "
+capturepage adb
+rc=$?
+if (( rc == 1 )) ; then exit $rc ; fi
+
 # Check season and episode
 if ! waitforstring "\nSeason $season.*Episode $episode " "Season and Episode" ; then
     echo `$LOGDATE` "ERROR - Wrong Season & Episode Selected"

@@ -108,6 +108,13 @@ fi
 # Force a launch first to get to the stNDRd start page
 $scriptpath/adb-sendkey.sh DOWN
 sleep 1
+
+# Check resolution
+CROP=" "
+capturepage adb
+rc=$?
+if (( rc == 1 )) ; then exit $rc ; fi
+
 navigate Search
 sleep 1
 if [[ "$pagename" != Search* ]] ; then
