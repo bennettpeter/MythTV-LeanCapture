@@ -65,8 +65,8 @@ if ! which pv >/dev/null ; then
     err=1
 fi
 
-if ! which vlc >/dev/null && ! which obs >/dev/null; then
-    echo WARNING you will need vlc or obs-studio installed to configure your system
+if ! which vlc >/dev/null >/dev/null; then
+    echo WARNING you will need vlc installed to configure your system
 fi
 
 if (( err )) ; then

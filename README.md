@@ -61,7 +61,7 @@ Connect each fire stick to a capture device, Ethernet adapter, and power supply.
 
 Prerequisite software for these scripts can be installed on Linux with the distribution package manager.
 
-- vlc or obs-studio
+- vlc
 - tesseract-ocr
 - gocr
 - ffmpeg
@@ -83,7 +83,7 @@ If there is a new or updated version of the scripts, just run the ./install.sh a
 
 ### Fire stick
 
-In order to operate your fire stick while connected to MythTV:
+In order to operate your fire stick while connected to the computer but not yet in use for the backend:
 
 1. Press Home on the Fire Stick Remote. 
 1. Run vlc on the backend. 
@@ -295,8 +295,12 @@ Any time you need to do any work on a fire stick (reset resolution, update, etc.
 
         sudo systemctl stop leancap-scan.service
 
-- Run vlc and open the video capture device (/dev/video*). You can find which the capture device is by looking in /var/opt/mythtv/leancapx.conf where x is the number of the one you are working on.
+- Run the below script on the backend, with leancap? as the id of the fire stick.
+
+        /opt/mythtv/leancap/leanvlc.sh leancap?
+
 - Use the fire stick remote to perform any needed work.
+- Repeat with other fire sticks as needed.
 - Close vlc
 - Start the service again:
 
