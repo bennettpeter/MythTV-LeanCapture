@@ -115,8 +115,6 @@ capturepage adb
 rc=$?
 if (( rc == 1 )) ; then exit $rc ; fi
 
-wmctrl -c obs
-
 # Kill vlc
 while pidof vlc ; do
     wmctrl -c vlc
