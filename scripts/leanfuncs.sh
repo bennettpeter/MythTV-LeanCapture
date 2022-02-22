@@ -20,6 +20,10 @@ fi
 if [[ "$X264_CRF" == "" ]] ; then
     X264_CRF=22
 fi
+if [[ "$FIRE_RESOLUTION" == "" ]] ; then
+    FIRE_RESOLUTION_SETTING="720p 60Hz"
+    FIRE_RESOLUTION=1280x720
+fi
 
 # Keys : 6 DOWNS for favorite or 5 DOWNS for All
 case "$NAVTYPE" in
@@ -68,7 +72,7 @@ function locktuner {
     attempts=$1
     mkdir -p $LOCKBASEDIR
     if [[ ! -w  $LOCKBASEDIR ]] ; then
-        echo `$LOGDATE` "ERROR: $LOCKBASEDIR is not writable"
+        echo `$LOGDATE` "FATAL: $LOCKBASEDIR is not writable"
         exit 2
     fi
     touch $LOCKBASEDIR/$recname.pid
@@ -242,9 +246,11 @@ function capturepage {
     fi
     if (( imagesize > 0 )) ; then
         resolution=$(identify -format %wx%h $DATADIR/${recname}_capture.png)
-        if [[ "$resolution" != "$OCR_RESOLUTION" ]] ; then
+        if [[ "$cap_source" == adb && "$resolution" != "$FIRE_RESOLUTION" ]] ; then
             rc=1
             echo `$LOGDATE` "WARNING Incorrect resolution $resolution"
+        fi
+        if [[ "$resolution" != "$OCR_RESOLUTION" ]] ; then
             convert $DATADIR/${recname}_capture.png -resize "$OCR_RESOLUTION" $DATADIR/${recname}_capturex.png
             cp -f $DATADIR/${recname}_capturex.png $DATADIR/${recname}_capture.png
             imagesize=$(stat -c %s $DATADIR/${recname}_capture.png)
@@ -502,6 +508,82 @@ function navigate {
         return 3
     fi
     return 0
+}
+
+# Check and repair firestick resolution
+function fireresolution {
+    echo `$LOGDATE` "Setting fire resolution to $FIRE_RESOLUTION_SETTING"
+    $scriptpath/adb-sendkey.sh POWER
+    $scriptpath/adb-sendkey.sh HOME
+    sleep 0.5
+    #Get to settings
+    $scriptpath/adb-sendkey.sh LEFT LEFT
+    # Get to Display & Sounds
+    $scriptpath/adb-sendkey.sh DOWN RIGHT RIGHT RIGHT
+    $scriptpath/adb-sendkey.sh DPAD_CENTER
+    CROP="-gravity Center -crop 40%x100%"
+    if ! waitforpage "DISPLAY & SOUNDS" ; then
+        return 2
+    fi
+    $scriptpath/adb-sendkey.sh DOWN
+    $scriptpath/adb-sendkey.sh DPAD_CENTER
+    $scriptpath/adb-sendkey.sh DPAD_CENTER
+    CROP="-gravity Center -crop 40%x100%"
+    if ! waitforpage "VIDEO RESOLUTION" ; then
+        return 2
+    fi
+    local match=0
+    local xx
+    # Move down through the list of resolutions untilwe get to the desired one
+    for (( xx = 0; xx < 10 ; xx++ )) ; do
+        sleep 0.2
+        CROP="-gravity East -crop 40%x100%"
+        capturepage
+        if grep "$FIRE_RESOLUTION_SETTING" $DATADIR/${recname}_capture_crop.txt ; then
+            match=1
+            break
+        fi
+        $scriptpath/adb-sendkey.sh DOWN
+    done
+    if (( match )) ; then
+        # Set the resolution
+        $scriptpath/adb-sendkey.sh DPAD_CENTER
+        sleep 2
+        capturepage
+        if [[ "$pagename" == "Resolution Changed" ]] ; then
+            $scriptpath/adb-sendkey.sh LEFT
+            $scriptpath/adb-sendkey.sh DPAD_CENTER
+        else
+            $scriptpath/adb-sendkey.sh BACK
+        fi
+        CROP="-gravity Center -crop 40%x100%"
+        if ! waitforpage "DISPLAY" ; then
+            return 2
+        fi
+        $scriptpath/adb-sendkey.sh DOWN
+        sleep 0.2
+        CROP="-gravity Center -crop 40%x100%"
+        capturepage
+        if ! grep "$FIRE_RESOLUTION_SETTING" $DATADIR/${recname}_capture_crop.txt ; then
+            echo `$LOGDATE` "ERROR - Resolution change failed."
+            return 2
+        fi
+    else
+        echo `$LOGDATE` "ERROR - cannot find resolution $FIRE_RESOLUTION_SETTING"
+        return 2
+    fi
+    $scriptpath/adb-sendkey.sh HOME
+    sleep 0.5
+    # Check resolution
+    CROP=" "
+    capturepage adb
+    local rc=$?
+    if (( rc == 0 )) ; then
+        echo `$LOGDATE` "Resolution OK"
+    else
+        echo `$LOGDATE` "Resolution wrong after change."
+    fi
+    return $rc
 }
 
 # Get channel list.

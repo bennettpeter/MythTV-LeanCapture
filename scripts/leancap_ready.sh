@@ -49,18 +49,25 @@ while true ; do
         today=$(date +%Y-%m-%d)
         adb connect $ANDROID_DEVICE
         if [[ "$lastrescheck" != "$today" ]] ; then
-            # At least once a day, restart xfinity app
-            $scriptpath/adb-sendkey.sh POWER
-            $scriptpath/adb-sendkey.sh HOME
-            sleep 1
+            # At least once a day, check resolution and restart
+            # Xfinity app
             errored=0
-            capturepage adb
+            # Uncomment this to only call the fixresolution if there is an error
+            # Better not to do this so I can get early warning of aany UI
+            # Change that makes this not work.
+            #~ capturepage adb
+            #~ rc=$?
+            #~ if (( rc == 1 )) ; then
+            fireresolution
             rc=$?
-            #~ if (( rc > mrc )) ; then mrc=$rc ; fi
-            if (( rc == 1 )) ; then
+            if (( rc != 0 )) ; then
                 $scriptpath/notify.py "Fire Stick Problem" \
-                  "leancap_ready: Wrong resolution on ${recname}" &
+                  "leancap_ready: Cannot set resolution on ${recname}" &
             fi
+            #~ else
+                #~ $scriptpath/adb-sendkey.sh POWER
+                #~ $scriptpath/adb-sendkey.sh HOME
+            #~ fi
             lastrescheck="$today"
         fi
         # Only check this on one tuner
