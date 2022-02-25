@@ -125,7 +125,8 @@ rc=$?
 if (( rc == 1 )) ; then exit $rc ; fi
 
 # Check season and episode
-if ! waitforstring "\nSeason $season.*Episode $episode " "Season and Episode" ; then
+if ! waitforstring "\nSeason $season.*Episode $episode |\nSeason $season \($episode\)" \
+  "Season and Episode" ; then
     echo `$LOGDATE` "ERROR - Wrong Season & Episode Selected"
     exit 2
 fi
