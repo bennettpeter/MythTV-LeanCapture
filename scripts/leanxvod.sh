@@ -5,11 +5,11 @@ title=
 
 minutes=360
 recname=leancap1
-endkey=HOME
+ADB_ENDKEY=
 waitforstart=1
 season=
 episode=
-noplay=0
+wait=0
 
 while (( "$#" >= 1 )) ; do
     case $1 in
@@ -48,8 +48,8 @@ while (( "$#" >= 1 )) ; do
                 shift||rc=$?
             fi
             ;;
-        --noplay)
-            noplay=1
+        --wait)
+            wait=1
             ;;
         *)
             echo "Invalid option $1"
@@ -68,7 +68,8 @@ if [[ "$error" == y || "$title" == "" || "$season" == "" \
     echo "--recname|-n xxxxxxxx : Recorder id (default leancap1)"
     echo "--season|-S nn : Season without leading zeroes"
     echo "--episode|-E nn : Episode without leading zeroes"
-    echo "--noplay : Exit immediately before playback, for testing."
+    echo "--wait : Pause immediately before playback, for testing"
+    echo "    or to rewind in progress show to beginning."
     exit 2
 fi
 
@@ -78,8 +79,10 @@ scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`
 scriptname=`basename "$scriptname" .sh`
 
+if (( ! wait )) ; then
+    ADB_ENDKEY=HOME
+fi
 source $scriptpath/leanfuncs.sh
-ADB_ENDKEY=HOME
 initialize
 echo `$LOGDATE` "RECORD: Title $title, S${season}E${episode}"
 if ! getparms PRIMARY ; then
@@ -141,7 +144,7 @@ sleep 2
 CROP="-gravity SouthEast -crop 70%x100%"
 capturepage
 # In case it got into "Set Series recording" by accident
-if [[ "$pagename" == "Series Info Episodes [upcoming" ]] ; then
+if grep "Set Series Recording" $DATADIR/${recname}_capture_crop.txt ; then
     $scriptpath/adb-sendkey.sh BACK
     $scriptpath/adb-sendkey.sh UP
     $scriptpath/adb-sendkey.sh RIGHT
@@ -283,10 +286,18 @@ while [[ -f "$recfile" ]] ; do
     echo `$LOGDATE` "Duplicate recording file, appending _$xx"
 done
 
-if ((noplay )) ; then
-    echo `$LOGDATE` "Selected $recfile - NOPLAY requested, exiting"
-    ADB_ENDKEY=
-    exit 2
+if (( wait )) ; then
+    echo "Ready to start recording of $recfile"
+    echo "Type Y to start, anything else to cancel"
+    echo "This script will press DPAD_CENTER to start. Do not press it."
+    read -e resp
+    if [[ "$resp" != Y ]] ; then exit 2 ; fi
+    # Kill vlc
+    while pidof vlc ; do
+        wmctrl -c vlc
+        sleep 2
+    done
+    ADB_ENDKEY=HOME
 fi
 
 mkdir -p "$VID_RECDIR/$title"
