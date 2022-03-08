@@ -47,8 +47,8 @@ logfile=$LOGDIR/${scriptname}_${recname}.log
 # Update the tune time at end
 updatetunetime=1
 
-progressfile=$LOGDIR/${scriptname}_${recname}_progress.log
-echo `$LOGDATE` "Start ffmpeg channel $tunechan" >> $progressfile
+progressfile=$DATADIR/${scriptname}_${recname}_progress.log
+echo `$LOGDATE` "Start ffmpeg channel $tunechan" > $progressfile
 
 ffmpeg -hide_banner -loglevel error -f v4l2 -thread_queue_size 256 -input_format $INPUT_FORMAT \
   -framerate $FRAMERATE -video_size $RESOLUTION \
@@ -111,6 +111,8 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
                             "leancap_encode: Playback Failed on ${recname}, retrying" &
                         errored=1
                     fi
+                    echo "$tunechan $(date -u '+%Y-%m-%d %H:%M:%S')" \
+                        >> $DATADIR/${recname}_damage.txt
                     # Try to tune again
                     launchXfinity
                     sleep 2

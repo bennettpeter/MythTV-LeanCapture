@@ -28,5 +28,21 @@ if [[ "$tunestatus" == tuned  ]] ; then
     # Clear tunefile
     echo "tunetime=$(date +%s)" > $tunefile
 else
-    echo `$LOGDATE` "Playback already ended - nothing to do"
+    echo `$LOGDATE` "Playback ended"
 fi
+# Mark failed recording if applicable
+(
+    sleep 10
+    while [[ -f $DATADIR/${recname}_damage.txt \
+         || -f $DATADIR/${recname}_damage.wrk ]] ; do
+         if [[ ! -f $DATADIR/${recname}_damage.wrk ]] ; then
+            mv -f $DATADIR/${recname}_damage.txt $DATADIR/${recname}_damage.wrk
+        fi
+        while read channum date time ; do
+            #~ read channum date time
+            if [[ "$channum" == "" ]] ; then break; fi
+            $scriptpath/mark_damaged.sh $channum $date $time
+        done < $DATADIR/${recname}_damage.wrk
+        rm -f $DATADIR/${recname}_damage.wrk
+    done
+) &
