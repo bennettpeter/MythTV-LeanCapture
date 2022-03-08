@@ -39,8 +39,6 @@ fi
             mv -f $DATADIR/${recname}_damage.txt $DATADIR/${recname}_damage.wrk
         fi
         while read channum date time ; do
-            #~ read channum date time
-            if [[ "$channum" == "" ]] ; then break; fi
             $scriptpath/mark_damaged.sh $channum $date $time
         done < $DATADIR/${recname}_damage.wrk
         rm -f $DATADIR/${recname}_damage.wrk
