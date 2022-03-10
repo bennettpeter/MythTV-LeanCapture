@@ -6,7 +6,8 @@ recname=leancap1
 maxrecordings=10
 maxendtime=$(date -d +6hours +%s)
 error=
-noplay=0
+wait=0
+origdate=0
 
 while (( "$#" >= 1 )) ; do
     case $1 in
@@ -32,8 +33,11 @@ while (( "$#" >= 1 )) ; do
                 shift||rc=$?
             fi
             ;;
-        --noplay)
-            noplay=1
+        --wait)
+            wait=1
+            ;;
+        --origdate)
+            origdate=1
             ;;
         *)
             echo "Invalid option $1"
@@ -52,7 +56,10 @@ if [[ "$error" == y ]] ; then
     echo "  To set a maximum period specify 'n hours'. Otherwise end"
     echo "  date & time in any format. Default 6 hours."
     echo "--maxrecs|-m : Maximum Number of recordings [default 10]"
-    echo "--noplay : Exit immediately before playback, for testing."
+    echo "--wait : Pause immediately before playback, for testing"
+    echo "    or to rewind in progress show to beginning."
+    echo "    Only pauses before first show, other proceed normally."
+    echo "--origdate : Add original air date to beginning of file names"
     exit 2
 fi
 
@@ -221,10 +228,10 @@ while  (( numrecorded < maxrecordings )) ; do
         orig_airdate=$(date -d "$orig_airdate" "+%y%m%d")
     fi
     mkdir -p "$VID_RECDIR/$title"
-    if [[ "$orig_airdate" == "" ]] ; then
-        recfilebase="$season_episode"
-    else
+    if [[ "$orig_airdate" != "" ]] && (( origdate )) ; then
         recfilebase="$orig_airdate $season_episode"
+    else
+        recfilebase="$season_episode"
     fi
     recfile="$VID_RECDIR/$title/$recfilebase.mkv"
     convert $DATADIR/${recname}_capture.png -gravity East -crop 25%x100% -negate -brightness-contrast 0x20 $DATADIR/${recname}_capture_details.png
@@ -257,15 +264,25 @@ while  (( numrecorded < maxrecordings )) ; do
         echo `$LOGDATE` "Duplicate recording file, appending _$xx"
     done
     
-    if (( noplay )) ; then
-        echo `$LOGDATE` "Selected $title $season_episode - NOPLAY requested, exiting"
+    if (( wait )) ; then
         ADB_ENDKEY=
-        my_exit 2
+        echo "Ready to start recording of $recfile"
+        echo "Type Y to start, anything else to cancel"
+        echo "This script will press DPAD_CENTER to start. Do not press it."
+        read -e resp
+        if [[ "$resp" != Y ]] ; then my_exit 2 ; fi
+        # Kill vlc
+        while pidof vlc ; do
+            wmctrl -c vlc
+            sleep 2
+        done
+        # Do not wait next time
+        wait=0
+        ADB_ENDKEY=HOME
     fi
 
     echo `$LOGDATE` "Starting recording of $title $season_episode"
     # Start Recording
-   
     $scriptpath/adb-sendkey.sh DPAD_CENTER
 
     ffmpeg -hide_banner -loglevel error \
@@ -379,14 +396,14 @@ while  (( numrecorded < maxrecordings )) ; do
                 my_exit 2
             fi
         fi
-        sleep 60
+        sleep 30
         newsize=`stat -c %s "$recfile"`
         let diff=newsize-filesize
         filesize=$newsize
         echo `$LOGDATE` "size: $filesize  Incr: $diff"
-        if (( diff < 5000000 )) ; then
+        if (( diff < MINBYTES )) ; then
             let lowcount++
-            echo `$LOGDATE` "Less than 5 MB, lowcount=$lowcount"
+            echo `$LOGDATE` "Less than $$MINBYTES, lowcount=$lowcount"
         else
             lowcount=0
         fi
