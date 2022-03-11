@@ -10,6 +10,9 @@ season=
 episode=
 wait=0
 ADB_ENDKEY=
+srch=
+prekeys=
+postkeys=
 
 while (( "$#" >= 1 )) ; do
     case $1 in
@@ -48,6 +51,27 @@ while (( "$#" >= 1 )) ; do
                 shift||rc=$?
             fi
             ;;
+        --srch)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                srch="$2"
+                shift||rc=$?
+            fi
+            ;;
+        --prekeys)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                prekeys="$2"
+                shift||rc=$?
+            fi
+            ;;
+        --postkeys)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                postkeys="$2"
+                shift||rc=$?
+            fi
+            ;;
         --wait)
             wait=1
             ;;
@@ -73,6 +97,9 @@ if [[ "$error" == y || "$title" == "" || "$season" == "" \
     echo "--recname|-n xxxxxxxx : Recorder id (default leancap1)"
     echo "--season|-S nn : Season without leading zeroes"
     echo "--episode|-E nn : Episode without leading zeroes"
+    echo "--srch string : Alternate search string for identifying correct page"
+    echo "--prekeys string : Keystrokes to send to get to correct page"
+    echo "--postkeys string : Keystrokes to send after successful recording"
     echo "--wait : Pause immediately before playback, for testing"
     echo "    or to rewind in progress show to beginning."
     exit 2
@@ -123,10 +150,17 @@ CROP=" "
 capturepage adb
 rc=$?
 if (( rc == 1 )) ; then exit $rc ; fi
-
+# Send prekeys
+if [[ "$prekeys" != "" ]] ; then
+    $scriptpath/adb-sendkey.sh $prekeys
+fi
 # Check season and episode
-if ! waitforstring "\nSeason $season.*Episode $episode |\nSeason $season \($episode\)" \
-  "Season and Episode" ; then
+if [[ "$srch" != "" ]] ; then
+    str="$srch"
+else
+    str="\nSeason $season.*Episode $episode |\nSeason $season \($episode\)"
+fi
+if ! waitforstring "$str" "Season and Episode" ; then
     echo `$LOGDATE` "ERROR - Wrong Season & Episode Selected"
     exit 2
 fi
@@ -228,9 +262,9 @@ while true ; do
         lowcount=0
     fi
 done
-ADB_ENDKEY=
 if (( now < minendtime )) ; then
     echo `$LOGDATE` "ERROR Recording is less than 5 minutes"
     exit 2
 fi
+ADB_ENDKEY="$postkeys"
 echo `$LOGDATE` "Complete - Recorded"
