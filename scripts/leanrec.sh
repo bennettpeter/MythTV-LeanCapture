@@ -263,8 +263,7 @@ while true ; do
     fi
 done
 if (( now < minendtime )) ; then
-    echo `$LOGDATE` "ERROR Recording is less than 5 minutes"
-    exit 2
+    echo `$LOGDATE` "WARNING Recording is less than 5 minutes"
 fi
 ADB_ENDKEY="$postkeys"
 echo `$LOGDATE` "Complete - Recorded"
