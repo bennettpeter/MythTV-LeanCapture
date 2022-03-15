@@ -512,6 +512,11 @@ function navigate {
 
 # Check and repair firestick resolution
 function fireresolution {
+    prodmodel=$(adb -s $ANDROID_DEVICE shell getprop ro.product.model)
+    if [[ $prodmodel != AFT* ]] ; then
+        echo `$LOGDATE` "This is not a fire device, cannot set resolution"
+        return 0
+    fi
     echo `$LOGDATE` "Setting fire resolution to $FIRE_RESOLUTION_SETTING"
     $scriptpath/adb-sendkey.sh POWER
     $scriptpath/adb-sendkey.sh HOME

@@ -69,7 +69,10 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
         adb disconnect $ANDROID_DEVICE
         continue
     fi
-    $scriptpath/adb-sendkey.sh POWER
+    capturepage
+    if [[ `stat -c %s $DATADIR/${recname}_capture_crop.txt` == 0 ]] ; then
+        $scriptpath/adb-sendkey.sh POWER
+    fi
     $scriptpath/adb-sendkey.sh HOME
     $scriptpath/adb-sendkey.sh DPAD_CENTER
     adb disconnect $ANDROID_DEVICE
@@ -100,7 +103,21 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
     fi
 
     echo `$LOGDATE` "Reset recorder: $recname"
-    launchXfinity
+    prodmodel=$(adb -s $ANDROID_DEVICE shell getprop ro.product.model)
+    case $prodmodel in
+        AFT*)
+            echo fire stick
+            $scriptpath/adb-sendkey.sh HOME
+            $scriptpath/adb-sendkey.sh LEFT
+            $scriptpath/adb-sendkey.sh LEFT
+            $scriptpath/adb-sendkey.sh DOWN
+            ;;
+        *)
+            echo other android
+            $scriptpath/adb-sendkey.sh HOME
+            $scriptpath/adb-sendkey.sh SETTINGS
+            ;;
+    esac
     sleep 2
     match=N
     remotefix=
@@ -111,26 +128,39 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
             if [[ "$assigned" == *"$VIDEO_IN"* ]] ; then continue ; fi
             if [[ ! -e $VIDEO_IN ]] ; then continue ; fi
             echo `$LOGDATE` "Trying: $VIDEO_IN"
+            CROP=" "
             capturepage video
-            if [[ "$pagename" == "For You" ]] ; then
-                match=Y
-                break
-            elif [[ "$pagename" == "We"*"detect your remote" ]] ; then
-                # We don't know if this message comes from the device
-                # currently processing, so send the enter once and start over
-                if [[ "$remotefix" != *"$VIDEO_IN"* ]] ; then
-                    # HOME in case this is not the one
-                    $scriptpath/adb-sendkey.sh HOME
-                    # DPAD_CENTER in case this is the one
-                    $scriptpath/adb-sendkey.sh DPAD_CENTER
-                    # HOME so we can start over
-                    $scriptpath/adb-sendkey.sh HOME
-                    launchXfinity
-                    sleep 2
-                    remotefix="$remotefix $VIDEO_IN"
-                    trynum=0
-                fi
-            fi
+            case $prodmodel in
+                AFT*)
+                    if grep "Controllers & Bluetooth" $DATADIR/${recname}_capture_crop.txt ; then
+                        match=Y
+                        break
+                    elif [[ "$pagename" == "We"*"detect your remote" ]] ; then
+                        # We don't know if this message comes from the device
+                        # currently processing, so send the enter once and start over
+                        if [[ "$remotefix" != *"$VIDEO_IN"* ]] ; then
+                            # HOME in case this is not the one
+                            $scriptpath/adb-sendkey.sh HOME
+                            # DPAD_CENTER in case this is the one
+                            $scriptpath/adb-sendkey.sh DPAD_CENTER
+                            # HOME so we can start over
+                            $scriptpath/adb-sendkey.sh HOME
+                            $scriptpath/adb-sendkey.sh LEFT
+                            $scriptpath/adb-sendkey.sh LEFT
+                            $scriptpath/adb-sendkey.sh DOWN
+                            sleep 2
+                            remotefix="$remotefix $VIDEO_IN"
+                            trynum=0
+                        fi
+                    fi
+                    ;;
+                *)
+                    if grep "Remotes & Accessories" $DATADIR/${recname}_capture_crop.txt ; then
+                        match=Y
+                        break
+                    fi
+                    ;;
+            esac
             sleep 1
         done
         if [[ $match == Y ]] ; then break ; fi
@@ -139,9 +169,9 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
     done
 
     if [[ $match != Y ]] ; then
-        echo `$LOGDATE` "Failed to start XFinity on ${recname} - see $DATADIR/${recname}_capture.png"
+        echo `$LOGDATE` "Failed to navigate on ${recname} - see $DATADIR/${recname}_capture.png"
         $scriptpath/notify.py "Fire Stick Problem" \
-          "leancap_scan: Failed to start XFinity on ${recname}" &
+          "leancap_scan: Failed to navigate on ${recname}" &
         $scriptpath/adb-sendkey.sh HOME
         adb disconnect $ANDROID_DEVICE
         unlocktuner

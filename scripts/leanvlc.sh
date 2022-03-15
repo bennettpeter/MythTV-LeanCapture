@@ -20,8 +20,12 @@ ifparam=
 if [[ "$INPUT_FORMAT" == mjpeg ]] ; then
     ifparam=":v4l2-chroma=MJPG"
 fi
-audio=":input-slave=alsa://$AUDIO_IN"
-video="v4l2://$VIDEO_IN"
+if [[ "$AUDIO_IN" != "" ]] ; then
+    audio=":input-slave=alsa://$AUDIO_IN"
+fi
+if [[ "$VIDEO_IN" != "" ]] ; then
+    video="v4l2://$VIDEO_IN"
+fi
 vlc $video  :v4l2-width=1280 :v4l2-height=720  \
  $ifparam :v4l2-fps=30 :v4l2-aspect-ratio=16:9 $audio \
  --audio-desync $offset_ms
