@@ -84,10 +84,11 @@ assigned=
 # Invoke app and check where the result is
 for conffile in /etc/opt/mythtv/$reqname.conf ; do
     recname=$(basename $conffile .conf)
-    true > $DATADIR/${recname}.conf
     getparms
     if [[ "$ANDROID_DEVICE" == "" ]] ; then
         unlocktuner
+        # No device in configuration - clear out audio and video settings.
+        true > $DATADIR/${recname}.conf
         continue
     fi
     adb connect $ANDROID_DEVICE
