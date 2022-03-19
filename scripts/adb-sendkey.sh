@@ -308,10 +308,16 @@ fi
 keylist=
 while true ; do
     # interactive option
+    mainpid=$$
     if [[ "$key1parm" == "" ]] ; then
         keyname=$(zenity  --width=360 --height=1920 --list --title "Android adb Test" \
-        --text "Send Key" --column Key \
-        `set |grep KEYCODE|sed 's/KEYCODE_//;s/=.*//'` 2>/dev/null)
+                --text "Send Key" --column Key \
+                `set |grep KEYCODE|sed 's/KEYCODE_//;s/=.*//'` 2>/dev/null &
+            sleep 0.3
+            winid=$(xdotool search --onlyvisible --name  "Android adb Test")
+            xdotool windowmove $winid 0 0
+            wait
+        )
         if [[ "$?" != 0 ]] ; then exit ; fi
         if [[ "$keyname" == "" ]] ; then exit ; fi
     else
