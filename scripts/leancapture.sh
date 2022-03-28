@@ -32,8 +32,12 @@ logfile=$LOGDIR/${scriptname}_${recname}.log
             rc=0
         else
             rc=99
-            if (( count > 15 )) ; then
-            echo `$LOGDATE` "ERROR leancap_scan not yet run, tuner disabled"
+            # This count must be enough for all tuners to be scanned, since scandate is
+            # only created after all are scanned. 45 = 90 seconds
+            if (( count > 45 )) ; then
+                echo `$LOGDATE` "ERROR leancap_scan not yet run, tuner ${recname} disabled"
+                $scriptpath/notify.py "Fire Stick Problem" \
+                    "leancapture: leancap_scan not yet run, tuner ${recname} disabled" &
                 break
             fi
             echo `$LOGDATE` "leancap_scan not yet run, waiting 2 seconds"
