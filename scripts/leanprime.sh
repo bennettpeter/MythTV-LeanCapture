@@ -271,7 +271,7 @@ ffmpeg -hide_banner -loglevel error \
 -i $AUDIO_IN \
 -c:v libx264 \
 -vf format=yuv420p \
--preset faster \
+-preset $X264_PRESET \
 -crf $X264_CRF \
 -c:a aac \
 "$recfile" &
@@ -287,6 +287,7 @@ let endtime=starttime+durationsecs
 sleep 20
 filesize=0
 lowcount=0
+let minbytes=MINBYTES*2
 while true ; do
     now=`date +%s`
     if (( now > maxendtime )) ; then
@@ -310,9 +311,9 @@ while true ; do
     let diff=newsize-filesize
     filesize=$newsize
     echo `$LOGDATE` "size: $filesize  Incr: $diff"
-    if (( diff < 5000000 )) ; then
+    if (( diff < minbytes )) ; then
         let lowcount++
-        echo `$LOGDATE` "Less than 5 MB, lowcount=$lowcount"
+        echo `$LOGDATE` "Less than $minbytes, lowcount=$lowcount"
     else
         lowcount=0
     fi

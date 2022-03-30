@@ -44,7 +44,11 @@ Run this on your backend to get a value:
 
     sysbench --num-threads=$(nproc) --max-time=10 --test=cpu run
 
-Look at the resulting *events per second*. Based on my simple testing, each encode will take approximately 2000 out of this. I do not recommend loading the CPU to 100%, preferably do not go over 50%. If your *events per second* is 4000 you should only do 1 encode at a time. if it is 16000, you could theoretically do 8 at a time, but I would limit it to 4.
+Look at the resulting *events per second*. Based on my simple testing, each encode will take approximately 1200 out of this, when using CRF 21 and preset veryfast. I do not recommend loading the CPU to 100%, preferably do not go much over 50%. If your *events per second* is 2400 you could do 2 encodes at a time. if it is 10000, you could theoretically do 8 at a time, but I would limit it to 4 or 5.
+
+With preset faster and CRF 22 it needs 2000 events per second for each encode. With preset veryfast and CRF 21 it needs 1200 events per second for each encode. Varying these parameters gives different quality, file size and cpu usage. These parameters are set in the /etc/opt/mythtv/leancapture.conf file.
+
+https://superuser.com/questions/490683/cheat-sheets-and-presets-settings-that-actually-work-with-ffmpeg-1-0
 
 Since I tested on only a few backends, these figures may not be reliable. This is only a rough guide. Once you have your setup running, set a recording going and run mpstat 1 10 to see the %idle to get a better idea of how much CPU is being used.
 

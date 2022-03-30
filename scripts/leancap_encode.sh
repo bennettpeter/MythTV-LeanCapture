@@ -55,7 +55,7 @@ ffmpeg -hide_banner -loglevel error -f v4l2 -thread_queue_size 256 -input_format
   -use_wallclock_as_timestamps 1 \
   -i $VIDEO_IN -f alsa -ac 2 -ar 48000 -thread_queue_size 1024 \
   -itsoffset $AUDIO_OFFSET -i $AUDIO_IN \
-  -c:v libx264 -vf format=yuv420p -preset faster -crf $X264_CRF -c:a aac \
+  -c:v libx264 -vf format=yuv420p -preset $X264_PRESET -crf $X264_CRF -c:a aac \
   -f mpegts - | pv -b -n -i 30 2>> $progressfile &
 
 # This is actually the pv pid, but killing pv kills ffmpeg so all is ok.

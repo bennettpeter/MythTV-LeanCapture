@@ -14,11 +14,12 @@ if [[ "$MAXCHANNUM" == "" ]] ; then
     MAXCHANNUM=999
 fi
 if [[ "$MINBYTES" == "" ]] ; then
-    MINBYTES=1500000
+    MINBYTES=2500000
 fi
-
 if [[ "$X264_CRF" == "" ]] ; then
-    X264_CRF=22
+    X264_CRF=21
+if [[ "$X264_PRESET" == "" ]] ; then
+    X264_PRESET=veryfast
 fi
 if [[ "$FIRE_RESOLUTION" == "" ]] ; then
     FIRE_RESOLUTION_SETTING="720p 60Hz"

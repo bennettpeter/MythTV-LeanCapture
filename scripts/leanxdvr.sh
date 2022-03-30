@@ -301,7 +301,7 @@ while  (( numrecorded < maxrecordings )) ; do
     -i $AUDIO_IN \
     -c:v libx264 \
     -vf format=yuv420p \
-    -preset faster \
+    -preset $X264_PRESET \
     -crf $X264_CRF \
     -c:a aac \
     "$recfile" &
@@ -403,7 +403,7 @@ while  (( numrecorded < maxrecordings )) ; do
         echo `$LOGDATE` "size: $filesize  Incr: $diff"
         if (( diff < MINBYTES )) ; then
             let lowcount++
-            echo `$LOGDATE` "Less than $$MINBYTES, lowcount=$lowcount"
+            echo `$LOGDATE` "Less than $MINBYTES, lowcount=$lowcount"
         else
             lowcount=0
         fi

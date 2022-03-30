@@ -142,7 +142,7 @@ ffmpeg -hide_banner -loglevel error \
 -i $AUDIO_IN \
 -c:v libx264 \
 -vf format=yuv420p \
--preset faster \
+-preset $X264_PRESET \
 -crf $X264_CRF \
 -c:a aac \
 $VID_RECDIR/${recfile}.mkv &
@@ -156,6 +156,7 @@ starttime=`date +%s`
 let endtime=starttime+seconds
 filesize=0
 let loops=responses+1
+let minbytes=MINBYTES*2
 for (( xx = 0 ; xx < loops ; xx++ )) ; do
     lowcount=0
     while true ; do
@@ -177,9 +178,9 @@ for (( xx = 0 ; xx < loops ; xx++ )) ; do
         let diff=newsize-filesize
         filesize=$newsize
         echo `$LOGDATE` "size: $filesize  Incr: $diff"
-        if (( diff < 4000000 )) ; then
+        if (( diff < minbytes )) ; then
             let lowcount=lowcount+1
-            echo `$LOGDATE` "Less than 4 MB, lowcount=$lowcount"
+            echo `$LOGDATE` "Less than $minbytes, lowcount=$lowcount"
             CROP=" "
             capturepage adb
             if (( imagesize > 0 )) ; then
