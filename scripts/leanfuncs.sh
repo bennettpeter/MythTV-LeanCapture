@@ -18,6 +18,7 @@ if [[ "$MINBYTES" == "" ]] ; then
 fi
 if [[ "$X264_CRF" == "" ]] ; then
     X264_CRF=21
+fi
 if [[ "$X264_PRESET" == "" ]] ; then
     X264_PRESET=veryfast
 fi
