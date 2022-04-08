@@ -4,6 +4,8 @@
 # Tuners must be set up with files called /etc/opt/mythtv/leancap*.conf
 # This will create files /var/opt/mythtv/leancap*.conf
 # with VIDEO_IN and AUDIO_IN settings
+# This uses the SLEEP and WAKEUP commands to create a screen display
+# which is then checked.
 # 
 
 . /etc/opt/mythtv/leancapture.conf
@@ -40,7 +42,7 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
     fi
 done
 
-# set all tuners to HOME
+# set all tuners to SLEEP
 for conffile in /etc/opt/mythtv/$reqname.conf ; do
     echo $conffile found
     recname=$(basename $conffile .conf)
@@ -69,19 +71,31 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
         adb disconnect $ANDROID_DEVICE
         continue
     fi
-    capturepage
-    if [[ `stat -c %s $DATADIR/${recname}_capture_crop.txt` == 0 ]] ; then
-        $scriptpath/adb-sendkey.sh POWER
-    fi
-    $scriptpath/adb-sendkey.sh HOME
-    $scriptpath/adb-sendkey.sh DPAD_CENTER
+    $scriptpath/adb-sendkey.sh SLEEP
     adb disconnect $ANDROID_DEVICE
+    sleep 0.5
+done
+
+# check all video devices for off
+sleep 2
+for (( x=0; x<20; x=x+2 )) ; do
+    VIDEO_IN=/dev/video${x}
+    if [[ ! -e $VIDEO_IN ]] ; then continue ; fi
+    echo `$LOGDATE` "Trying: $VIDEO_IN"
+    CROP=" "
+    capturepage video
+    if [[ `stat -c %s $DATADIR/${recname}_capture_crop.txt` > 0 ]] ; then
+        echo `$LOGDATE` "ERROR: Device: $VIDEO_IN has stuff on screen."
+        $scriptpath/notify.py "Fire Stick Problem" \
+          "leancap_scan: ERROR, Device $VIDEO_IN has stuff on screen." &
+        exit 2
+    fi
 done
 
 capseq=0
 pidlist=
 assigned=
-# Invoke app and check where the result is
+# Got to HOME and see if it responds
 for conffile in /etc/opt/mythtv/$reqname.conf ; do
     recname=$(basename $conffile .conf)
     getparms
@@ -104,21 +118,8 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
     fi
 
     echo `$LOGDATE` "Reset recorder: $recname"
-    prodmodel=$(adb -s $ANDROID_DEVICE shell getprop ro.product.model)
-    case $prodmodel in
-        AFT*)
-            echo fire stick
-            $scriptpath/adb-sendkey.sh HOME
-            $scriptpath/adb-sendkey.sh LEFT
-            $scriptpath/adb-sendkey.sh LEFT
-            $scriptpath/adb-sendkey.sh DOWN
-            ;;
-        *)
-            echo other android
-            $scriptpath/adb-sendkey.sh HOME
-            $scriptpath/adb-sendkey.sh SETTINGS
-            ;;
-    esac
+    $scriptpath/adb-sendkey.sh WAKEUP
+    $scriptpath/adb-sendkey.sh HOME
     sleep 2
     match=N
     remotefix=
@@ -131,55 +132,28 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
             echo `$LOGDATE` "Trying: $VIDEO_IN"
             CROP=" "
             capturepage video
-            case $prodmodel in
-                AFT*)
-                    if grep "Controllers & Bluetooth" $DATADIR/${recname}_capture_crop.txt ; then
-                        match=Y
-                        break
-                    elif [[ "$pagename" == "We"*"detect your remote" ]] ; then
-                        # We don't know if this message comes from the device
-                        # currently processing, so send the enter once and start over
-                        if [[ "$remotefix" != *"$VIDEO_IN"* ]] ; then
-                            # HOME in case this is not the one
-                            $scriptpath/adb-sendkey.sh HOME
-                            # DPAD_CENTER in case this is the one
-                            $scriptpath/adb-sendkey.sh DPAD_CENTER
-                            # HOME so we can start over
-                            $scriptpath/adb-sendkey.sh HOME
-                            $scriptpath/adb-sendkey.sh LEFT
-                            $scriptpath/adb-sendkey.sh LEFT
-                            $scriptpath/adb-sendkey.sh DOWN
-                            sleep 2
-                            remotefix="$remotefix $VIDEO_IN"
-                            trynum=0
-                        fi
-                    fi
-                    ;;
-                *)
-                    if grep "Remotes & Accessories" $DATADIR/${recname}_capture_crop.txt ; then
-                        match=Y
-                        break
-                    fi
-                    ;;
-            esac
-            sleep 1
+            if [[ `stat -c %s $DATADIR/${recname}_capture_crop.txt` > 0 ]] ; then
+                match=Y
+                break;
+            fi
+            sleep 2
         done
         if [[ $match == Y ]] ; then break ; fi
         echo `$LOGDATE` "Failed to read screen on ${recname}, trying again"
-        sleep 1
+        sleep 2
     done
 
     if [[ $match != Y ]] ; then
-        echo `$LOGDATE` "Failed to navigate on ${recname} - see $DATADIR/${recname}_capture.png"
+        echo `$LOGDATE` "Failed to identify ${recname}."
         $scriptpath/notify.py "Fire Stick Problem" \
-          "leancap_scan: Failed to navigate on ${recname}" &
-        $scriptpath/adb-sendkey.sh HOME
+          "leancap_scan: Failed to identify ${recname}" &
+        $scriptpath/adb-sendkey.sh SLEEP
         adb disconnect $ANDROID_DEVICE
         unlocktuner
         continue
     fi
     # We have the video device,now get the audio device
-    $scriptpath/adb-sendkey.sh HOME
+    $scriptpath/adb-sendkey.sh SLEEP
     adb disconnect $ANDROID_DEVICE
 
     # vid_path is a string like pci-0000:00:14.0-usb-0:2.2:1.0
