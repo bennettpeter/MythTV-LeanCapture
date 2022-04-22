@@ -216,6 +216,7 @@ function getparms {
 # TSSPARM amd CROP are cleared at the end of the function.
 # USE_GOCR: Set to 1 to use GOCR instead of tesseract
 # Return 1 if wrong resolution is found
+# CAP_TYPE returns 0 for text, 1 for same text as before, 2 for blank screen, 3 for no capture
 function capturepage {
     pagename=
     imagesize=0
@@ -270,17 +271,21 @@ function capturepage {
                 | sed '/^ *$/d' > $DATADIR/${recname}_capture_crop.txt
         fi
         if [[ `stat -c %s $DATADIR/${recname}_capture_crop.txt` == 0 ]] ; then
-            echo `$LOGDATE` Blank Screen from $cap_source
+            # echo `$LOGDATE` Blank Screen from $cap_source
+            CAP_TYPE=2
         elif diff -q $DATADIR/${recname}_capture_crop.txt $DATADIR/${recname}_capture_crop_prior.txt >/dev/null ; then
             echo `$LOGDATE` Same Screen Again
+            CAP_TYPE=1
         else
             echo "*****" `$LOGDATE` Screen from $cap_source
             cat $DATADIR/${recname}_capture_crop.txt
             echo "*****"
+            CAP_TYPE=0
         fi
         pagename=$(head -n 1 $DATADIR/${recname}_capture_crop.txt)
     else
-        echo `$LOGDATE` No Screen capture
+        # echo `$LOGDATE` No Screen capture
+        CAP_TYPE=3
     fi
     TESSPARM=
     CROP=

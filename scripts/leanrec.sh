@@ -3,7 +3,7 @@
 
 title=
 
-minutes=120
+minutes=
 recname=leancap1
 wait=1
 season=
@@ -13,6 +13,8 @@ ADB_ENDKEY=
 srch=
 prekeys=
 postkeys=
+dosrch=1
+playing=0
 
 while (( "$#" >= 1 )) ; do
     case $1 in
@@ -23,7 +25,7 @@ while (( "$#" >= 1 )) ; do
                 shift||rc=$?
             fi
             ;;
-        --time)
+        --time|-m)
             if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
             else
                 minutes="$2"
@@ -58,6 +60,13 @@ while (( "$#" >= 1 )) ; do
                 shift||rc=$?
             fi
             ;;
+        --nosrch)
+            dosrch=0
+            ;;
+        --playing)
+            playing=1
+            dosrch=0
+            ;;
         --prekeys)
             if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
             else
@@ -84,7 +93,7 @@ while (( "$#" >= 1 )) ; do
 done
 
 if [[ "$error" == y || "$title" == "" || "$season" == "" \
-      || "$episode" == ""  ]] ; then
+      || "$episode" == "" || "$minutes" == "" ]] ; then
     echo "*** $0 ***"
     echo "Generic Record"
     echo "Disable autoplay"
@@ -93,12 +102,17 @@ if [[ "$error" == y || "$title" == "" || "$season" == "" \
     echo "After recording will not return to HOME unless there was an error."
     echo "Input parameters:"
     echo "--title|-t xxxx : Title"
-    echo "--time nn : Maximum Number of minutes [default 120]"
+    echo "--time|-m nn : Estimated Number of minutes [required]"
+    echo "    If show ends before 66% or after 133% of this it is an error"
     echo "--recname|-n xxxxxxxx : Recorder id (default leancap1)"
     echo "--season|-S nn : Season without leading zeroes"
     echo "--episode|-E nn : Episode without leading zeroes"
     echo "--srch string : Alternate search string for identifying correct page"
-    echo "--prekeys string : Keystrokes to send to get to correct page"
+    echo "--nosrch : Do not check for correct page."
+    echo "--playing : Do not send Enter key at start. Use when playback is already going"
+    echo "    This also sets nosrch."
+    echo "--prekeys string : Keystrokes to send before playback to get to correct page"
+    echo "    This probably should not be used with playing option."
     echo "--postkeys string : Keystrokes to send after successful recording"
     echo "--wait : Pause immediately before playback, for testing"
     echo "    or to rewind in progress show to beginning."
@@ -160,7 +174,7 @@ if [[ "$srch" != "" ]] ; then
 else
     str="\nSeason $season.*Episode $episode |\nSeason $season \($episode\)"
 fi
-if ! waitforstring "$str" "Season and Episode" ; then
+if (( dosrch )) && ! waitforstring "$str" "Season and Episode" ; then
     echo `$LOGDATE` "ERROR - Wrong Season & Episode Selected"
     exit 2
 fi
@@ -191,7 +205,7 @@ if (( wait )) ; then
     # Kill vlc
     while pidof vlc ; do
         wmctrl -c vlc
-        sleep 2
+        sleep 1
     done
     ADB_ENDKEY=HOME
 fi
@@ -201,7 +215,9 @@ mkdir -p "$VID_RECDIR/$title"
 echo `$LOGDATE` "Starting recording of $recfile"
 # Start Recording
 
-$scriptpath/adb-sendkey.sh DPAD_CENTER
+if (( ! playing )) ; then
+    $scriptpath/adb-sendkey.sh DPAD_CENTER
+fi
 
 ffmpeg -hide_banner -loglevel error \
 -f v4l2 \
@@ -226,32 +242,68 @@ ffmpeg -hide_banner -loglevel error \
 
 ffmpeg_pid=$!
 starttime=`date +%s`
-let maxduration=minutes*60
+let maxduration=minutes*60*133/100
+let minduration=minutes*60*66/100
 let maxendtime=starttime+maxduration
-let minendtime=starttime+300
-sleep 20
+let firstminute=starttime+60
+let minendtime=starttime+minduration
+echo "Minimum end time" $(date -d @$minendtime)
+echo "Maximum end time" $(date -d @$maxendtime)
 filesize=0
 lowcount=0
+# textoverlay indicates there is a text overlay on the video, which
+# means text can pop up any time and therefore the value must be tested.
+# If there in no text overlay you can assume the video is over as soon
+# as you see text.
+textoverlay=0
 let minbytes=MINBYTES*2
 while true ; do
     now=`date +%s`
     if (( now > maxendtime )) ; then
-        echo `$LOGDATE` "Recording for too long, kill it"
+        echo `$LOGDATE` "ERROR: Recording for too long, kill it"
         exit 2
     fi
     if ! ps -q $ffmpeg_pid >/dev/null ; then
-        echo `$LOGDATE` "ffmpeg is gone, exit"
+        echo `$LOGDATE` "ERROR: ffmpeg is gone, exit"
         exit 2
     fi
-    capturepage adb
-    if [[ "$pagename" != "" ]] || (( lowcount > 4 )) ; then
-        kill $ffmpeg_pid
-        sleep 2
-        capturepage
-        echo `$LOGDATE` "Recording $recfile ended."
-        break
+    for (( x=0; x<12; x++ )) ; do
+        capturepage adb
+        if (( ! textoverlay  && CAP_TYPE == 2 )) ; then
+            textoverlay=1
+            echo `$LOGDATE` Blank Screen sets textoverlay flag.
+        fi
+        if [[ "$pagename" != "" ]] ; then
+            # peacock select watch from start
+            if [[ "$pagename" == "Would you like to watch from start or resume"* ]] ; then
+                $scriptpath/adb-sendkey.sh DPAD_CENTER
+                sleep 4.5
+                continue
+            fi
+            if (( now < firstminute )) ; then
+                sleep 4.5
+                continue
+            fi
+            if (( ! textoverlay )) ; then
+                sleep 2
+                kill $ffmpeg_pid
+                echo `$LOGDATE` "Recording $recfile ended with text screen."
+                break 2
+            fi
+            # peacock prompt
+            if grep '^Cancel$' $DATADIR/${recname}_capture_crop.txt ; then
+                sleep 2
+                kill $ffmpeg_pid
+                echo `$LOGDATE` "Recording $recfile ended with Next Up prompt."
+                break 2
+            fi
+        fi
+        sleep 4.5
+    done
+    if (( lowcount > 4 )) ; then
+        echo `$LOGDATE` "ERROR: Recording seems to have stuck, kill it"
+        exit 2
     fi
-    sleep 60
     newsize=`stat -c %s "$recfile"`
     let diff=newsize-filesize
     filesize=$newsize
@@ -264,7 +316,8 @@ while true ; do
     fi
 done
 if (( now < minendtime )) ; then
-    echo `$LOGDATE` "WARNING Recording is less than 5 minutes"
+    echo `$LOGDATE` "ERROR Recording is less than minimum, kill it"
+    exit 2
 fi
 ADB_ENDKEY="$postkeys"
 echo `$LOGDATE` "Complete - Recorded"
