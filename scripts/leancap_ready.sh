@@ -58,12 +58,15 @@ while true ; do
             #~ capturepage adb
             #~ rc=$?
             #~ if (( rc == 1 )) ; then
-            fireresolution
-            rc=$?
-            if (( rc != 0 )) ; then
-                $scriptpath/notify.py "Fire Stick Problem" \
-                  "leancap_ready: Cannot set resolution on ${recname}" &
-            fi
+
+            # 4/22/2022 commented because of change in UI
+            #~ fireresolution
+            #~ rc=$?
+            #~ if (( rc != 0 )) ; then
+                #~ $scriptpath/notify.py "Fire Stick Problem" \
+                  #~ "leancap_ready: Cannot set resolution on ${recname}" &
+            #~ fi
+
             #~ else
                 #~ $scriptpath/adb-sendkey.sh POWER
                 #~ $scriptpath/adb-sendkey.sh HOME
