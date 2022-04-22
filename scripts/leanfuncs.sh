@@ -529,7 +529,21 @@ function fireresolution {
     $scriptpath/adb-sendkey.sh HOME
     sleep 0.5
     #Get to settings
-    $scriptpath/adb-sendkey.sh LEFT LEFT
+    local xx
+    local match=0
+    for (( xx = 0; xx < 5; xx++ )) ; do
+        $scriptpath/adb-sendkey.sh LEFT
+        sleep 2
+        capturepage
+        if grep "Display & Sounds" $DATADIR/${recname}_capture_crop.txt ; then
+            match=1
+            break
+        fi
+    done
+    if (( ! match )) ; then
+        echo `$LOGDATE` "ERROR - cannot get to settings page"
+        return 2
+    fi
     # Get to Display & Sounds
     $scriptpath/adb-sendkey.sh DOWN RIGHT RIGHT RIGHT
     $scriptpath/adb-sendkey.sh DPAD_CENTER
@@ -544,8 +558,7 @@ function fireresolution {
     if ! waitforpage "VIDEO RESOLUTION" ; then
         return 2
     fi
-    local match=0
-    local xx
+    match=0
     # Move down through the list of resolutions untilwe get to the desired one
     for (( xx = 0; xx < 10 ; xx++ )) ; do
         sleep 0.2
