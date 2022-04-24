@@ -29,7 +29,7 @@ fi
 # Do not use gettunestatus here because that tries to lock and fails
 # if it cannot
 
-tunefile=$DATADIR/${recname}_tune.stat
+tunefile=$TEMPDIR/${recname}_tune.stat
 source $tunefile
 
 if [[ "$tunestatus" == tuned ]] ; then

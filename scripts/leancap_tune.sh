@@ -67,7 +67,7 @@ if (( channum <= 0 )) ; then
     exit 2
 fi
 
-tunefile=$DATADIR/${recname}_tune.stat
+tunefile=$TEMPDIR/${recname}_tune.stat
 true > $tunefile
 
 adb connect $ANDROID_DEVICE
@@ -109,7 +109,7 @@ for (( xx=0; xx<5; xx++ )) ; do
         echo `$LOGDATE` "channels: ${channels[@]}"
         getchannelselection
         if (( selection < 0)) ; then
-            cp $DATADIR/${recname}_capture.png $DATADIR/${recname}_capture_channels.png
+            cp $TEMPDIR/${recname}_capture.png $TEMPDIR/${recname}_capture_channels.png
         fi
         for (( xx2=0; selection<0 && xx2<5; xx2++ )) ; do
             echo `$LOGDATE` "No channel selection, moving cursor"
@@ -126,7 +126,7 @@ for (( xx=0; xx<5; xx++ )) ; do
         if (( selection < 0)) ; then
             echo `$LOGDATE` "ERROR: Cannot determine channel selection, try again"
             savefile=$DATADIR/$($LOGDATE)_${recname}_capture_channels.png
-            cp $DATADIR/${recname}_capture_channels.png "$savefile"
+            cp $TEMPDIR/${recname}_capture_channels.png "$savefile"
             echo `$LOGDATE` "$savefile created for debugging"
             launchXfinity
             #~ $scriptpath/adb-sendkey.sh MENU

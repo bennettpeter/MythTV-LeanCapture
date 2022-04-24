@@ -294,14 +294,14 @@ else
     srchstring="^$episode\."
 fi
 
-subtitle=$(grep -E -m 1 "$srchstring" $DATADIR/${recname}_capture_crop.txt | sed "s/[0-9]*\.//")
+subtitle=$(grep -E -m 1 "$srchstring" $TEMPDIR/${recname}_capture_crop.txt | sed "s/[0-9]*\.//")
 echo "subtitle: $subtitle"
-lineno=$(grep -E -m 1 -n "$srchstring" $DATADIR/${recname}_capture_crop.txt | sed "s/:.*//")
+lineno=$(grep -E -m 1 -n "$srchstring" $TEMPDIR/${recname}_capture_crop.txt | sed "s/:.*//")
 #default duration
 duration="20min"
 orig_airdate=
 if (( lineno > 0 )) ; then
-    dattim=$(sed -n "$lineno,999p" $DATADIR/${recname}_capture_crop.txt | grep -m 1 " [0-9][0-9]*min ")
+    dattim=$(sed -n "$lineno,999p" $TEMPDIR/${recname}_capture_crop.txt | grep -m 1 " [0-9][0-9]*min ")
     duration=$(echo "$dattim" | grep -o " [0-9][0-9]*min ")
     orig_airdate=$(echo "$dattim" | sed "s/$duration.*//")
     if echo $orig_airdate | grep "[0-9],[0-9]" ; then
@@ -412,7 +412,6 @@ while true ; do
     fi
     capturepage adb
     if [[ "$pagename" != "" ]] || (( lowcount > 4 )) ; then
-        kill $ffmpeg_pid
         sleep 2
         capturepage
         echo `$LOGDATE` "Recording $recfile ended."

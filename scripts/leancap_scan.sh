@@ -47,7 +47,7 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
     echo $conffile found
     recname=$(basename $conffile .conf)
 
-    tunefile=$DATADIR/${recname}_tune.stat
+    tunefile=$TEMPDIR/${recname}_tune.stat
     # Clear status
     true > $tunefile
 
@@ -84,7 +84,7 @@ for (( x=0; x<20; x=x+2 )) ; do
     echo `$LOGDATE` "Trying: $VIDEO_IN"
     CROP=" "
     capturepage video
-    if [[ `stat -c %s $DATADIR/${recname}_capture_crop.txt` > 0 ]] ; then
+    if [[ `stat -c %s $TEMPDIR/${recname}_capture_crop.txt` > 0 ]] ; then
         echo `$LOGDATE` "ERROR: Device: $VIDEO_IN has stuff on screen."
         $scriptpath/notify.py "Fire Stick Problem" \
           "leancap_scan: ERROR, Device $VIDEO_IN has stuff on screen." &
@@ -132,7 +132,7 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
             echo `$LOGDATE` "Trying: $VIDEO_IN"
             CROP=" "
             capturepage video
-            if [[ `stat -c %s $DATADIR/${recname}_capture_crop.txt` > 0 ]] ; then
+            if [[ `stat -c %s $TEMPDIR/${recname}_capture_crop.txt` > 0 ]] ; then
                 match=Y
                 break;
             fi

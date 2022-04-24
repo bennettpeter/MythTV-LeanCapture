@@ -146,7 +146,7 @@ if ! waitforstring "\n$title\n" "$title" ; then
 fi
 
 # Check season
-if ! grep "^Season $season" $DATADIR/${recname}_capture_crop.txt ; then
+if ! grep "^Season $season" $TEMPDIR/${recname}_capture_crop.txt ; then
     echo `$LOGDATE` "ERROR - Wrong Season Selected"
     exit 2
 fi
@@ -164,7 +164,7 @@ if ! waitforstring "\nSeason $season, Episode [0-9][0-9]*" "Episode" ; then
     exit 2
 fi
 # See what episode we are on
-sep=($(grep -o -m 1 "^Season $season, Episode [0-9][0-9]*" $DATADIR/${recname}_capture_crop.txt))
+sep=($(grep -o -m 1 "^Season $season, Episode [0-9][0-9]*" $TEMPDIR/${recname}_capture_crop.txt))
 epfound=${sep[3]}
 if [[ "$epfound" == "" ]] ; then
     echo `$LOGDATE` "ERROR - Cannot see what episode was selected"
@@ -188,13 +188,13 @@ fi
 
 subtitle=
 # This gives the subtitle plus first sentence of description. Not useful.
-#~ subtitle=$(grep -m 1 "^Season $season, Episode $episode - " $DATADIR/${recname}_capture_crop.txt \
+#~ subtitle=$(grep -m 1 "^Season $season, Episode $episode - " $TEMPDIR/${recname}_capture_crop.txt \
     #~ | sed "s/^Season $season, Episode $episode - //")
 echo "subtitle: $subtitle"
 duration="20min"
 orig_airdate=
 # This extracts duration and orig air date but is not reliable
-#~ dirtim=($(grep -E -m 1 "^[0-9][0-9]* *min|^[0-9][0-9]* *hr" $DATADIR/${recname}_capture_crop.txt))
+#~ dirtim=($(grep -E -m 1 "^[0-9][0-9]* *min|^[0-9][0-9]* *hr" $TEMPDIR/${recname}_capture_crop.txt))
 #~ size=${#dirtim[@]}
 #~ duration="${dirtim[@]:0:size-3}"
 #~ orig_aridate="${dirtim[@]:size-3:3}"

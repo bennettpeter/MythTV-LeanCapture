@@ -136,13 +136,13 @@ while  (( numrecorded < maxrecordings )) ; do
     linesel=3
     title=
     while true ; do
-        title=$(head -$linesel $DATADIR/${recname}_capture_crop.txt  | tail -1)
+        title=$(head -$linesel $TEMPDIR/${recname}_capture_crop.txt  | tail -1)
         echo `$LOGDATE` "title: $title"
         if [[ "$title" == "Deleted Recordings" ]] ; then
             echo `$LOGDATE` "Reached Deleted Recordings - Stop run"
             break 2;
         elif [[ "$title" == "You have no completed recordings"* ]] ; then
-            status=$(grep -m 1 "% Full [0-9]* Recordings" $DATADIR/${recname}_capture_crop.txt)
+            status=$(grep -m 1 "% Full [0-9]* Recordings" $TEMPDIR/${recname}_capture_crop.txt)
             if [[ "$status" != "0% Full 0 Recordings" ]] ; then
                 if (( retries > 2 )) ; then
                     echo `$LOGDATE` "ERROR: Inconsistent recordings page"
@@ -201,7 +201,7 @@ while  (( numrecorded < maxrecordings )) ; do
     fi
     sleep 1
     capturepage
-    season_episode=$(grep "^[S\$5][^ ]* *| *Ep[^ ]*$" $DATADIR/${recname}_capture_crop.txt | tail -1)
+    season_episode=$(grep "^[S\$5][^ ]* *| *Ep[^ ]*$" $TEMPDIR/${recname}_capture_crop.txt | tail -1)
     season_episode=$(echo $season_episode | sed "s/| / /;s/ |/ /;s/ *Ep/E/;s/\\$/S/;s/^5/S/")
     # Lowercase l should be 1 and other fixes
     season_episode=$(echo $season_episode | sed "s/[liI|]/1/g;s/St/S11/;s/Et/E1/;s/s/8/g;s/^5/S/")
@@ -222,7 +222,7 @@ while  (( numrecorded < maxrecordings )) ; do
         fi
         season_episode=S${season}E${episode}
     fi
-    orig_airdate=$(grep -o "([0-9]*/[0-9/]*)" $DATADIR/${recname}_capture_crop.txt | head -1)
+    orig_airdate=$(grep -o "([0-9]*/[0-9/]*)" $TEMPDIR/${recname}_capture_crop.txt | head -1)
     orig_airdate=$(echo "$orig_airdate" | sed "s/(//;s/)//")
     if [[ "$orig_airdate" != "" ]] ; then
         orig_airdate=$(date -d "$orig_airdate" "+%y%m%d")
@@ -234,16 +234,16 @@ while  (( numrecorded < maxrecordings )) ; do
         recfilebase="$season_episode"
     fi
     recfile="$VID_RECDIR/$title/$recfilebase.mkv"
-    convert $DATADIR/${recname}_capture.png -gravity East -crop 25%x100% -negate -brightness-contrast 0x20 $DATADIR/${recname}_capture_details.png
-    tesseract $DATADIR/${recname}_capture_details.png  - 2>/dev/null | sed '/^ *$/d' > $DATADIR/${recname}_details.txt
+    convert $TEMPDIR/${recname}_capture.png -gravity East -crop 25%x100% -negate -brightness-contrast 0x20 $TEMPDIR/${recname}_capture_details.png
+    tesseract $TEMPDIR/${recname}_capture_details.png  - 2>/dev/null | sed '/^ *$/d' > $TEMPDIR/${recname}_details.txt
     echo `$LOGDATE` "Episode Details:"
     echo "*****"
-    cat $DATADIR/${recname}_details.txt
+    cat $TEMPDIR/${recname}_details.txt
     echo "*****"
-    lno=`grep -n -m 1 "^Details$" $DATADIR/${recname}_details.txt`
+    lno=`grep -n -m 1 "^Details$" $TEMPDIR/${recname}_details.txt`
     lno=${lno%:*}
     let lno=lno+2
-    duration=`head -$lno $DATADIR/${recname}_details.txt | tail -1`
+    duration=`head -$lno $TEMPDIR/${recname}_details.txt | tail -1`
     if [[ "$duration" =~ ^[0-9]*min$ ]] ; then
         duration=${duration%min}
         let duration=duration*60
@@ -311,9 +311,9 @@ while  (( numrecorded < maxrecordings )) ; do
     sleep 10
     capturepage adb
     # Get past resume prompt and start over
-    if [[ `stat -c %s $DATADIR/${recname}_capture_crop.png` != 0 ]] ; then
-        if  grep "Resume" $DATADIR/${recname}_capture_crop.txt \
-            ||  grep "Start" $DATADIR/${recname}_capture_crop.txt ; then
+    if [[ `stat -c %s $TEMPDIR/${recname}_capture_crop.png` != 0 ]] ; then
+        if  grep "Resume" $TEMPDIR/${recname}_capture_crop.txt \
+            ||  grep "Start" $TEMPDIR/${recname}_capture_crop.txt ; then
             echo `$LOGDATE` "Selecting Start Over from Resume Prompt"
             $scriptpath/adb-sendkey.sh DOWN
             $scriptpath/adb-sendkey.sh DPAD_CENTER
@@ -345,14 +345,14 @@ while  (( numrecorded < maxrecordings )) ; do
             sleep 2
             capturepage
             # Handle "Delete Recording" at end
-            if [[ `stat -c %s $DATADIR/${recname}_capture_crop.png` != 0 ]] ; then
-                if grep "Delete Recording" $DATADIR/${recname}_capture_crop.txt ; then
+            if [[ `stat -c %s $TEMPDIR/${recname}_capture_crop.png` != 0 ]] ; then
+                if grep "Delete Recording" $TEMPDIR/${recname}_capture_crop.txt ; then
                     echo `$LOGDATE` "End of Recording - Delete"
                     $scriptpath/adb-sendkey.sh DPAD_CENTER
                     sleep 1
                     capturepage
                     xx=0
-                    while ! grep "Delete Now"  $DATADIR/${recname}_capture_crop.txt ; do
+                    while ! grep "Delete Now"  $TEMPDIR/${recname}_capture_crop.txt ; do
                         if (( ++xx > 30 )) ; then
                             echo `$LOGDATE` "ERROR Cannot get to Delete Now page"
                             my_exit 2
@@ -360,11 +360,11 @@ while  (( numrecorded < maxrecordings )) ; do
                         sleep 1
                         capturepage
                     done
-                    ques=$(grep -n "Are you sure you want to delete " $DATADIR/${recname}_capture_crop.txt)
+                    ques=$(grep -n "Are you sure you want to delete " $TEMPDIR/${recname}_capture_crop.txt)
                     lno=${ques%:*}
                     subtitle=${ques#*:Are you sure you want to delete }
                     let lno++
-                    subtitle2=$(head -n $lno $DATADIR/${recname}_capture_crop.txt | tail -1)
+                    subtitle2=$(head -n $lno $TEMPDIR/${recname}_capture_crop.txt | tail -1)
                     if [[ "$subtitle2" =~ \?$ ]] ; then
                         subtitle=`echo $subtitle $subtitle2`
                     fi

@@ -26,6 +26,10 @@ if [[ "$FIRE_RESOLUTION" == "" ]] ; then
     FIRE_RESOLUTION_SETTING="720p 60Hz"
     FIRE_RESOLUTION=1280x720
 fi
+if [[ "$TEMPDIR" == "" ]] ; then
+    TEMPDIR=/dev/shm/leancap
+fi
+mkdir -p $TEMPDIR
 
 # Keys : 6 DOWNS for favorite or 5 DOWNS for All
 case "$NAVTYPE" in
@@ -149,7 +153,7 @@ function initialize {
     echo `$LOGDATE` "Start of run ***********************"
     trap exitfunc EXIT
     if [[ "$recname" != "" ]] ; then
-        true > $DATADIR/${recname}_capture_crop.txt
+        true > $TEMPDIR/${recname}_capture_crop.txt
     fi
 }
 
@@ -217,6 +221,7 @@ function getparms {
 # USE_GOCR: Set to 1 to use GOCR instead of tesseract
 # Return 1 if wrong resolution is found
 # CAP_TYPE returns 0 for text, 1 for same text as before, 2 for blank screen, 3 for no capture
+# imagesize returns size of full image file
 function capturepage {
     pagename=
     imagesize=0
@@ -225,64 +230,63 @@ function capturepage {
     if [[ "$CROP" == "" ]] ; then
         CROP="-gravity East -crop 95%x100%"
     fi
-    #~ if [[ "$TESSPARM" == "" ]] ; then
-        #~ TESSPARM="-c tessedit_char_whitelist=0123456789QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm "
-    #~ fi
-    cp -f $DATADIR/${recname}_capture_crop.txt $DATADIR/${recname}_capture_crop_prior.txt
-    true > $DATADIR/${recname}_capture.png
-    true > $DATADIR/${recname}_capture_crop.png
-    true > $DATADIR/${recname}_capture_crop.txt
+    # Make sure file exists
+    touch $TEMPDIR/${recname}_capture_crop.txt
+    cp -f $TEMPDIR/${recname}_capture_crop.txt $TEMPDIR/${recname}_capture_crop_prior.txt
+    true > $TEMPDIR/${recname}_capture.png
+    true > $TEMPDIR/${recname}_capture_crop.png
+    true > $TEMPDIR/${recname}_capture_crop.txt
     cap_source=
     if ( [[ "$source_req" == "" || "$source_req" == video  ]] ) \
       && ( [[ "$ffmpeg_pid" == "" ]] || ! ps -q $ffmpeg_pid >/dev/null ) \
       && [[ "$VIDEO_IN" != "" ]] ; then
-        ffmpeg -hide_banner -loglevel error  -y -f v4l2 -s $OCR_RESOLUTION -i $VIDEO_IN -frames 1 $DATADIR/${recname}_capture.png
+        ffmpeg -hide_banner -loglevel error  -y -f v4l2 -s $OCR_RESOLUTION -i $VIDEO_IN -frames 1 $TEMPDIR/${recname}_capture.png
         cap_source=ffmpeg
     fi
-    imagesize=$(stat -c %s $DATADIR/${recname}_capture.png)
+    imagesize=$(stat -c %s $TEMPDIR/${recname}_capture.png)
     if (( imagesize == 0 )) ; then
         if [[ "$source_req" == "" || "$source_req" == adb  ]] ; then
-            adb -s $ANDROID_DEVICE exec-out screencap -p > $DATADIR/${recname}_capture.png
+            adb -s $ANDROID_DEVICE exec-out screencap -p > $TEMPDIR/${recname}_capture.png
             cap_source=adb
-            imagesize=$(stat -c %s $DATADIR/${recname}_capture.png)
+            imagesize=$(stat -c %s $TEMPDIR/${recname}_capture.png)
         fi
     fi
     if (( imagesize > 0 )) ; then
-        resolution=$(identify -format %wx%h $DATADIR/${recname}_capture.png)
+        resolution=$(identify -format %wx%h $TEMPDIR/${recname}_capture.png)
         if [[ "$cap_source" == adb && "$resolution" != "$FIRE_RESOLUTION" ]] ; then
             rc=1
             echo `$LOGDATE` "WARNING Incorrect resolution $resolution"
         fi
         if [[ "$resolution" != "$OCR_RESOLUTION" ]] ; then
-            convert $DATADIR/${recname}_capture.png -resize "$OCR_RESOLUTION" $DATADIR/${recname}_capturex.png
-            cp -f $DATADIR/${recname}_capturex.png $DATADIR/${recname}_capture.png
-            imagesize=$(stat -c %s $DATADIR/${recname}_capture.png)
+            convert $TEMPDIR/${recname}_capture.png -resize "$OCR_RESOLUTION" $TEMPDIR/${recname}_capturex.png
+            cp -f $TEMPDIR/${recname}_capturex.png $TEMPDIR/${recname}_capture.png
+            imagesize=$(stat -c %s $TEMPDIR/${recname}_capture.png)
         fi
     fi
     if (( imagesize > 0 )) ; then
-        convert $DATADIR/${recname}_capture.png $CROP -negate -brightness-contrast 0x20 $DATADIR/${recname}_capture_crop.png
+        convert $TEMPDIR/${recname}_capture.png $CROP -negate -brightness-contrast 0x20 $TEMPDIR/${recname}_capture_crop.png
     fi
-    if [[ `stat -c %s $DATADIR/${recname}_capture_crop.png` != 0 ]] ; then
+    if [[ `stat -c %s $TEMPDIR/${recname}_capture_crop.png` != 0 ]] ; then
         if (( $USE_GOCR )) ; then
-            gocr $DATADIR/${recname}_capture_crop.png 2>/dev/null \
-                | sed '/^ *$/d' > $DATADIR/${recname}_capture_crop.txt
+            gocr $TEMPDIR/${recname}_capture_crop.png 2>/dev/null \
+                | sed '/^ *$/d' > $TEMPDIR/${recname}_capture_crop.txt
         else
-            tesseract -c page_separator="" $DATADIR/${recname}_capture_crop.png  - $TESSPARM 2>/dev/null \
-                | sed '/^ *$/d' > $DATADIR/${recname}_capture_crop.txt
+            tesseract -c page_separator="" $TEMPDIR/${recname}_capture_crop.png  - $TESSPARM 2>/dev/null \
+                | sed '/^ *$/d' > $TEMPDIR/${recname}_capture_crop.txt
         fi
-        if [[ `stat -c %s $DATADIR/${recname}_capture_crop.txt` == 0 ]] ; then
+        if [[ `stat -c %s $TEMPDIR/${recname}_capture_crop.txt` == 0 ]] ; then
             # echo `$LOGDATE` Blank Screen from $cap_source
             CAP_TYPE=2
-        elif diff -q $DATADIR/${recname}_capture_crop.txt $DATADIR/${recname}_capture_crop_prior.txt >/dev/null ; then
+        elif diff -q $TEMPDIR/${recname}_capture_crop.txt $TEMPDIR/${recname}_capture_crop_prior.txt >/dev/null ; then
             echo `$LOGDATE` Same Screen Again
             CAP_TYPE=1
         else
             echo "*****" `$LOGDATE` Screen from $cap_source
-            cat $DATADIR/${recname}_capture_crop.txt
+            cat $TEMPDIR/${recname}_capture_crop.txt
             echo "*****"
             CAP_TYPE=0
         fi
-        pagename=$(head -n 1 $DATADIR/${recname}_capture_crop.txt)
+        pagename=$(head -n 1 $TEMPDIR/${recname}_capture_crop.txt)
     else
         # echo `$LOGDATE` No Screen capture
         CAP_TYPE=3
@@ -347,7 +351,7 @@ function waitforstring {
         if [[ "$pagename" == "We"*"detect your remote" ]] ; then
             $scriptpath/adb-sendkey.sh DPAD_CENTER
         fi
-        if grep -oPz "$search" $DATADIR/${recname}_capture_crop.txt ; then
+        if grep -oPz "$search" $TEMPDIR/${recname}_capture_crop.txt ; then
             # Output a newline
             echo
             found=1
@@ -375,7 +379,7 @@ function gettunestatus {
         echo `$LOGDATE` "ERROR - Cannot lock to get tune status"
         return 1
     fi
-    tunefile=$DATADIR/${recname}_tune.stat
+    tunefile=$TEMPDIR/${recname}_tune.stat
     touch $tunefile
     # Default tunestatus
     tunestatus=idle
@@ -494,7 +498,7 @@ function navigate {
             ;;
         *)
             if [[ "$pagereq" == Search ]] ; then
-                if grep "Press and hold.*to say words and phrases" $DATADIR/${recname}_capture_crop.txt ; then
+                if grep "Press and hold.*to say words and phrases" $TEMPDIR/${recname}_capture_crop.txt ; then
                     pagename=Search_keyboard
                     break
                 fi
@@ -535,7 +539,7 @@ function fireresolution {
         $scriptpath/adb-sendkey.sh LEFT
         sleep 2
         capturepage
-        if grep "Display & Sounds" $DATADIR/${recname}_capture_crop.txt ; then
+        if grep "Display & Sounds" $TEMPDIR/${recname}_capture_crop.txt ; then
             match=1
             break
         fi
@@ -564,7 +568,7 @@ function fireresolution {
         sleep 0.2
         CROP="-gravity East -crop 40%x100%"
         capturepage
-        if grep "$FIRE_RESOLUTION_SETTING" $DATADIR/${recname}_capture_crop.txt ; then
+        if grep "$FIRE_RESOLUTION_SETTING" $TEMPDIR/${recname}_capture_crop.txt ; then
             match=1
             break
         fi
@@ -589,7 +593,7 @@ function fireresolution {
         sleep 0.2
         CROP="-gravity Center -crop 40%x100%"
         capturepage
-        if ! grep "$FIRE_RESOLUTION_SETTING" $DATADIR/${recname}_capture_crop.txt ; then
+        if ! grep "$FIRE_RESOLUTION_SETTING" $TEMPDIR/${recname}_capture_crop.txt ; then
             echo `$LOGDATE` "ERROR - Resolution change failed."
             return 2
         fi
@@ -621,7 +625,7 @@ function getchannellist {
     CROP="-crop 86x600+208+120"
     TESSPARM="-c tessedit_char_whitelist=0123456789"
     capturepage
-    onscreen=$(cat $DATADIR/${recname}_capture_crop.txt)
+    onscreen=$(cat $TEMPDIR/${recname}_capture_crop.txt)
     # In case nothing found yet
     channels=($onscreen)
     arrsize=${#channels[@]}
@@ -633,7 +637,7 @@ function getchannellist {
             if (( channels[ix] >= MAXCHANNUM )) ; then return ; fi
         done
         echo `$LOGDATE` "Tesseract OCR Error, trying gocr"
-        channels=($(gocr -C 0-9 -l 200 $DATADIR/${recname}_capture_crop.png))
+        channels=($(gocr -C 0-9 -l 200 $TEMPDIR/${recname}_capture_crop.png))
         arrsize=${#channels[@]}
     fi
 }
@@ -643,9 +647,9 @@ function getchannellist {
 # selection - index of selected item,-2 if none selected, blank if error
 
 function getchannelselection {
-    convert $DATADIR/${recname}_capture_crop.png $DATADIR/${recname}_capture_crop.jpg
-    jp2a --width=10  -i $DATADIR/${recname}_capture_crop.jpg \
-      | sed 's/ //g' > $DATADIR/${recname}_capture_crop.ascii
+    convert $TEMPDIR/${recname}_capture_crop.png $TEMPDIR/${recname}_capture_crop.jpg
+    jp2a --width=10  -i $TEMPDIR/${recname}_capture_crop.jpg \
+      | sed 's/ //g' > $TEMPDIR/${recname}_capture_crop.ascii
 
     selection=$(awk  '
         BEGIN {
@@ -678,7 +682,7 @@ function getchannelselection {
                 print "ERROR: selectstart:" selectstart " selectend:" selectend " error:" error > "/dev/stderr"
             }
         }
-        ' $DATADIR/${recname}_capture_crop.ascii)
+        ' $TEMPDIR/${recname}_capture_crop.ascii)
 }
 
 
@@ -687,13 +691,13 @@ function getchannelselection {
 # menuitems - array of menu items
 # selection - index of selected item or blank if error
 function getmenuselection {
-    convert $DATADIR/${recname}_capture_crop.png -gravity West -crop 25%x100% $DATADIR/${recname}_capture_crop.jpg
-    jp2a --width=50 -i --red=1 --green=0 --blue=0 $DATADIR/${recname}_capture_crop.jpg \
-      | sed 's/ //g' > $DATADIR/${recname}_capture_crop.ascii
+    convert $TEMPDIR/${recname}_capture_crop.png -gravity West -crop 25%x100% $TEMPDIR/${recname}_capture_crop.jpg
+    jp2a --width=50 -i --red=1 --green=0 --blue=0 $TEMPDIR/${recname}_capture_crop.jpg \
+      | sed 's/ //g' > $TEMPDIR/${recname}_capture_crop.ascii
     # 7 blank rows between each, but selected one removed and 15 blank rows there
     # each entry 2-3 rows
-    tesseract $DATADIR/${recname}_capture_crop.jpg - 2>/dev/null | sed  '/^$/d' > $DATADIR/${recname}_capture_crop.txt
-    mapfile -t menuitems < <(cat $DATADIR/${recname}_capture_crop.txt)
+    tesseract $TEMPDIR/${recname}_capture_crop.jpg - 2>/dev/null | sed  '/^$/d' > $TEMPDIR/${recname}_capture_crop.txt
+    mapfile -t menuitems < <(cat $TEMPDIR/${recname}_capture_crop.txt)
 
     selection=$(awk  '
         BEGIN {
@@ -732,7 +736,7 @@ function getmenuselection {
                 print selection
             }
         }
-        ' $DATADIR/${recname}_capture_crop.ascii)
+        ' $TEMPDIR/${recname}_capture_crop.ascii)
     if [[ "$selection" == "" ]] ; then
         echo `$LOGDATE` "ERROR: Failed to find menu selection"
     else

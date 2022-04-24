@@ -149,7 +149,7 @@ sleep 2
 CROP="-gravity SouthEast -crop 70%x100%"
 capturepage
 # In case it got into "Set Series recording" by accident
-if grep "Set Series Recording" $DATADIR/${recname}_capture_crop.txt ; then
+if grep "Set Series Recording" $TEMPDIR/${recname}_capture_crop.txt ; then
     $scriptpath/adb-sendkey.sh BACK
     $scriptpath/adb-sendkey.sh UP
     $scriptpath/adb-sendkey.sh RIGHT
@@ -157,7 +157,7 @@ if grep "Set Series Recording" $DATADIR/${recname}_capture_crop.txt ; then
     CROP="-gravity SouthEast -crop 70%x100%"
     capturepage
 fi
-top=($(grep -m 1 Season $DATADIR/${recname}_capture_crop.txt))
+top=($(grep -m 1 Season $TEMPDIR/${recname}_capture_crop.txt))
 let topseason=top[1]
 let diff=topseason-season
 if (( diff < 0 )) ; then
@@ -174,7 +174,7 @@ fi
 sleep 2
 CROP="-gravity SouthEast -crop 70%x100%"
 capturepage
-if ! grep "Season $season" $DATADIR/${recname}_capture_crop.txt ; then
+if ! grep "Season $season" $TEMPDIR/${recname}_capture_crop.txt ; then
     echo `$LOGDATE` "ERROR: Cannot find season $season"
     exit 2
 fi
@@ -191,7 +191,7 @@ fi
 $scriptpath/adb-sendkey.sh DOWN
 CROP="-gravity SouthEast -crop 70%x100%"
 capturepage
-top=($(grep -m 1 ^Ep[0-9] $DATADIR/${recname}_capture_crop.txt))
+top=($(grep -m 1 ^Ep[0-9] $TEMPDIR/${recname}_capture_crop.txt))
 let topepisode=${top[0]#Ep}
 if (( topepisode == 0 )) ; then
     echo `$LOGDATE` "ERROR: Cannot find episode in $top"
@@ -212,7 +212,7 @@ fi
 sleep 2
 CROP="-gravity SouthEast -crop 70%x100%"
 capturepage
-#~ if ! grep "^Ep$episode" $DATADIR/${recname}_capture_crop.txt ; then
+#~ if ! grep "^Ep$episode" $TEMPDIR/${recname}_capture_crop.txt ; then
     #~ echo `$LOGDATE` "ERROR: Cannot find episode $episode"
     #~ exit 2
 #~ fi
@@ -223,27 +223,27 @@ sleep 1
 CROP="-gravity SouthEast -crop 70%x100%"
 capturepage
 match=0
-subtitle=$(grep "^Ep$episode " $DATADIR/${recname}_capture_crop.txt)
+subtitle=$(grep "^Ep$episode " $TEMPDIR/${recname}_capture_crop.txt)
 if [[ "$subtitle" == Ep${episode}* ]] ; then
     match=1
 fi
 # In case it misinterpreted 7 as /
 if (( ! match && episode == 7)) ; then
-    subtitle=$(grep "^Ep/ " $DATADIR/${recname}_capture_crop.txt)
+    subtitle=$(grep "^Ep/ " $TEMPDIR/${recname}_capture_crop.txt)
     if [[ "$subtitle" == Ep/* ]] ; then
         match=1
     fi
 fi
 # In case it misinterpreted 7 as 7/
 if (( ! match && episode == 7)) ; then
-    subtitle=$(grep "^Ep7/ " $DATADIR/${recname}_capture_crop.txt)
+    subtitle=$(grep "^Ep7/ " $TEMPDIR/${recname}_capture_crop.txt)
     if [[ "$subtitle" == Ep7/* ]] ; then
         match=1
     fi
 fi
 # In case it misinterpreted 7 as ?
 if (( ! match && episode == 7)) ; then
-    subtitle=$(grep "^Ep? " $DATADIR/${recname}_capture_crop.txt)
+    subtitle=$(grep "^Ep? " $TEMPDIR/${recname}_capture_crop.txt)
     if [[ "$subtitle" == Ep* ]] ; then
         match=1
     fi
@@ -258,14 +258,14 @@ subtitle=$(echo $subtitle | sed "s@/@-@g")
 
 # Use only 1 slash because if it is the current year they do not show
 # the year.
-orig_airdate=$(grep -o "([0-9]*/[0-9/]*)" $DATADIR/${recname}_capture_crop.txt)
+orig_airdate=$(grep -o "([0-9]*/[0-9/]*)" $TEMPDIR/${recname}_capture_crop.txt)
 if [[ "$orig_airdate" != "" ]] ; then
     orig_airdate=${orig_airdate#(}
     orig_airdate=${orig_airdate%)}
     orig_airdate=$(date -d "$orig_airdate" "+%y%m%d")
 fi
 
-duration=$(grep -o "[0-9]*min$" $DATADIR/${recname}_capture_crop.txt)
+duration=$(grep -o "[0-9]*min$" $TEMPDIR/${recname}_capture_crop.txt)
 duration=${duration%min}
 echo "Episode duration: $duration minutes"
 
@@ -338,9 +338,9 @@ starttime=`date +%s`
 sleep 10
 capturepage adb
 # Get past resume prompt and start over
-if [[ `stat -c %s $DATADIR/${recname}_capture_crop.png` != 0 ]] ; then
-    if  grep "Resume" $DATADIR/${recname}_capture_crop.txt \
-        ||  grep "Start" $DATADIR/${recname}_capture_crop.txt ; then
+if [[ `stat -c %s $TEMPDIR/${recname}_capture_crop.png` != 0 ]] ; then
+    if  grep "Resume" $TEMPDIR/${recname}_capture_crop.txt \
+        ||  grep "Start" $TEMPDIR/${recname}_capture_crop.txt ; then
         echo `$LOGDATE` "Selecting Start Over from Resume Prompt"
         $scriptpath/adb-sendkey.sh DOWN
         $scriptpath/adb-sendkey.sh DPAD_CENTER

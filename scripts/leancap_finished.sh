@@ -33,14 +33,14 @@ fi
 # Mark failed recording if applicable
 (
     sleep 10
-    while [[ -f $DATADIR/${recname}_damage.txt \
-         || -f $DATADIR/${recname}_damage.wrk ]] ; do
-         if [[ ! -f $DATADIR/${recname}_damage.wrk ]] ; then
-            mv -f $DATADIR/${recname}_damage.txt $DATADIR/${recname}_damage.wrk
+    while [[ -f $TEMPDIR/${recname}_damage.txt \
+          || -f $TEMPDIR/${recname}_damage.wrk ]] ; do
+        if [[ ! -f $TEMPDIR/${recname}_damage.wrk ]] ; then
+            mv -f $TEMPDIR/${recname}_damage.txt $TEMPDIR/${recname}_damage.wrk
         fi
         while read channum date time ; do
             $scriptpath/mark_damaged.sh $channum $date $time
-        done < $DATADIR/${recname}_damage.wrk
-        rm -f $DATADIR/${recname}_damage.wrk
+        done < $TEMPDIR/${recname}_damage.wrk
+        rm -f $TEMPDIR/${recname}_damage.wrk
     done
 ) &

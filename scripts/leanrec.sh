@@ -215,6 +215,19 @@ mkdir -p "$VID_RECDIR/$title"
 echo `$LOGDATE` "Starting recording of $recfile"
 # Start Recording
 
+if (( playing )) ; then
+    # Wait for video device if it is in use for prior episode.
+    for (( xx=0 ; xx < 10 ; xx++ )) ; do
+        capturepage video
+        if (( imagesize > 0 )) ; then break ; fi
+        sleep 1
+    done
+    if (( imagesize == 0 )) ; then
+        echo `$LOGDATE` "ERROR - Video device $VIDEO_IN is unavailable."
+        exit 2
+    fi
+fi
+
 if (( ! playing )) ; then
     $scriptpath/adb-sendkey.sh DPAD_CENTER
 fi
@@ -286,14 +299,12 @@ while true ; do
             fi
             if (( ! textoverlay )) ; then
                 sleep 2
-                kill $ffmpeg_pid
                 echo `$LOGDATE` "Recording $recfile ended with text screen."
                 break 2
             fi
             # peacock prompt
-            if grep '^Cancel$' $DATADIR/${recname}_capture_crop.txt ; then
+            if grep '^Cancel$' $TEMPDIR/${recname}_capture_crop.txt ; then
                 sleep 2
-                kill $ffmpeg_pid
                 echo `$LOGDATE` "Recording $recfile ended with Next Up prompt."
                 break 2
             fi
