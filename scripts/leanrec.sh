@@ -280,7 +280,7 @@ while true ; do
         echo `$LOGDATE` "ERROR: ffmpeg is gone, exit"
         exit 2
     fi
-    for (( x=0; x<12; x++ )) ; do
+    for (( x=0; x<25; x++ )) ; do
         capturepage adb
         if (( ! textoverlay  && CAP_TYPE == 2 )) ; then
             textoverlay=1
@@ -290,11 +290,11 @@ while true ; do
             # peacock select watch from start
             if [[ "$pagename" == "Would you like to watch from start or resume"* ]] ; then
                 $scriptpath/adb-sendkey.sh DPAD_CENTER
-                sleep 4.5
+                sleep 2
                 continue
             fi
             if (( now < firstminute )) ; then
-                sleep 4.5
+                sleep 2
                 continue
             fi
             if (( ! textoverlay )) ; then
@@ -309,7 +309,7 @@ while true ; do
                 break 2
             fi
         fi
-        sleep 4.5
+        sleep 2
     done
     if (( lowcount > 4 )) ; then
         echo `$LOGDATE` "ERROR: Recording seems to have stuck, kill it"
