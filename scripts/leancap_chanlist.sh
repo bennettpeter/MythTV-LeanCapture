@@ -22,7 +22,7 @@ initialize
 
 getparms
 
-if ! locktuner 10 ; then
+if ! locktuner 60 ; then
     echo `$LOGDATE` "Encoder $recname is locked, exiting"
     exit 2
 fi
