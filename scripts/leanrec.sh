@@ -302,8 +302,9 @@ while true ; do
                 echo `$LOGDATE` "Recording $recfile ended with text screen."
                 break 2
             fi
-            # peacock prompt
-            if grep '^Cancel$' $TEMPDIR/${recname}_capture_crop.txt ; then
+            # peacock prompt: Cancel on last line
+            # tubi prompt: Starting in xx secondsS
+            if egrep -a '^Cancel$|^Starting in' $TEMPDIR/${recname}_capture_crop.txt ; then
                 sleep 2
                 echo `$LOGDATE` "Recording $recfile ended with Next Up prompt."
                 break 2
