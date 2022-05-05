@@ -258,7 +258,7 @@ starttime=`date +%s`
 let maxduration=minutes*60*133/100
 let minduration=minutes*60*66/100
 let maxendtime=starttime+maxduration
-let firstminute=starttime+60
+let firstminutes=starttime+120
 let minendtime=starttime+minduration
 echo "Minimum end time" $(date -d @$minendtime)
 echo "Maximum end time" $(date -d @$maxendtime)
@@ -293,7 +293,7 @@ while true ; do
                 sleep 2
                 continue
             fi
-            if (( now < firstminute )) ; then
+            if (( now < firstminutes )) ; then
                 sleep 2
                 continue
             fi
