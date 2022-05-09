@@ -528,21 +528,25 @@ function fireresolution {
         echo `$LOGDATE` "This is not a fire device, cannot set resolution"
         return 0
     fi
-    echo `$LOGDATE` "Setting fire resolution to $FIRE_RESOLUTION_SETTING"
-    $scriptpath/adb-sendkey.sh POWER
-    $scriptpath/adb-sendkey.sh HOME
-    sleep 0.5
-    #Get to settings
-    local xx
-    local match=0
-    for (( xx = 0; xx < 5; xx++ )) ; do
-        $scriptpath/adb-sendkey.sh LEFT
-        sleep 2
-        capturepage
-        if grep "Display & Sounds" $TEMPDIR/${recname}_capture_crop.txt ; then
-            match=1
-            break
-        fi
+    local xy
+    for (( xy = 0; xy < 5; xy++ )) ; do
+        echo `$LOGDATE` "Setting fire resolution to $FIRE_RESOLUTION_SETTING"
+        $scriptpath/adb-sendkey.sh POWER
+        $scriptpath/adb-sendkey.sh HOME
+        sleep 0.5
+        #Get to settings
+        local xx
+        local match=0
+        for (( xx = 0; xx < 5; xx++ )) ; do
+            $scriptpath/adb-sendkey.sh LEFT
+            sleep 2
+            capturepage
+            if grep "Display & Sounds" $TEMPDIR/${recname}_capture_crop.txt ; then
+                match=1
+                break
+            fi
+        done
+        if (( match )) ; then break ; fi
     done
     if (( ! match )) ; then
         echo `$LOGDATE` "ERROR - cannot get to settings page"
