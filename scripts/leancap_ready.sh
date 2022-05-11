@@ -93,7 +93,11 @@ while true ; do
         fi
         # If no error this entire run, reset errored so messages can resume.
         if (( mrc == 0 )) ; then
-            errored=0
+            if (( errored > 0 )) ; then
+                $scriptpath/notify.py "Fire Stick OK" \
+                  "leancap_ready: Previous problem now fixed on ${recname}" &
+                errored=0
+            fi
         fi
         adb disconnect $ANDROID_DEVICE
     else
