@@ -63,6 +63,7 @@ while true ; do
                       "leancap_ready: Cannot set resolution on ${recname}" &
                 fi
             else
+                echo `$LOGDATE` "Resolution is correct on $recname."
                 $scriptpath/adb-sendkey.sh POWER
                 $scriptpath/adb-sendkey.sh HOME
             fi

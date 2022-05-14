@@ -606,7 +606,7 @@ function fireresolution {
         return 2
     fi
     $scriptpath/adb-sendkey.sh HOME
-    sleep 0.5
+    sleep 2
     # Check resolution
     CROP=" "
     capturepage adb
