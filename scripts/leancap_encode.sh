@@ -71,6 +71,16 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
 {
     sleep 20
     adb connect $ANDROID_DEVICE
+    # Sometimes recording does not start and is stuck on the listing page
+    # Kick start it if at happens.
+    capturepage adb
+    if [[ "$pagename" == "$NAVTYPE" ]] ; then
+        echo `$LOGDATE` "ERROR: Listing screen, send extra ENTER."
+        $scriptpath/adb-sendkey.sh DPAD_CENTER
+        $scriptpath/notify.py "Xfinity Warning" \
+            "leancap_encode: Listing screen, sent extra ENTER on ${recname}." &
+        sleep 20
+    fi
     # Loop to check if recording is working.
     # When recording is working, nothing is displayed
     # from capture. If anything is captured, something
