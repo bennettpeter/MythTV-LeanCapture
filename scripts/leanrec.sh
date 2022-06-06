@@ -259,6 +259,7 @@ let maxduration=minutes*60*133/100
 let minduration=minutes*60*66/100
 let maxendtime=starttime+maxduration
 let firstminutes=starttime+120
+let fiveminutes=starttime+300
 let minendtime=starttime+minduration
 echo "Minimum end time" $(date -d @$minendtime)
 echo "Maximum end time" $(date -d @$maxendtime)
@@ -282,7 +283,7 @@ while true ; do
     fi
     for (( x=0; x<25; x++ )) ; do
         capturepage adb
-        if (( ! textoverlay  && CAP_TYPE == 2 )) ; then
+        if (( ! textoverlay  && CAP_TYPE == 2 && now > firstminutes && now < fiveminutes )) ; then
             textoverlay=1
             echo `$LOGDATE` Blank Screen sets textoverlay flag.
         fi
