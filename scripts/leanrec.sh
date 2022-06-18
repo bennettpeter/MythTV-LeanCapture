@@ -255,7 +255,9 @@ ffmpeg -hide_banner -loglevel error \
 
 ffmpeg_pid=$!
 starttime=`date +%s`
-let maxduration=minutes*60*133/100
+# Max duration is 50% more than specified duration.
+let maxduration=minutes*60*150/100
+# Min duration is 66% of specified duration.
 let minduration=minutes*60*66/100
 let maxendtime=starttime+maxduration
 let firstminutes=starttime+120
