@@ -203,6 +203,9 @@ if [[ "$tuned" == Y ]] ; then
     echo `$LOGDATE` "Complete tuning channel: $channum on recorder: $recname"
     # Start playback
     if [[ "$lockreq" != NOPLAY ]] ; then
+        # pause 1 second because sometimes this may be too quick
+        # to register
+        sleep 1
         $scriptpath/adb-sendkey.sh DPAD_CENTER
     fi
     rc=0
