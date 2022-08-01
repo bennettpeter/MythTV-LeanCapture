@@ -153,7 +153,7 @@ if (( numerrors == 0 )) ; then
 else
     echo `$LOGDATE` "Number of errors: $numerrors. Errors listed below. See $errfile"
     $scriptpath/notify.py "Channel list needs fixing" \
-        "leancap_chanlist: New list has errors. See $logfile" &
+        "leancap_chanlist: New list has errors. See $logfile"
     echo `$LOGDATE` "cp $chanlistfilegen $chanlistfile then fix the errors there."
     echo "Add a line with priorchannel, currentchannel, fixcurrentchannel to $fixupfile"
 fi

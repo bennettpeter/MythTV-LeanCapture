@@ -16,7 +16,7 @@ rc=$?
 
 if [[ "$rc" != 0 ]] ; then
     $scriptpath/notify.py "Upcoming Recordings Error" \
-      "$scriptname failed." &
+      "$scriptname failed."
     exit
 fi
 
@@ -24,7 +24,7 @@ chanlistfile=$DATADIR/"$NAVTYPE".txt
 wc=$(cat $DATADIR/recording_channels.txt | wc -c)
 if (( wc == 0 )) ; then
     $scriptpath/notify.py "Upcoming Recordings Error" \
-      "No Upcoming Recordings shown by $scriptname. Possible script error?" &
+      "No Upcoming Recordings shown by $scriptname. Possible script error?"
     exit
 fi
 
@@ -39,5 +39,5 @@ missing_chans=$(grep "[<|]" $DATADIR/channel_diff.txt | sed "s/ .*//g")
 missing_chans=$(echo $missing_chans)
 if [[ "$missing_chans" != "" ]] ; then
     $scriptpath/notify.py "Missing Channels" \
-      "$scriptname: Channels missing from xfinity favorites: $missing_chans" &
+      "$scriptname: Channels missing from xfinity favorites: $missing_chans"
 fi

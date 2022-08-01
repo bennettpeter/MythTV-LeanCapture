@@ -78,7 +78,7 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
         echo `$LOGDATE` "ERROR: Listing screen, send extra ENTER."
         $scriptpath/adb-sendkey.sh DPAD_CENTER
         $scriptpath/notify.py "Xfinity Warning" \
-            "leancap_encode: Listing screen, sent extra ENTER on ${recname}." &
+            "leancap_encode: Listing screen, sent extra ENTER on ${recname}."
         sleep 20
     fi
     # Loop to check if recording is working.
@@ -98,7 +98,7 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
             #~ echo `$LOGDATE` "ERROR: playback failed, retrying."
             #~ if (( errored == 0 )) ; then
                 #~ $scriptpath/notify.py "Xfinity Problem" \
-                    #~ "leancap_encode: Playback Failed on ${recname}, retrying" &
+                    #~ "leancap_encode: Playback Failed on ${recname}, retrying"
             #~ fi
             #~ let errored++
             #~ # Try to tune again

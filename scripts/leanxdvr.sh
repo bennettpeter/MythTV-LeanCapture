@@ -89,7 +89,7 @@ function my_exit {
     rc=$1
     if (( rc > 0 && ! isterminal )) ; then
         $scriptpath/notify.py "leanxdvr failed" \
-        "leanxdvr: see error log for recorder: $recname" &
+        "leanxdvr: see error log for recorder: $recname"
     fi
     exit $rc
 }

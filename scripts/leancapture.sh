@@ -37,7 +37,7 @@ logfile=$LOGDIR/${scriptname}_${recname}.log
             if (( count > 45 )) ; then
                 echo `$LOGDATE` "ERROR leancap_scan not yet run, tuner ${recname} disabled"
                 $scriptpath/notify.py "Fire Stick Problem" \
-                    "leancapture: leancap_scan not yet run, tuner ${recname} disabled" &
+                    "leancapture: leancap_scan not yet run, tuner ${recname} disabled"
                 break
             fi
             echo `$LOGDATE` "leancap_scan not yet run, waiting 2 seconds"

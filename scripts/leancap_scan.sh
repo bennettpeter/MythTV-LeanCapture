@@ -58,7 +58,7 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
     fi
     if (( rc > 0 )) ; then
         $scriptpath/notify.py "Fire Stick Problem" \
-          "leancap_scan: Primary network adapter for $recname failed" &
+          "leancap_scan: Primary network adapter for $recname failed"
     fi
     adb connect $ANDROID_DEVICE
     sleep 0.5
@@ -67,7 +67,7 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
     if [[ "$status" != device ]] ; then
         echo `$LOGDATE` "WARNING: Device offline: $recname, skipping"
         $scriptpath/notify.py "Fire Stick Problem" \
-          "leancap_scan: Device offline: $recname" &
+          "leancap_scan: Device offline: $recname"
         adb disconnect $ANDROID_DEVICE
         continue
     fi
@@ -82,12 +82,23 @@ for (( x=0; x<20; x=x+2 )) ; do
     VIDEO_IN=/dev/video${x}
     if [[ ! -e $VIDEO_IN ]] ; then continue ; fi
     echo `$LOGDATE` "Trying: $VIDEO_IN"
-    CROP=" "
-    capturepage video
-    if [[ `stat -c %s $TEMPDIR/${recname}_capture_crop.txt` > 0 ]] ; then
-        echo `$LOGDATE` "ERROR: Device: $VIDEO_IN has stuff on screen."
+    success=0
+    for (( ix=1; ix<5; ix++ )) ; do
+        CROP=" "
+        capturepage video
+        if [[ `stat -c %s $TEMPDIR/${recname}_capture_crop.txt` > 0 ]] ; then
+            echo `$LOGDATE` "ERROR: Device: $VIDEO_IN has stuff on screen."
+            sleep 1
+        else
+            echo "$VIDEO_IN is blank."
+            success=1
+            break
+        fi
+    done
+    set -x
+    if (( ! success )) ; then
         $scriptpath/notify.py "Fire Stick Problem" \
-          "leancap_scan: ERROR, Device $VIDEO_IN has stuff on screen." &
+          "leancap_scan: ERROR, Device $VIDEO_IN has stuff on screen after several tries."
         exit 2
     fi
 done
@@ -146,7 +157,7 @@ for conffile in /etc/opt/mythtv/$reqname.conf ; do
     if [[ $match != Y ]] ; then
         echo `$LOGDATE` "Failed to identify ${recname}."
         $scriptpath/notify.py "Fire Stick Problem" \
-          "leancap_scan: Failed to identify ${recname}" &
+          "leancap_scan: Failed to identify ${recname}"
         $scriptpath/adb-sendkey.sh SLEEP
         adb disconnect $ANDROID_DEVICE
         unlocktuner
