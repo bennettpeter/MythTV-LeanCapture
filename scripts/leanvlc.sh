@@ -9,7 +9,6 @@ recname=leancap1
 if [[ "$1" != "" ]] ; then
     recname="$1"
 fi
-set -x
 . /var/opt/mythtv/$recname.conf 
 # Calculate audio offset in ms
 eval $(grep ^AUDIO_OFFSET= /etc/opt/mythtv/$recname.conf)
@@ -26,6 +25,7 @@ fi
 if [[ "$VIDEO_IN" != "" ]] ; then
     video="v4l2://$VIDEO_IN"
 fi
+set -x
 vlc $video  :v4l2-width=1280 :v4l2-height=720  \
  $ifparam :v4l2-fps=30 :v4l2-aspect-ratio=16:9 $audio \
  --audio-desync $offset_ms

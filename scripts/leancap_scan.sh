@@ -95,7 +95,6 @@ for (( x=0; x<20; x=x+2 )) ; do
             break
         fi
     done
-    set -x
     if (( ! success )) ; then
         $scriptpath/notify.py "Fire Stick Problem" \
           "leancap_scan: ERROR, Device $VIDEO_IN has stuff on screen after several tries."
