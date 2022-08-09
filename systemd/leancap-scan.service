@@ -1,8 +1,8 @@
 # /etc/systemd/system/leancap-scan.service
 [Unit]
 Description=LeanCapture Scan & Monitor
-Wants=mysql.service network-online.target multi-user.target
-After=mysql.service network-online.target multi-user.target
+Wants=mysql.service network-online.target
+After=mysql.service network-online.target
 
 [Service]
 Type=simple
