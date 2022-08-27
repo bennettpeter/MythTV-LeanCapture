@@ -313,6 +313,15 @@ while true ; do
                 echo `$LOGDATE` "Recording $recfile ended with Next Up prompt."
                 break 2
             fi
+            # Xfinity resume prompt and start over
+            if [[ "$pagename" != "" ]] ; then
+                if  grep "Resume" $TEMPDIR/${recname}_capture_crop.txt \
+                    ||  grep "Start" $TEMPDIR/${recname}_capture_crop.txt ; then
+                    echo `$LOGDATE` "Selecting Start Over from Resume Prompt"
+                    $scriptpath/adb-sendkey.sh DOWN
+                    $scriptpath/adb-sendkey.sh DPAD_CENTER
+                fi
+            fi
         fi
         sleep 2
     done
