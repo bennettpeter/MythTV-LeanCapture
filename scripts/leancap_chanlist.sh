@@ -16,10 +16,9 @@ scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`
 scriptname=`basename "$scriptname" .sh`
 
+numdate=`date "+%Y%m%d"`
 source $scriptpath/leanfuncs.sh
-
 initialize
-
 getparms
 
 if ! locktuner 60 ; then
@@ -147,9 +146,12 @@ if diff "$chanlistfile" "$chanlistfilegen" ; then
     echo `$LOGDATE` "Channel list same as before. No problems."
     exit 0
 fi
+cp "$chanlistfilegen" $DATADIR/"${numdate}_$NAVTYPE".txt
 cp -n "$chanlistfilegen" "$chanlistfile"
 if (( numerrors == 0 )) ; then
     cp "$chanlistfilegen" "$chanlistfile"
+    $scriptpath/notify.py "Channel list changes" \
+        "leancap_chanlist: See new list in $numdate_$chanlistfilegen"
 else
     echo `$LOGDATE` "Number of errors: $numerrors. Errors listed below. See $errfile"
     $scriptpath/notify.py "Channel list needs fixing" \
