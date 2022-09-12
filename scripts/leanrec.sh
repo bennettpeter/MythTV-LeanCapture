@@ -274,8 +274,8 @@ lowcount=0
 textoverlay=0
 let minbytes=MINBYTES*2
 while true ; do
-    now=`date +%s`
-    if (( now > maxendtime )) ; then
+    loopstart=`date +%s`
+    if (( loopstart > maxendtime )) ; then
         echo `$LOGDATE` "ERROR: Recording for too long, kill it"
         exit 2
     fi
@@ -283,7 +283,12 @@ while true ; do
         echo `$LOGDATE` "ERROR: ffmpeg is gone, exit"
         exit 2
     fi
-    for (( x=0; x<25; x++ )) ; do
+    for (( x=0; x<30; x++ )) ; do
+        now=`date +%s`
+        # Each outer loop should be approximately 1 minute
+        if (( now - loopstart > 59 )) ; then
+            break
+        fi
         capturepage adb
         if (( ! textoverlay  && CAP_TYPE == 2 && now > firstminutes && now < fiveminutes )) ; then
             textoverlay=1
