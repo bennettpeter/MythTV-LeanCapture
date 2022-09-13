@@ -286,7 +286,7 @@ while true ; do
     for (( x=0; x<30; x++ )) ; do
         now=`date +%s`
         # Each outer loop should be approximately 1 minute
-        if (( now - loopstart > 59 )) ; then
+        if (( now - loopstart > 58 )) ; then
             break
         fi
         capturepage adb
@@ -311,9 +311,10 @@ while true ; do
                 break 2
             fi
             # peacock prompt: Cancel on last line
+            # peacock prompt: "Up Next" on a whole line
             # tubi prompt: Starting in xx secondsS
             # peacock prompt - i TVMA
-            if egrep -a '^Cancel$|^i TVMA$|^Starting in' $TEMPDIR/${recname}_capture_crop.txt ; then
+            if egrep -a '^Cancel$|^Up Next$|^i TVMA$|^Starting in [0-9]* seconds' $TEMPDIR/${recname}_capture_crop.txt ; then
                 sleep 2
                 echo `$LOGDATE` "Recording $recfile ended with Next Up prompt."
                 break 2

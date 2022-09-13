@@ -351,6 +351,8 @@ function waitforstring {
         if [[ "$pagename" == "We"*"detect your remote" ]] ; then
             $scriptpath/adb-sendkey.sh DPAD_CENTER
         fi
+        # -oPz is required so that we match the whole file against the string,
+        # Thus allowing strings like "\nSearch\nHome\n" to be matched
         if grep -oPz "$search" $TEMPDIR/${recname}_capture_crop.txt ; then
             # Output a newline
             echo
