@@ -286,7 +286,7 @@ while true ; do
     for (( x=0; x<30; x++ )) ; do
         now=`date +%s`
         # Each outer loop should be approximately 1 minute
-        if (( now - loopstart > 58 )) ; then
+        if (( now - loopstart > 59 )) ; then
             break
         fi
         capturepage adb
