@@ -295,17 +295,26 @@ while true ; do
             echo `$LOGDATE` Blank Screen sets textoverlay flag.
         fi
         if [[ "$pagename" != "" ]] ; then
-            # peacock select watch from start
-            if [[ "$pagename" == "Would you like to watch from start or resume"* ]] ; then
-                $scriptpath/adb-sendkey.sh DPAD_CENTER
-                sleep 2
-                continue
-            fi
+            # peacock select watch from start or resume
+            # default is resume, use right center to resume
+            #~ if [[ "$pagename" == "Would you like to watch from start or resume"* ]] ; then
+                #~ $scriptpath/adb-sendkey.sh RIGHT DPAD_CENTER
+                #~ sleep 2
+                #~ continue
+            #~ fi
             if (( now < firstminutes )) ; then
                 sleep 2
                 continue
             fi
             if (( ! textoverlay )) ; then
+                # Xfinity resume prompt and start over
+                if  grep "Resume" $TEMPDIR/${recname}_capture_crop.txt \
+                    ||  grep "Start" $TEMPDIR/${recname}_capture_crop.txt ; then
+                    echo `$LOGDATE` "Selecting Start Over from Resume Prompt"
+                    $scriptpath/adb-sendkey.sh DOWN
+                    $scriptpath/adb-sendkey.sh DPAD_CENTER
+                    continue
+                fi
                 sleep 2
                 echo `$LOGDATE` "Recording $recfile ended with text screen."
                 break 2
@@ -318,15 +327,6 @@ while true ; do
                 sleep 2
                 echo `$LOGDATE` "Recording $recfile ended with Next Up prompt."
                 break 2
-            fi
-            # Xfinity resume prompt and start over
-            if [[ "$pagename" != "" ]] ; then
-                if  grep "Resume" $TEMPDIR/${recname}_capture_crop.txt \
-                    ||  grep "Start" $TEMPDIR/${recname}_capture_crop.txt ; then
-                    echo `$LOGDATE` "Selecting Start Over from Resume Prompt"
-                    $scriptpath/adb-sendkey.sh DOWN
-                    $scriptpath/adb-sendkey.sh DPAD_CENTER
-                fi
             fi
         fi
         sleep 2
