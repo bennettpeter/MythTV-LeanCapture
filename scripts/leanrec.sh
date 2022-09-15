@@ -5,7 +5,6 @@ title=
 
 minutes=
 recname=leancap1
-wait=1
 season=
 episode=
 wait=0
@@ -130,11 +129,13 @@ scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`
 scriptname=`basename "$scriptname" .sh`
 
+source $scriptpath/leanfuncs.sh
+initialize
+
 if (( ! wait )) ; then
     ADB_ENDKEY=HOME
 fi
-source $scriptpath/leanfuncs.sh
-initialize
+
 echo `$LOGDATE` "RECORD: Title $title, S${season}E${episode}"
 if ! getparms PRIMARY ; then
     exit 2
