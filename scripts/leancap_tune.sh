@@ -82,6 +82,13 @@ fi
 chansearch $channum
 ixchannum=$chanindex
 
+if (( channum != ${chanlist[chanindex]} )) ; then
+    echo `$LOGDATE` "WARNING: Required channel: $channum not in $chanlistfile"
+    $scriptpath/notify.py "WARNING: Required Channel not in file" \
+        "leancap_tune: Required channel: $channum not in $chanlistfile on recorder: $recname" &
+fi
+chansnotified=0
+
 for (( xx=0; xx<5; xx++ )) ; do
     if [[ "$tuned" == Y ]] ; then  break; fi
 
@@ -142,6 +149,20 @@ for (( xx=0; xx<5; xx++ )) ; do
             break
         fi
         chansearch $currchan
+        # channum : desired channel
+        # currchan : currently selected channel
+        # ixchannum = index of desired channel
+        # chanindex : index of currently selected channel
+        #    or channel below that if selected channel not in list
+        if (( currchan != ${chanlist[chanindex]} )) ; then
+            echo `$LOGDATE` "WARNING: Extra channels: $currchan not in $chanlistfile"
+            if (( ! chansnotified )) ; then
+                $scriptpath/notify.py "WARNING: Extra channels in file" \
+                    "leancap_tune: Extra channel: $currchan not in $chanlistfile on recorder: $recname" &
+                chansnotified=1
+            fi
+        fi
+
         let distance=ixchannum-chanindex
         # Is the channel on the page?
         isonpage=0
