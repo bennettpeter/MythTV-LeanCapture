@@ -87,7 +87,6 @@ if (( channum != ${chanlist[chanindex]} )) ; then
     $scriptpath/notify.py "WARNING: Required Channel not in file" \
         "leancap_tune: Required channel: $channum not in $chanlistfile on recorder: $recname" &
 fi
-chansnotified=0
 
 for (( xx=0; xx<5; xx++ )) ; do
     if [[ "$tuned" == Y ]] ; then  break; fi
@@ -98,6 +97,9 @@ for (( xx=0; xx<5; xx++ )) ; do
     errorpassed=0
     jumpsize=100
     trycount=0
+    chansnotified=0
+    extrachans=
+
     while (( currchan != channum )) ; do
         if (( currchan == 0 )) ; then
             # get out of the Filter box
@@ -156,10 +158,10 @@ for (( xx=0; xx<5; xx++ )) ; do
         #    or channel below that if selected channel not in list
         if (( currchan != ${chanlist[chanindex]} )) ; then
             echo `$LOGDATE` "WARNING: Extra channels: $currchan not in $chanlistfile"
-            if (( ! chansnotified )) ; then
+            extrachans="$extrachans $currchan"
+            if (( ++chansnotified == 5 )) ; then
                 $scriptpath/notify.py "WARNING: Extra channels in file" \
-                    "leancap_tune: Extra channel: $currchan not in $chanlistfile on recorder: $recname" &
-                chansnotified=1
+                    "leancap_tune: Extra channels: $extrachans not in $chanlistfile on recorder: $recname" &
             fi
         fi
 
