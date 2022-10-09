@@ -351,5 +351,12 @@ if (( now < minendtime )) ; then
     echo `$LOGDATE` "ERROR Recording is less than minimum, kill it"
     exit 2
 fi
+
+if [[ -f $VID_RECDIR/STOP_RECORDINGS ]] ; then
+    echo "Exiting because of file $VID_RECDIR/STOP_RECORDINGS"
+    ADB_ENDKEY=HOME
+    exit 3
+fi
+
 ADB_ENDKEY="$postkeys"
 echo `$LOGDATE` "Complete - Recorded"
