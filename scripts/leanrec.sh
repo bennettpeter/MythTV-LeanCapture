@@ -324,9 +324,10 @@ while true ; do
             # peacock prompt: "Up Next" on a whole line
             # tubi prompt: Starting in xx secondsS
             # peacock prompt - i TVMA
-            if egrep -a '^Cancel$|^Up Next$|^i *TV..$|^Starting in [0-9]* seconds' $TEMPDIR/${recname}_capture_crop.txt ; then
+            # Hulu no ads prompt "Episodes Inside the Episodes"
+            if egrep -a '^Cancel$|^Up Next$|^i *TV..$|^Starting in [0-9]* seconds|Episodes' $TEMPDIR/${recname}_capture_crop.txt ; then
                 sleep 2
-                echo `$LOGDATE` "Recording $recfile ended with Next Up prompt."
+                echo `$LOGDATE` "Recording $recfile ended with text prompt."
                 break 2
             fi
         fi
