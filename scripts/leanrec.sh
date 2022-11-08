@@ -230,6 +230,7 @@ if (( playing )) ; then
 fi
 
 if (( ! playing )) ; then
+    sleep 1
     $scriptpath/adb-sendkey.sh DPAD_CENTER
 fi
 
