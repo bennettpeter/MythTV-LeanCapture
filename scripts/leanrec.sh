@@ -14,6 +14,7 @@ prekeys=
 postkeys=
 dosrch=1
 playing=0
+stopafter=
 
 while (( "$#" >= 1 )) ; do
     case $1 in
@@ -28,6 +29,13 @@ while (( "$#" >= 1 )) ; do
             if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
             else
                 minutes="$2"
+                shift||rc=$?
+            fi
+            ;;
+        --stopafter|-s)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                stopafter="$2"
                 shift||rc=$?
             fi
             ;;
@@ -103,6 +111,9 @@ if [[ "$error" == y || "$title" == "" || "$season" == "" \
     echo "--title|-t xxxx : Title"
     echo "--time|-m nn : Estimated Number of minutes [required]"
     echo "    If show ends before 66% or after 133% of this it is an error"
+    echo "--stopafter|-s nn : Stop after a number of minutes "
+    echo "    Stop recording without error after this number of minutes"
+    echo "    Should be used with postkeys to also stop the playback."
     echo "--recname|-n xxxxxxxx : Recorder id (default leancap1)"
     echo "--season|-S nn : Season without leading zeroes"
     echo "--episode|-E nn : Episode without leading zeroes"
@@ -265,8 +276,13 @@ let maxendtime=starttime+maxduration
 let firstminutes=starttime+120
 let fiveminutes=starttime+300
 let minendtime=starttime+minduration
+stoptime=0
 echo "Minimum end time" $(date -d @$minendtime)
 echo "Maximum end time" $(date -d @$maxendtime)
+if (( stopafter > 0 )) ; then
+    let stoptime=starttime+stopafter*60
+    echo "Stop time" $(date -d @$stoptime)
+fi
 filesize=0
 lowcount=0
 # textoverlay indicates there is a text overlay on the video, which
@@ -280,6 +296,11 @@ while true ; do
     if (( loopstart > maxendtime )) ; then
         echo `$LOGDATE` "ERROR: Recording for too long, kill it"
         exit 2
+    fi
+    if (( stoptime > 0 && loopstart > stoptime )) ; then
+        sleep 2
+        echo `$LOGDATE` "Recording $recfile ended for Stop Time reached."
+        break
     fi
     if ! ps -q $ffmpeg_pid >/dev/null ; then
         echo `$LOGDATE` "ERROR: ffmpeg is gone, exit"
