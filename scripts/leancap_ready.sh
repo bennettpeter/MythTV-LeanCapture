@@ -89,7 +89,7 @@ while true ; do
         if (( rc > mrc )) ; then mrc=$rc ; fi
         if (( rc > errored ))  ; then
             $scriptpath/notify.py "Fire Stick Problem" \
-              "leancap_ready: Failed to get to favorite channels on ${recname}" &
+              "leancap_ready: Failed to get to channel list on ${recname}" &
             errored=$rc
         fi
         # If no error this entire run, reset errored so messages can resume.
