@@ -15,6 +15,7 @@ postkeys=
 dosrch=1
 playing=0
 stopafter=
+chapter=0
 
 while (( "$#" >= 1 )) ; do
     case $1 in
@@ -91,6 +92,9 @@ while (( "$#" >= 1 )) ; do
         --wait)
             wait=1
             ;;
+        --chapter)
+            chapter=1
+            ;;
         *)
             echo "Invalid option $1"
             error=y
@@ -126,6 +130,8 @@ if [[ "$error" == y || "$title" == "" || "$season" == "" \
     echo "--postkeys string : Keystrokes to send after successful recording"
     echo "--wait : Pause immediately before playback, for testing"
     echo "    or to rewind in progress show to beginning."
+    echo "--chapter : Record only one chapter"
+    echo "    Only for services with text overlay"
     exit 2
 fi
 
@@ -276,9 +282,13 @@ let maxendtime=starttime+maxduration
 let firstminutes=starttime+120
 let fiveminutes=starttime+300
 let minendtime=starttime+minduration
-stoptime=0
-echo "Minimum end time" $(date -d @$minendtime)
+if (( chapter )) ; then
+    minendtime=0
+else
+    echo "Minimum end time" $(date -d @$minendtime)
+fi
 echo "Maximum end time" $(date -d @$maxendtime)
+stoptime=0
 if (( stopafter > 0 )) ; then
     let stoptime=starttime+stopafter*60
     echo "Stop time" $(date -d @$stoptime)
@@ -340,6 +350,11 @@ while true ; do
                 fi
                 sleep 2
                 echo `$LOGDATE` "Recording $recfile ended with text screen."
+                break 2
+            fi
+            if (( chapter )) ; then
+                sleep 2
+                echo `$LOGDATE` "Recording $recfile ended at chapter end."
                 break 2
             fi
             # peacock prompt: Cancel on last line
