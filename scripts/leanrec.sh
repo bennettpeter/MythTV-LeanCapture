@@ -279,8 +279,8 @@ let maxduration=minutes*60*150/100
 # Min duration is 66% of specified duration.
 let minduration=minutes*60*66/100
 let maxendtime=starttime+maxduration
-let firstminutes=starttime+120
-let fiveminutes=starttime+300
+let firstminutes=starttime+180
+let blankminutes=starttime+360
 let minendtime=starttime+minduration
 if (( chapter )) ; then
     minendtime=0
@@ -323,7 +323,7 @@ while true ; do
             break
         fi
         capturepage adb
-        if (( ! textoverlay  && CAP_TYPE == 2 && now > firstminutes && now < fiveminutes )) ; then
+        if (( ! textoverlay  && CAP_TYPE == 2 && now > firstminutes && now < blankminutes )) ; then
             textoverlay=1
             echo `$LOGDATE` Blank Screen sets textoverlay flag.
         fi
