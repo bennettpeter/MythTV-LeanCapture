@@ -362,7 +362,8 @@ while true ; do
             # tubi prompt: Starting in xx secondsS
             # peacock prompt - i TVMA
             # Hulu no ads prompt "Episodes Inside the Episodes"
-            if egrep -a '^Cancel$|^Up Next$|^i *TV..$|^Starting in [0-9]* seconds|Episodes' $TEMPDIR/${recname}_capture_crop.txt ; then
+            # HBOMAX: "AUTOPLAY OFF" or "NEXT EPISODE "
+            if egrep -a '^Cancel$|^Up Next$|^i *TV..$|^Starting in [0-9]* seconds|Episodes|AUTOPLAY OFF|NEXT EPISODE ' $TEMPDIR/${recname}_capture_crop.txt ; then
                 sleep 2
                 echo `$LOGDATE` "Recording $recfile ended with text prompt."
                 break 2
