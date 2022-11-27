@@ -16,6 +16,12 @@ dosrch=1
 playing=0
 stopafter=
 chapter=0
+# textoverlay indicates there is a text overlay on the video, which
+# means text can pop up any time and therefore the value must be tested.
+# If there in no text overlay you can assume the video is over as soon
+# as you see text.
+textoverlay=0
+
 
 while (( "$#" >= 1 )) ; do
     case $1 in
@@ -95,6 +101,9 @@ while (( "$#" >= 1 )) ; do
         --chapter)
             chapter=1
             ;;
+        --textoverlay)
+            textoverlay=1
+            ;;
         *)
             echo "Invalid option $1"
             error=y
@@ -132,6 +141,8 @@ if [[ "$error" == y || "$title" == "" || "$season" == "" \
     echo "    or to rewind in progress show to beginning."
     echo "--chapter : Record only one chapter"
     echo "    Only for services with text overlay"
+    echo "--textoverlay : Service uses textoverlay"
+    echo "    For service that has text ads and more than 3 minutes of ads at the start."
     exit 2
 fi
 
@@ -279,6 +290,7 @@ let maxduration=minutes*60*150/100
 # Min duration is 66% of specified duration.
 let minduration=minutes*60*66/100
 let maxendtime=starttime+maxduration
+# firstminutes is the max length of ads at the beginning
 let firstminutes=starttime+180
 let blankminutes=starttime+360
 let minendtime=starttime+minduration
@@ -295,11 +307,6 @@ if (( stopafter > 0 )) ; then
 fi
 filesize=0
 lowcount=0
-# textoverlay indicates there is a text overlay on the video, which
-# means text can pop up any time and therefore the value must be tested.
-# If there in no text overlay you can assume the video is over as soon
-# as you see text.
-textoverlay=0
 let minbytes=MINBYTES*2
 while true ; do
     loopstart=`date +%s`
@@ -362,8 +369,8 @@ while true ; do
             # tubi prompt: Starting in xx secondsS
             # peacock prompt - i TVMA
             # Hulu no ads prompt "Episodes Inside the Episodes"
-            # HBOMAX: "AUTOPLAY OFF" or "NEXT EPISODE "
-            if egrep -a '^Cancel$|^Up Next$|^i *TV..$|^Starting in [0-9]* seconds|Episodes|AUTOPLAY OFF|NEXT EPISODE ' $TEMPDIR/${recname}_capture_crop.txt ; then
+            # HBOMAX: "AUTOPLAY OFF" or "NEXT EPISODE " or "Seasons [0-9]"
+            if egrep -a '^Cancel$|^Up Next$|^i *TV..$|^Starting in [0-9]* seconds|Episodes|AUTOPLAY OFF|NEXT EPISODE |Seasons [0-9]' $TEMPDIR/${recname}_capture_crop.txt ; then
                 sleep 2
                 echo `$LOGDATE` "Recording $recfile ended with text prompt."
                 break 2
