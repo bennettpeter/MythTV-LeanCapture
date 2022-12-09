@@ -190,6 +190,9 @@ if [[ "$ISMYTHBACKEND" == "" ]] ; then
 fi
 # When running as a service, start up the leancap_ready processes
 if (( ! isterminal && ISMYTHBACKEND )) ; then
+    # Initial sleep so that if any programs are immediately pending they
+    # can start up right away (e.g. after a power outage or reboot)
+    sleep 120
     for conffile in /etc/opt/mythtv/$reqname.conf ; do
         recname=$(basename $conffile .conf)
         numlines=$(wc -l < $DATADIR/${recname}.conf)

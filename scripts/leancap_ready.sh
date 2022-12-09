@@ -52,21 +52,15 @@ while true ; do
             # At least once a day, check resolution and restart
             # Xfinity app
             errored=0
-            # call the fixresolution if there is a wrong resolution
-            capturepage adb
+            # call the fixresolution once per day
+            fireresolution
             rc=$?
-            if (( rc == 1 )) ; then
-                fireresolution
-                rc=$?
-                if (( rc != 0 )) ; then
-                    $scriptpath/notify.py "Fire Stick Problem" \
-                      "leancap_ready: Cannot set resolution on ${recname}" &
-                fi
-            else
-                echo `$LOGDATE` "Resolution is correct on $recname."
-                $scriptpath/adb-sendkey.sh POWER
-                $scriptpath/adb-sendkey.sh HOME
+            if (( rc != 0 )) ; then
+                $scriptpath/notify.py "Fire Stick Problem" \
+                  "leancap_ready: Cannot set resolution on ${recname}" &
             fi
+            $scriptpath/adb-sendkey.sh POWER
+            $scriptpath/adb-sendkey.sh HOME
             lastrescheck="$today"
         fi
         # Only check this on one tuner

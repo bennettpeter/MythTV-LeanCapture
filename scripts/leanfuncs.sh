@@ -561,8 +561,21 @@ function fireresolution {
     if ! waitforpage "DISPLAY & SOUNDS" ; then
         return 2
     fi
-    $scriptpath/adb-sendkey.sh DOWN
-    $scriptpath/adb-sendkey.sh DPAD_CENTER
+    for (( xy = 0; xy < 5; xy++ )) ; do
+        $scriptpath/adb-sendkey.sh DOWN
+        $scriptpath/adb-sendkey.sh DPAD_CENTER
+        CROP="-gravity Center -crop 40%x100%"
+        capturepage
+        if [[ "$pagename" == DISPLAY ]] ; then
+            break
+        fi
+        $scriptpath/adb-sendkey.sh BACK
+    done
+    if [[ "$pagename" != DISPLAY ]] ; then
+        echo `$LOGDATE` "ERROR: Cannot get to DISPLAY page."
+        return 2
+    fi
+
     $scriptpath/adb-sendkey.sh DPAD_CENTER
     CROP="-gravity Center -crop 40%x100%"
     if ! waitforpage "VIDEO RESOLUTION" ; then
