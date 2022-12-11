@@ -12,7 +12,7 @@ ADB_ENDKEY=
 srch=
 prekeys=
 postkeys=
-dosrch=1
+dosrch=0
 playing=0
 stopafter=
 chapter=0
@@ -68,14 +68,19 @@ while (( "$#" >= 1 )) ; do
             fi
             ;;
         --srch)
-            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            if [[ "$2" == "" || "$2" == -* ]] ; then
+                # This indicates search with default string
+                srch=
+                dosrch=1
             else
                 srch="$2"
+                dosrch=1
                 shift||rc=$?
             fi
             ;;
         --nosrch)
             dosrch=0
+            srch=
             ;;
         --playing)
             playing=1
@@ -130,8 +135,9 @@ if [[ "$error" == y || "$title" == "" || "$season" == "" \
     echo "--recname|-n xxxxxxxx : Recorder id (default leancap1)"
     echo "--season|-S nn : Season without leading zeroes"
     echo "--episode|-E nn : Episode without leading zeroes"
+    echo "--srch : With no value srch will search using default string"
     echo "--srch string : Alternate search string for identifying correct page"
-    echo "--nosrch : Do not check for correct page."
+    echo "--nosrch : Do not check for correct page. This is the default so can be omitted."
     echo "--playing : Do not send Enter key at start. Use when playback is already going"
     echo "    This also sets nosrch."
     echo "--prekeys string : Keystrokes to send before playback to get to correct page"
