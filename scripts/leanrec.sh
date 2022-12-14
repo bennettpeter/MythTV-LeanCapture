@@ -314,6 +314,7 @@ fi
 filesize=0
 lowcount=0
 let minbytes=MINBYTES*2
+duptext=0
 while true ; do
     loopstart=`date +%s`
     if (( loopstart > maxendtime )) ; then
@@ -336,9 +337,16 @@ while true ; do
             break
         fi
         capturepage adb
+        # CAP_TYPE 2 is "blank text screen"
         if (( ! textoverlay  && CAP_TYPE == 2 && now > firstminutes && now < blankminutes )) ; then
             textoverlay=1
             echo `$LOGDATE` Blank Screen sets textoverlay flag.
+        fi
+        # CAP_TYPE 1 is "same text as before"
+        if (( CAP_TYPE == 1 )) ; then
+            let duptext++
+        else
+            duptext=0
         fi
         if [[ "$pagename" != "" ]] ; then
             # peacock select watch from start or resume
@@ -368,6 +376,12 @@ while true ; do
             if (( chapter )) ; then
                 sleep 2
                 echo `$LOGDATE` "Recording $recfile ended at chapter end."
+                break 2
+            fi
+            
+            # If stopped on a text page for a minute, end
+            if (( duptext > 30 )) ; then
+                echo `$LOGDATE` "Recording $recfile ended on static text for 1 minute."
                 break 2
             fi
             # peacock prompt: Cancel on last line
