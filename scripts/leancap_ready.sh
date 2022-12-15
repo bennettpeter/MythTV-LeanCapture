@@ -59,6 +59,7 @@ while true ; do
                   "leancap_ready: Wrong resolution ${resolution} on ${recname}" &
             else
                 echo `$LOGDATE` "Resolution is correct ${resolution} on $recname."
+            fi
             # call the fixresolution once per day
             # doesn't work
             #~ fireresolution
