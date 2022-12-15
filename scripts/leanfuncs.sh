@@ -222,6 +222,7 @@ function getparms {
 # Return 1 if wrong resolution is found
 # CAP_TYPE returns 0 for text, 1 for same text as before, 2 for blank screen, 3 for no capture
 # imagesize returns size of full image file
+# resolution: contains the resolution found
 function capturepage {
     pagename=
     imagesize=0
@@ -524,7 +525,10 @@ function navigate {
 }
 
 # Check and repair firestick resolution
+# Does not work and gets stuck in mirroring which cannot be recovered from
+# unless you have an actual bluetooth remote or reboot the fire stick.
 function fireresolution {
+    return 0
     prodmodel=$(adb -s $ANDROID_DEVICE shell getprop ro.product.model)
     if [[ $prodmodel != AFT* ]] ; then
         echo `$LOGDATE` "This is not a fire device, cannot set resolution"
