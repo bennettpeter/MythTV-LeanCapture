@@ -77,8 +77,8 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
     if [[ "$pagename" == "$NAVTYPE" ]] ; then
         echo `$LOGDATE` "ERROR: Listing screen, send extra ENTER."
         $scriptpath/adb-sendkey.sh DPAD_CENTER
-        $scriptpath/notify.py "Xfinity Warning" \
-            "leancap_encode: Listing screen, sent extra ENTER on ${recname}."
+        #~ $scriptpath/notify.py "Xfinity Warning" \
+            #~ "leancap_encode: Listing screen, sent extra ENTER on ${recname}."
         sleep 20
     fi
     # Loop to check if recording is working.
