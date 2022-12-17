@@ -379,9 +379,9 @@ while true ; do
                 break 2
             fi
             
-            # If stopped on a text page for a minute, end
-            if (( duptext > 30 )) ; then
-                echo `$LOGDATE` "Recording $recfile ended on static text for 1 minute."
+            # If stopped on a text page for 5 iterations (10-15 sec), end recording
+            if (( duptext > 5 )) ; then
+                echo `$LOGDATE` "Recording $recfile ended on static text 5 times."
                 break 2
             fi
             # peacock prompt: Cancel on last line
