@@ -16,8 +16,9 @@ dosrch=0
 playing=0
 stopafter=
 chapter=0
+movie=0
 # textoverlay indicates there is a text overlay on the video, which
-# means text can pop up any time and therefore the value must be tested.
+# means text can pop up any time and therefore the value must be checked.
 # If there in no text overlay you can assume the video is over as soon
 # as you see text.
 textoverlay=0
@@ -66,6 +67,9 @@ while (( "$#" >= 1 )) ; do
                 episode="$2"
                 shift||rc=$?
             fi
+            ;;
+        --movie|-M)
+            movie=1
             ;;
         --srch)
             if [[ "$2" == "" || "$2" == -* ]] ; then
@@ -117,17 +121,19 @@ while (( "$#" >= 1 )) ; do
     shift||rc=$?
 done
 
-if [[ "$error" == y || "$title" == "" || "$season" == "" \
-      || "$episode" == "" || "$minutes" == "" ]] ; then
+if [[ "$error" == y || "$title" == "" \
+      || ( ( "$season" == "" || "$episode" == "" ) && "$movie" == 0 ) \
+      || "$minutes" == "" ]] ; then
     echo "*** $0 ***"
     echo "Generic Record"
     echo "Disable autoplay"
-    echo "Title season and expisode are for naming the recording"
+    echo "Title season and episode are for naming the recording"
     echo "Start with appropriate show selected and ready."
     echo "After recording will not return to HOME unless there was an error."
+    echo "title, time and either movie or season and episode are required"
     echo "Input parameters:"
     echo "--title|-t xxxx : Title"
-    echo "--time|-m nn : Estimated Number of minutes [required]"
+    echo "--time|-m nn : Estimated Number of minutes"
     echo "    If show ends before 66% or after 133% of this it is an error"
     echo "--stopafter|-s nn : Stop after a number of minutes "
     echo "    Stop recording without error after this number of minutes"
@@ -135,6 +141,7 @@ if [[ "$error" == y || "$title" == "" || "$season" == "" \
     echo "--recname|-n xxxxxxxx : Recorder id (default leancap1)"
     echo "--season|-S nn : Season without leading zeroes"
     echo "--episode|-E nn : Episode without leading zeroes"
+    echo "--movie|-M : Recording a movie"
     echo "--srch : With no value srch will search using default string"
     echo "--srch string : Alternate search string for identifying correct page"
     echo "--nosrch : Do not check for correct page. This is the default so can be omitted."
@@ -170,7 +177,20 @@ if (( ! wait )) ; then
     ADB_ENDKEY=HOME
 fi
 
-echo `$LOGDATE` "RECORD: Title $title, S${season}E${episode}"
+if (( movie )) ; then
+    directory=Movies
+    file="$title"
+else
+    directory="$title"
+    if (( ${#season} == 1 )) ; then
+        season=0$season
+    fi
+    if (( ${#episode} == 1 )) ; then
+        episode=0$episode
+    fi
+    file=S${season}E${episode}
+fi
+echo `$LOGDATE` "RECORD: $directory, $file"
 if ! getparms PRIMARY ; then
     exit 2
 fi
@@ -214,15 +234,7 @@ if (( dosrch )) && ! waitforstring "$str" "Season and Episode" ; then
     exit 2
 fi
 
-if (( ${#season} == 1 )) ; then
-    season=0$season
-fi
-if (( ${#episode} == 1 )) ; then
-    episode=0$episode
-fi
-season_episode=S${season}E${episode}
-
-recfilebase="$VID_RECDIR/$title/$season_episode"
+recfilebase="$VID_RECDIR/$directory/$file"
 recfile="$recfilebase.mkv"
 xx=
 while [[ -f "$recfile" ]] ; do
@@ -245,13 +257,13 @@ if (( wait )) ; then
     ADB_ENDKEY=HOME
 fi
 
-mkdir -p "$VID_RECDIR/$title"
+mkdir -p "$VID_RECDIR/$directory"
 
 echo `$LOGDATE` "Starting recording of $recfile"
 # Start Recording
 
 if (( playing )) ; then
-    # Wait for video device if it is in use for prior episode.
+    # Wait for video device if it is in use for prior recording.
     for (( xx=0 ; xx < 10 ; xx++ )) ; do
         capturepage video
         if (( imagesize > 0 )) ; then break ; fi
