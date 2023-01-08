@@ -361,6 +361,13 @@ while true ; do
             duptext=0
         fi
         if [[ "$pagename" != "" ]] ; then
+            # peacock "Are you still watching?" prompt
+            if grep "Are you still watching" $TEMPDIR/${recname}_capture_crop.txt ; then
+                echo `$LOGDATE` "Responding to 'Are you still watching?' Prompt"
+                $scriptpath/adb-sendkey.sh DPAD_CENTER
+                sleep 2
+            fi
+
             # peacock select watch from start or resume
             # default is resume, use right center to resume
             #~ if [[ "$pagename" == "Would you like to watch from start or resume"* ]] ; then
@@ -368,6 +375,7 @@ while true ; do
                 #~ sleep 2
                 #~ continue
             #~ fi
+
             if (( now < firstminutes )) ; then
                 sleep 2
                 continue
@@ -390,7 +398,7 @@ while true ; do
                 echo `$LOGDATE` "Recording $recfile ended at chapter end."
                 break 2
             fi
-            
+
             # If stopped on a text page for 5 iterations (10-15 sec), end recording
             if (( duptext > 5 )) ; then
                 echo `$LOGDATE` "Recording $recfile ended on static text 5 times."
