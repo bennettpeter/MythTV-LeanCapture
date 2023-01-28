@@ -17,6 +17,8 @@ playing=0
 stopafter=
 chapter=0
 movie=0
+extension=mkv
+capture=adb
 # textoverlay indicates there is a text overlay on the video, which
 # means text can pop up any time and therefore the value must be checked.
 # If there in no text overlay you can assume the video is over as soon
@@ -65,6 +67,20 @@ while (( "$#" >= 1 )) ; do
             if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
             else
                 episode="$2"
+                shift||rc=$?
+            fi
+            ;;
+        --extension|-e)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                extension="$2"
+                shift||rc=$?
+            fi
+            ;;
+        --capture)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                capture="$2"
                 shift||rc=$?
             fi
             ;;
@@ -121,6 +137,24 @@ while (( "$#" >= 1 )) ; do
     shift||rc=$?
 done
 
+case "$capture" in
+    adb)
+        ;;
+    file)
+        if [[ "$extension" != ts ]] ; then
+            echo "ERROR file capture requres ts extension"
+            error=y
+        fi
+        ;;
+    *)
+        echo "ERROR Invalid capture value $capture"
+        error=y
+        ;;
+esac
+
+
+
+
 if [[ "$error" == y || "$title" == "" \
       || ( ( "$season" == "" || "$episode" == "" ) && "$movie" == 0 ) \
       || "$minutes" == "" ]] ; then
@@ -141,6 +175,7 @@ if [[ "$error" == y || "$title" == "" \
     echo "--recname|-n xxxxxxxx : Recorder id (default leancap1)"
     echo "--season|-S nn : Season without leading zeroes"
     echo "--episode|-E nn : Episode without leading zeroes"
+    echo "--extension|-e xxx : File extension, determines type. Default mkv."
     echo "--movie|-M : Recording a movie"
     echo "--srch : With no value srch will search using default string"
     echo "--srch string : Alternate search string for identifying correct page"
@@ -156,6 +191,8 @@ if [[ "$error" == y || "$title" == "" \
     echo "    Only for services with text overlay"
     echo "--textoverlay : Service uses textoverlay"
     echo "    For service that has text ads and more than 3 minutes of ads at the start."
+    echo "--capture adb|file : Method of monitoring messages. file is experimental"
+    echo "    file requires extension ts"
     exit 2
 fi
 
@@ -163,6 +200,7 @@ fi
 
 if [[ -f $VID_RECDIR/STOP_RECORDINGS ]] ; then
     echo "Exiting because of file $VID_RECDIR/STOP_RECORDINGS"
+    ADB_ENDKEY=HOME
     exit 3
 fi
 
@@ -235,16 +273,16 @@ if (( dosrch )) && ! waitforstring "$str" "Season and Episode" ; then
 fi
 
 recfilebase="$VID_RECDIR/$directory/$file"
-recfile="$recfilebase.mkv"
+RECFILE="$recfilebase.$extension"
 xx=
-while [[ -f "$recfile" ]] ; do
+while [[ -f "$RECFILE" ]] ; do
     let xx++
-    recfile="${recfilebase}_$xx.mkv"
+    RECFILE="${recfilebase}_$xx.$extension"
     echo `$LOGDATE` "Duplicate recording file, appending _$xx"
 done
 
 if (( wait )) ; then
-    echo "Ready to start recording of $recfile"
+    echo "Ready to start recording of $RECFILE"
     echo "Type Y to start, anything else to cancel"
     echo "This script will press DPAD_CENTER to start. Do not press it."
     read -e resp
@@ -259,20 +297,19 @@ fi
 
 mkdir -p "$VID_RECDIR/$directory"
 
-echo `$LOGDATE` "Starting recording of $recfile"
+echo `$LOGDATE` "Starting recording of $RECFILE"
 # Start Recording
 
-if (( playing )) ; then
-    # Wait for video device if it is in use for prior recording.
-    for (( xx=0 ; xx < 10 ; xx++ )) ; do
-        capturepage video
-        if (( imagesize > 0 )) ; then break ; fi
-        sleep 1
-    done
-    if (( imagesize == 0 )) ; then
-        echo `$LOGDATE` "ERROR - Video device $VIDEO_IN is unavailable."
-        exit 2
-    fi
+# Wait for video device if it is in use for prior recording.
+for (( xx=0 ; xx < 30 ; xx++ )) ; do
+    capturepage video
+    if (( imagesize > 0 )) ; then break ; fi
+    echo "Waiting for video device"
+    sleep 1
+done
+if (( imagesize == 0 )) ; then
+    echo `$LOGDATE` "ERROR - Video device $VIDEO_IN is unavailable."
+    exit 2
 fi
 
 if (( ! playing )) ; then
@@ -299,7 +336,11 @@ ffmpeg -hide_banner -loglevel error \
 -preset $X264_PRESET \
 -crf $X264_CRF \
 -c:a aac \
-"$recfile" &
+"$RECFILE" &
+
+# This captures an image every 2 seconds but the audio cuts in and out
+# if I use it.
+#~ -vf fps=1/2 -an -update "$framefile" &
 
 ffmpeg_pid=$!
 starttime=`date +%s`
@@ -325,8 +366,10 @@ if (( stopafter > 0 )) ; then
 fi
 filesize=0
 lowcount=0
-let minbytes=MINBYTES*2
 duptext=0
+if [[ "$capture" == file ]] ; then
+    textoverlay=1
+fi
 while true ; do
     loopstart=`date +%s`
     if (( loopstart > maxendtime )) ; then
@@ -335,7 +378,7 @@ while true ; do
     fi
     if (( stoptime > 0 && loopstart > stoptime )) ; then
         sleep 2
-        echo `$LOGDATE` "Recording $recfile ended for Stop Time reached."
+        echo `$LOGDATE` "Recording $RECFILE ended for Stop Time reached."
         break
     fi
     if ! ps -q $ffmpeg_pid >/dev/null ; then
@@ -344,11 +387,11 @@ while true ; do
     fi
     for (( x=0; x<30; x++ )) ; do
         now=`date +%s`
-        # Each outer loop should be approximately 1 minute
-        if (( now - loopstart > 59 )) ; then
+        # Each outer loop should be approximately 30 seconds
+        if (( now - loopstart > 29 )) ; then
             break
         fi
-        capturepage adb
+        capturepage $capture
         # CAP_TYPE 2 is "blank text screen"
         if (( ! textoverlay  && CAP_TYPE == 2 && now > firstminutes && now < blankminutes )) ; then
             textoverlay=1
@@ -390,18 +433,18 @@ while true ; do
                     continue
                 fi
                 sleep 2
-                echo `$LOGDATE` "Recording $recfile ended with text screen."
+                echo `$LOGDATE` "Recording $RECFILE ended with text screen."
                 break 2
             fi
             if (( chapter )) ; then
                 sleep 2
-                echo `$LOGDATE` "Recording $recfile ended at chapter end."
+                echo `$LOGDATE` "Recording $RECFILE ended at chapter end."
                 break 2
             fi
 
             # If stopped on a text page for 5 iterations (10-15 sec), end recording
             if (( duptext > 5 )) ; then
-                echo `$LOGDATE` "Recording $recfile ended on static text 5 times."
+                echo `$LOGDATE` "Recording $RECFILE ended on static text 5 times."
                 break 2
             fi
             # peacock prompt: Cancel on last line
@@ -412,7 +455,7 @@ while true ; do
             # HBOMAX: "AUTOPLAY OFF" or "NEXT EPISODE " or "Seasons [0-9]"
             if egrep -a '^Cancel$|^Up Next$|^i *TV.{2,3}$|^Starting in [0-9]* seconds|Episodes|AUTOPLAY OFF|NEXT EPISODE |Seasons [0-9]' $TEMPDIR/${recname}_capture_crop.txt ; then
                 sleep 2
-                echo `$LOGDATE` "Recording $recfile ended with text prompt."
+                echo `$LOGDATE` "Recording $RECFILE ended with text prompt."
                 break 2
             fi
         fi
@@ -422,13 +465,22 @@ while true ; do
         echo `$LOGDATE` "ERROR: Recording seems to have stuck, kill it"
         exit 2
     fi
-    newsize=`stat -c %s "$recfile"`
+    newsize=`stat -c %s "$RECFILE"`
     let diff=newsize-filesize
     filesize=$newsize
     echo `$LOGDATE` "size: $filesize  Incr: $diff"
-    if (( diff < minbytes )) ; then
+    if (( diff < MINBYTES )) ; then
         let lowcount++
-        echo `$LOGDATE` "Less than minbytes, lowcount=$lowcount"
+        echo `$LOGDATE` "Less than MINBYTES ($MINBYTES), lowcount=$lowcount"
+        # freevee "Are you still watching" prompt is on a protected screen
+        # so look in the file.
+        if [[ "$extension" == ts ]] ; then
+            capturepage file
+            if grep "Are you still watching" $TEMPDIR/${recname}_capture_crop.txt ; then
+                echo `$LOGDATE` "Responding to 'Are you still watching?' Prompt"
+                $scriptpath/adb-sendkey.sh DPAD_CENTER
+            fi
+        fi
     else
         lowcount=0
     fi
