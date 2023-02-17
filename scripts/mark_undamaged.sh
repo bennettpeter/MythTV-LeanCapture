@@ -14,7 +14,7 @@ channum="$1"
 time="$2 $3"
 
 if [[ "$channum" == "" || "$2" == "" || "$3" == "" ]] ; then
-    echo Mark recording as damaged
+    echo Mark recording as undamaged
     echo $0 "<Channel number> <error date> <error time>"
     echo Date and time in UCT
     echo Example:
