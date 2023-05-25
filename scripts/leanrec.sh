@@ -447,13 +447,13 @@ while true ; do
                 echo `$LOGDATE` "Recording $RECFILE ended on static text 5 times."
                 break 2
             fi
-            # peacock prompt: Cancel on last line
+            # peacock prompt: CANCEL on last line
             # peacock prompt: "Up Next" on a whole line
             # tubi prompt: Starting in xxs or Starting inxs
             # peacock prompt - i TVMA or i TV-14
             # Hulu no ads prompt "Episodes Inside the Episodes"
             # HBOMAX: "AUTOPLAY OFF" or "NEXT EPISODE " or "Seasons [0-9]"
-            if egrep -a '^Cancel$|^Up Next$|^i *TV.{2,3}$|^Starting in *[0-9]|Episodes|AUTOPLAY OFF|NEXT EPISODE |Seasons [0-9]' $TEMPDIR/${recname}_capture_crop.txt ; then
+            if egrep -a '^CANCEL$|^Up Next$|^i *TV.{2,3}$|^Starting in *[0-9]|Episodes|AUTOPLAY OFF|NEXT EPISODE |Seasons [0-9]' $TEMPDIR/${recname}_capture_crop.txt ; then
                 sleep 2
                 echo `$LOGDATE` "Recording $RECFILE ended with text prompt."
                 break 2
