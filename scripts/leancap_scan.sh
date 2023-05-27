@@ -6,7 +6,7 @@
 # with VIDEO_IN and AUDIO_IN settings
 # This uses the SLEEP and WAKEUP commands to create a screen display
 # which is then checked.
-# 
+#
 
 . /etc/opt/mythtv/leancapture.conf
 scriptname=`readlink -e "$0"`
@@ -188,6 +188,9 @@ done
 if [[ "$ISMYTHBACKEND" == "" ]] ; then
     ISMYTHBACKEND=1
 fi
+
+$LOGDATE > $LOCKBASEDIR/scandate
+
 # When running as a service, start up the leancap_ready processes
 if (( ! isterminal && ISMYTHBACKEND )) ; then
     # Initial sleep so that if any programs are immediately pending they
@@ -204,8 +207,6 @@ if (( ! isterminal && ISMYTHBACKEND )) ; then
         fi
     done
 fi
-
-$LOGDATE > $LOCKBASEDIR/scandate
 
 if [[ "$pidlist" != "" ]] ; then
     # wait for ready processes to end
