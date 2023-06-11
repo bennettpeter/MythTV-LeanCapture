@@ -104,7 +104,6 @@ while (( "$#" >= 1 )) ; do
             ;;
         --playing)
             playing=1
-            dosrch=0
             ;;
         --prekeys)
             if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
