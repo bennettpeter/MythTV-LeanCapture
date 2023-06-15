@@ -398,7 +398,12 @@ while true ; do
         fi
         # CAP_TYPE 1 is "same text as before"
         if (( CAP_TYPE == 1 )) ; then
-            let duptext++
+            # tubi message
+            if egrep -a 'Your video will resume after the break' $TEMPDIR/${recname}_capture_crop.txt ; then
+                duptext=0
+            else
+                let duptext++
+            fi
         else
             duptext=0
         fi
