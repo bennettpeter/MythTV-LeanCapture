@@ -53,7 +53,7 @@ elif [[ "$title" == "" ]] ; then
     exit 2
 fi
 
-if [[ "$videoprop" != *DAMAGED* ]] ; then
+if [[ ! "$videoprop" == *DAMAGED* ]] ; then
     echo "Recording was not marked damaged"
 else
     newprop=$(echo "$videoprop" | sed "s/,DAMAGED//;s/DAMAGED,//")
