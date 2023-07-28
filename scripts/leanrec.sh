@@ -465,7 +465,7 @@ while true ; do
         fi
         sleep 2
     done
-    if (( lowcount > 6 )) ; then
+    if (( lowcount > 10 )) ; then
         echo `$LOGDATE` "ERROR: Recording seems to have stuck, kill it"
         exit 2
     fi
