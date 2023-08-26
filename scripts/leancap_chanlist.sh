@@ -151,7 +151,8 @@ cp -n "$chanlistfilegen" "$chanlistfile"
 if (( numerrors == 0 )) ; then
     cp "$chanlistfilegen" "$chanlistfile"
     $scriptpath/notify.py "Channel list changes" \
-        "leancap_chanlist: See new list in $numdate_$chanlistfilegen"
+        "leancap_chanlist: See new list in $numdate_$chanlistfilegen .
+Run $scriptpath/update_sd_channels.sh to keep schedules direct in sync"
 else
     echo `$LOGDATE` "Number of errors: $numerrors. Errors listed below. See $errfile"
     $scriptpath/notify.py "Channel list needs fixing" \

@@ -69,6 +69,10 @@ if ! which vlc >/dev/null >/dev/null; then
     echo WARNING you will need vlc installed to configure your system
 fi
 
+if ! which sqlite3 >/dev/null >/dev/null; then
+    echo WARNING you will need sqlite3 installed to run update_sd_channels
+fi
+
 if (( err )) ; then
     exit 2
 fi
