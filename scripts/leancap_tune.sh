@@ -108,6 +108,7 @@ for (( xx=0; xx<5; xx++ )) ; do
         # To test incorrect selection condition:
         #~ $scriptpath/adb-sendkey.sh RIGHT
         getchannellist
+        echo `$LOGDATE` "channels: ${channels[@]}"
         if (( arrsize != 5 )) ; then
             echo `$LOGDATE` "Wrong number of channels, trying again"
             $scriptpath/adb-sendkey.sh MENU
@@ -115,7 +116,6 @@ for (( xx=0; xx<5; xx++ )) ; do
             $scriptpath/adb-sendkey.sh RIGHT
             continue 2
         fi
-        echo `$LOGDATE` "channels: ${channels[@]}"
         getchannelselection
         if (( selection < 0)) ; then
             cp $TEMPDIR/${recname}_capture.png $TEMPDIR/${recname}_capture_channels.png
