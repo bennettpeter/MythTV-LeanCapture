@@ -7,6 +7,7 @@
 
 import os
 import sys
+import requests
 from datetime import datetime
 from configparser import ConfigParser
 import smtplib
@@ -73,4 +74,9 @@ with open(logfilename,"a") as logfile:
         smtpsrv = smtplib.SMTP_SSL(config.get(" default ","SMTP_HOST"), timeout=30)
         smtpsrv.login(config.get(" default ","SMTP_USER"),privConfig.get(" default ","SMTP_PASSWORD"))
         smtpsrv.sendmail(config.get(" default ","SMTP_SENDER"),destination,msg.as_string())
+    if config.has_option(" default ","NTFY_TOPIC") :
+        ntfy_topic=config.get(" default ","NTFY_TOPIC")
+        msgtext = subject + " " + now + " " + os.uname().nodename + " " + content
+        requests.post("https://ntfy.sh/" + ntfy_topic,
+            data=msgtext.encode(encoding='utf-8'))
 
