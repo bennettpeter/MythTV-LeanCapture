@@ -1,9 +1,14 @@
 #!/bin/bash
 
 # Send keystrokes to android device
-# Optional Params - keycodes. If none supplied prenet a menu.
+# Optional Params - key names. If none supplied present a menu for interative testing.
+# Use +number (e.g. +5) in the list to send the next key name that number of times
 # Optional environ param ANDROID_DEVICE set to hostname or ip address
-#   of already connected device
+#   of already connected device, if there could be more than one.
+# Note if LONGPRESS is used only one key should be sent
+
+# TODO 
+# adb shell input keyevent now accepts key name. This script may be able to be simplified.
 
 #KEYCODE_UNKNOWN=0
 #KEYCODE_SOFT_LEFT=1
@@ -325,8 +330,16 @@ while true ; do
         if [[ "$keyname" == "" ]] ; then break ; fi
         shift
     fi
+    # Check for repeat
+    repeat=1
+    if [[ ${keyname:0:1} == "+" ]] ; then
+        let repeat=keyname
+        keyname="$1"
+        shift
+    fi
+    if [[ ! $keyname =~ ^[A-Z0-9_]+$ ]] ; then echo "ERROR INVALID CHARACTER IN CODE <$keyname>" ; exit 2 ; fi
     keycode=`eval echo "$"KEYCODE_$keyname`
-    if [[ "$keycode" == "" ]]; then echo ERROR INVALID CODE $keyname ; exit 2 ; fi
+    if [[ "$keycode" == "" ]]; then echo "ERROR INVALID CODE <$keyname>" ; exit 2 ; fi
     option=
     if echo $keyname | grep LONGPRESS ; then
         option="--longpress"
@@ -336,9 +349,13 @@ while true ; do
         echo "$keyname ($keycode)"
         adb $devparm shell input keyevent $option $keycode
     else
-        keylist="$keylist $keycode"
-        desc="$desc $keyname ($keycode)"
+        for (( x=0; x<repeat; x++ )) ; do
+            keylist="$keylist $keycode"
+            desc="$desc $keyname ($keycode)"
+        done
     fi
 done
-echo $desc
-adb $devparm shell input keyevent $option $keylist
+if [[ "$keylist" != "" ]] ; then
+    echo $desc
+    adb $devparm shell input keyevent $option $keylist
+fi
