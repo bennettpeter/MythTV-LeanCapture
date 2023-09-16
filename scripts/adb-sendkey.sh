@@ -3,9 +3,12 @@
 # Send keystrokes to android device
 # Optional Params - key names. If none supplied present a menu for interative testing.
 # Use +number (e.g. +5) in the list to send the next key name that number of times
+# use --slow in the list to send keys separately, which gives approximately a 1 second
+# pause between sending keys.
 # Optional environ param ANDROID_DEVICE set to hostname or ip address
 #   of already connected device, if there could be more than one.
-# Note if LONGPRESS is used only one key should be sent
+# Note if LONGPRESS is used only one key should be sent otherwise all keys will be
+# sent with long press
 
 # TODO 
 # adb shell input keyevent now accepts key name. This script may be able to be simplified.
@@ -311,6 +314,7 @@ if [[ "$ANDROID_DEVICE" != "" ]] ; then
 fi
 
 keylist=
+slow=0
 while true ; do
     # interactive option
     mainpid=$$
@@ -326,6 +330,14 @@ while true ; do
         if [[ "$?" != 0 ]] ; then exit ; fi
         if [[ "$keyname" == "" ]] ; then exit ; fi
     else
+        keyname="$1"
+        if [[ "$keyname" == "" ]] ; then break ; fi
+        shift
+    fi
+    # Check for slow option
+    if [[ "$keyname" == --slow ]] ; then
+        slow=1
+        desc="$desc --slow"
         keyname="$1"
         if [[ "$keyname" == "" ]] ; then break ; fi
         shift
@@ -357,5 +369,11 @@ while true ; do
 done
 if [[ "$keylist" != "" ]] ; then
     echo $desc
-    adb $devparm shell input keyevent $option $keylist
+    if (( slow )) ; then
+        for key in $keylist ; do
+            adb $devparm shell input keyevent $option $key
+        done
+    else
+        adb $devparm shell input keyevent $option $keylist
+    fi
 fi
