@@ -135,9 +135,9 @@ while (( "$#" >= 1 )) ; do
         --textoverlay)
             textoverlay=1
             ;;
-        --tubi
+        --tubi)
             textoverlay=1
-            endtext='^Starting in *[0-9]s$'
+            endtext='Starting in *[0-9]s$'
             ;;
         *)
             echo "Invalid option $1"
