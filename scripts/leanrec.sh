@@ -25,6 +25,13 @@ capture=adb
 # as you see text.
 textoverlay=0
 
+# peacock prompt: CANCEL on last line
+# peacock prompt: "Up Next" on a whole line
+# tubi prompt: Starting in xxs or Starting inxs
+# peacock prompt - i TVMA or i TV-14
+# Hulu no ads prompt "Episodes Inside the Episodes"
+# HBOMAX: "AUTOPLAY OFF" or "NEXT EPISODE " or "Seasons [0-9]"
+endtext='^CANCEL$|^Up Next$|^i *TV.{2,3}$|^Starting in *[0-9]|^Episodes|AUTOPLAY OFF|NEXT EPISODE |Seasons [0-9]'
 
 while (( "$#" >= 1 )) ; do
     case $1 in
@@ -128,6 +135,10 @@ while (( "$#" >= 1 )) ; do
         --textoverlay)
             textoverlay=1
             ;;
+        --tubi
+            textoverlay=1
+            endtext='^Starting in *[0-9]s$'
+            ;;
         *)
             echo "Invalid option $1"
             error=y
@@ -150,8 +161,6 @@ case "$capture" in
         error=y
         ;;
 esac
-
-
 
 
 if [[ "$error" == y || "$title" == "" \
@@ -190,8 +199,9 @@ if [[ "$error" == y || "$title" == "" \
     echo "    Only for services with text overlay"
     echo "--textoverlay : Service uses textoverlay"
     echo "    For service that has text ads and more than 3 minutes of ads at the start."
-    echo "--capture adb|file : Method of monitoring messages. file is experimental"
-    echo "    file requires extension ts"
+    echo "--capture adb|file : Method of monitoring messages. file requires extension ts"
+    echo "--tubi : Set up for recording Tubi."
+    echo "    Tubi has Autoplay on, needs --playing on next leanrec, --postkeys HOME on last."
     exit 2
 fi
 
@@ -457,7 +467,7 @@ while true ; do
             # peacock prompt - i TVMA or i TV-14
             # Hulu no ads prompt "Episodes Inside the Episodes"
             # HBOMAX: "AUTOPLAY OFF" or "NEXT EPISODE " or "Seasons [0-9]"
-            if egrep -a '^CANCEL$|^Up Next$|^i *TV.{2,3}$|^Starting in *[0-9]|Episodes|AUTOPLAY OFF|NEXT EPISODE |Seasons [0-9]' $TEMPDIR/${recname}_capture_crop.txt ; then
+            if egrep -a "$endtext" $TEMPDIR/${recname}_capture_crop.txt ; then
                 sleep 2
                 echo `$LOGDATE` "Recording $RECFILE ended with text prompt."
                 break 2
