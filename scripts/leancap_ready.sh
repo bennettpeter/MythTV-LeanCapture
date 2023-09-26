@@ -75,7 +75,7 @@ while true ; do
         # Only check this on one tuner
         if (( capseq == 1 )) ; then
             # Only check once per day
-            if [[ "$NAVTYPE" == "Favorite Channels" \
+            if [[ "$NAVTYPELC" == "favorite channels" \
                 && "$lastfavcheck" != "$today" ]] ; then
                 # Simple check for mythbackend running
                 if (( now - startup > 300 )) && pidof mythbackend >/dev/null ; then

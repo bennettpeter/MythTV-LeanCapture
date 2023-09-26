@@ -45,6 +45,7 @@ case "$NAVTYPE" in
         ;;
 esac
 
+NAVTYPELC=${NAVTYPE,,}
 
 function exitfunc {
     local rc=$?
@@ -427,11 +428,13 @@ function navigate {
     local blanks=0
     local xx=0
     local expect=0
+    local pagereqlc="${pagereq,,}"
     # Normal would be 5 or 6 iterations to get to favorites
     for (( xx=0 ; xx < 25 ; xx++ )) ; do
         sleep 0.5
         capturepage
-        case "$pagename" in
+        pagenamelc="${pagename,,}"
+        case "$pagenamelc" in
         "")
             # If sleeping need to send POWER to turn it back on
             if (( xx == 0 || ++blanks > 4 )) ; then
@@ -442,13 +445,13 @@ function navigate {
                 blanks=0
             fi
             ;;
-        "We"*"detect your remote")
+        "we"*"detect your remote")
             $scriptpath/adb-sendkey.sh DPAD_CENTER
             ;;
         "xfinity stream")
             continue
             ;;
-        "For You")
+        "for you")
             sleep 0.5
             # LEFT invokes the menu in case MENU dismissed it
             $scriptpath/adb-sendkey.sh MENU
@@ -462,7 +465,7 @@ function navigate {
             for (( xy=0 ; xy < 25 ; xy++ )) ; do
                 capturepage
                 getmenuselection
-                if [[ "$selection" == "" || "${menuitems[selection]}" == "$pagereq" ]] ; then
+                if [[ "$selection" == "" || "${menuitems[selection],,}" == "$pagereqlc" ]] ; then
                     $scriptpath/adb-sendkey.sh DPAD_CENTER
                     let expect++
                     break
@@ -472,7 +475,7 @@ function navigate {
                     local entries=${#menuitems[@]}
                     local wanted=
                     for (( xx2=0; xx2<entries ; xx2++ )) ; do
-                        if [[ "${menuitems[xx2]}" == "$pagereq" ]] ; then
+                        if [[ "${menuitems[xx2],,}" == "$pagereqlc" ]] ; then
                             wanted=xx2
                             break
                         fi
@@ -502,11 +505,11 @@ function navigate {
                 $scriptpath/adb-sendkey.sh BACK
             fi
             ;;
-        "$pagereq")
+        "$pagereqlc")
             break
             ;;
         *)
-            if [[ "$pagereq" == Search ]] ; then
+            if [[ "$pagereqlc" == search ]] ; then
                 if grep "Press and hold.*to say words and phrases" $TEMPDIR/${recname}_capture_crop.txt ; then
                     pagename=Search_keyboard
                     break
@@ -523,7 +526,7 @@ function navigate {
             ;;
         esac
     done
-    if [[ "$pagename" != "${pagereq}"* ]] ; then
+    if [[ "$pagenamelc" != "${pagereqlc}"* ]] ; then
         echo `$LOGDATE` "ERROR: Unable to reach $pagereq: $recname."
         return 3
     fi

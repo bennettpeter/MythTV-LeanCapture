@@ -53,7 +53,7 @@ if [[ "$lockreq" != NOLOCK ]] ; then
             echo `$LOGDATE` "WARNING tuner already tuned to $tunechan, will retune"
             adb connect $ANDROID_DEVICE
             capturepage
-            if [[ "$pagename" != "$NAVTYPE" ]] ; then
+            if [[ "${pagename,,}" != "$NAVTYPELC" ]] ; then
                 $scriptpath/adb-sendkey.sh BACK
                 sleep 3
             fi
@@ -125,7 +125,7 @@ for (( xx=0; xx<5; xx++ )) ; do
             # Move cursor left in case a program is selected instead of a channel
             $scriptpath/adb-sendkey.sh LEFT
             capturepage
-            if [[ "$pagename" == "$NAVTYPE" ]] ; then
+            if [[ "${pagename,,}" == "$NAVTYPELC" ]] ; then
                 getchannellist
                 getchannelselection
             else

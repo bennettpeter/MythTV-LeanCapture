@@ -74,7 +74,7 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
     # Sometimes recording does not start and is stuck on the listing page
     # Kick start it if at happens.
     capturepage adb
-    if [[ "$pagename" == "$NAVTYPE" ]] ; then
+    if [[ "${pagename,,}" == "$NAVTYPELC" ]] ; then
         echo `$LOGDATE` "ERROR: Listing screen, send extra ENTER."
         $scriptpath/adb-sendkey.sh DPAD_CENTER
         $scriptpath/notify.py "Xfinity Warning" \
