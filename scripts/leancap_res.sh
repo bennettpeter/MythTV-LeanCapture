@@ -2,6 +2,12 @@
 
 # Check and fix resolution on fire tv stick
 
+echo "**************"
+echo "$0 is obsolete"
+echo "**************"
+
+exit 2
+
 . /etc/opt/mythtv/leancapture.conf
 scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`

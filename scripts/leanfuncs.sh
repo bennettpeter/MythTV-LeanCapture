@@ -3,7 +3,7 @@
 # This file need not be marked executable
 
 LOGDATE='date +%Y-%m-%d_%H-%M-%S'
-OCR_RESOLUTION=1280x720
+OCR_RESOLUTION=2560x1440
 updatetunetime=0
 ADB_ENDKEY=
 LOCKBASEDIR=/run/lock/leancap
@@ -23,7 +23,6 @@ if [[ "$X264_PRESET" == "" ]] ; then
     X264_PRESET=veryfast
 fi
 if [[ "$FIRE_RESOLUTION" == "" ]] ; then
-    FIRE_RESOLUTION_SETTING="720p 60Hz"
     FIRE_RESOLUTION=1280x720
 fi
 if [[ "$TEMPDIR" == "" ]] ; then
@@ -533,128 +532,20 @@ function navigate {
     return 0
 }
 
-# Check and repair firestick resolution
-# Does not work and gets stuck in mirroring which cannot be recovered from
-# unless you have an actual bluetooth remote or reboot the fire stick.
-function fireresolution {
-    return 0
-    prodmodel=$(adb -s $ANDROID_DEVICE shell getprop ro.product.model)
-    if [[ $prodmodel != AFT* ]] ; then
-        echo `$LOGDATE` "This is not a fire device, cannot set resolution"
-        return 0
-    fi
-    local xy
-    for (( xy = 0; xy < 5; xy++ )) ; do
-        echo `$LOGDATE` "Setting fire resolution to $FIRE_RESOLUTION_SETTING"
-        $scriptpath/adb-sendkey.sh POWER
-        $scriptpath/adb-sendkey.sh HOME
-        sleep 0.5
-        #Get to settings
-        local xx
-        local match=0
-        for (( xx = 0; xx < 5; xx++ )) ; do
-            $scriptpath/adb-sendkey.sh LEFT
-            sleep 2
-            capturepage
-            if grep "Display & Sounds" $TEMPDIR/${recname}_capture_crop.txt ; then
-                match=1
-                break
-            fi
-        done
-        if (( match )) ; then break ; fi
-    done
-    if (( ! match )) ; then
-        echo `$LOGDATE` "ERROR - cannot get to settings page"
-        return 2
-    fi
-    # Get to Display & Sounds
-    $scriptpath/adb-sendkey.sh DOWN RIGHT RIGHT RIGHT
-    $scriptpath/adb-sendkey.sh DPAD_CENTER
-    CROP="-gravity Center -crop 40%x100%"
-    if ! waitforpage "DISPLAY & SOUNDS" ; then
-        return 2
-    fi
-    for (( xy = 0; xy < 5; xy++ )) ; do
-        $scriptpath/adb-sendkey.sh DOWN
-        $scriptpath/adb-sendkey.sh DPAD_CENTER
-        CROP="-gravity Center -crop 40%x100%"
-        capturepage
-        if [[ "$pagename" == DISPLAY ]] ; then
-            break
-        fi
-        $scriptpath/adb-sendkey.sh BACK
-    done
-    if [[ "$pagename" != DISPLAY ]] ; then
-        echo `$LOGDATE` "ERROR: Cannot get to DISPLAY page."
-        return 2
-    fi
-
-    $scriptpath/adb-sendkey.sh DPAD_CENTER
-    CROP="-gravity Center -crop 40%x100%"
-    if ! waitforpage "VIDEO RESOLUTION" ; then
-        return 2
-    fi
-    match=0
-    # Move down through the list of resolutions untilwe get to the desired one
-    for (( xx = 0; xx < 10 ; xx++ )) ; do
-        sleep 0.2
-        CROP="-gravity East -crop 40%x100%"
-        capturepage
-        if grep "$FIRE_RESOLUTION_SETTING" $TEMPDIR/${recname}_capture_crop.txt ; then
-            match=1
-            break
-        fi
-        $scriptpath/adb-sendkey.sh DOWN
-    done
-    if (( match )) ; then
-        # Set the resolution
-        $scriptpath/adb-sendkey.sh DPAD_CENTER
-        sleep 2
-        capturepage
-        if [[ "$pagename" == "Resolution Changed" ]] ; then
-            $scriptpath/adb-sendkey.sh LEFT
-            $scriptpath/adb-sendkey.sh DPAD_CENTER
-        else
-            $scriptpath/adb-sendkey.sh BACK
-        fi
-        CROP="-gravity Center -crop 40%x100%"
-        if ! waitforpage "DISPLAY" ; then
-            return 2
-        fi
-        $scriptpath/adb-sendkey.sh DOWN
-        sleep 0.2
-        CROP="-gravity Center -crop 40%x100%"
-        capturepage
-        if ! grep "$FIRE_RESOLUTION_SETTING" $TEMPDIR/${recname}_capture_crop.txt ; then
-            echo `$LOGDATE` "ERROR - Resolution change failed."
-            return 2
-        fi
-    else
-        echo `$LOGDATE` "ERROR - cannot find resolution $FIRE_RESOLUTION_SETTING"
-        return 2
-    fi
-    $scriptpath/adb-sendkey.sh HOME
-    sleep 2
-    # Check resolution
-    CROP=" "
-    capturepage adb
-    local rc=$?
-    if (( rc == 0 )) ; then
-        echo `$LOGDATE` "Resolution OK"
-    else
-        echo `$LOGDATE` "Resolution wrong after change."
-    fi
-    return $rc
-}
-
 # Get channel list.
 # Return:
 # channels - array of 5 channels in list on screen
 # arrsize = size of array (should be 5)
 
 function getchannellist {
-    # Note this assumes a 1280-x720 resolution
-    CROP="-crop 86x600+208+120"
+    # The CROP parameter is different depending on 
+    # OCR_RESOLUTION (see above)
+    # This assumes a 1280-x720 resolution
+    #~ CROP="-crop 86x600+208+120"
+    # This assumes a 1920x1080 resolution
+    #~ CROP="-crop 129x900+312+180"
+    # This assumes a 2560x1440 resolution
+    CROP="-crop 172x1200+416+240"
     TESSPARM="-c tessedit_char_whitelist=0123456789"
     capturepage
     onscreen=$(cat $TEMPDIR/${recname}_capture_crop.txt)
@@ -685,36 +576,35 @@ function getchannelselection {
 
     selection=$(awk  '
         BEGIN {
-            entry=-1
-            selectstart=-2
-            selectend=-2
-            error=-1
+            lines1 = 0
+            lines2 = 0
+            error = ""
         }
         {
-            if (length==10) {
-                if (priorleng==0) {
-                    if (selectstart==-2)
-                        selectstart=entry+1
-                    else if (selectend==-2)
-                        selectend=entry
+            if (length == 10) {
+                if (lines1 == 0)
+                    lines1 = NR
+                else if (lines1 != (NR - 1)) {
+                    if (lines2 == 0)
+                        lines2 = NR
                     else
-                        error=entry
+                        error = "Too many lines"
                 }
             }
-            else if (length>0) {
-                if (priorleng==0)
-                    entry++
-            }
-            priorleng=length
         }
         END {
-            if (selectstart == selectend && error == -1)
-                print selectstart
-            else {
-                print "ERROR: selectstart:" selectstart " selectend:" selectend " error:" error > "/dev/stderr"
-            }
+            if (error == "") {
+                if (lines1 > 0 && lines2 == 0) {
+                    lines2 = lines1
+                }
+                selection = int ( (lines2 + 3) / 6 ) - 2
+                print selection
+            } 
+            else 
+                print "ERROR: " error > "/dev/stderr"
         }
         ' $TEMPDIR/${recname}_capture_crop.ascii)
+
 }
 
 
