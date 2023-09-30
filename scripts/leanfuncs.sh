@@ -545,9 +545,9 @@ function getchannellist {
     # This assumes a 1920x1080 resolution
     #~ CROP="-crop 129x900+312+180"
     # This assumes a 2560x1440 resolution
-    CROP="-crop 172x1200+416+240"
+    CROP="-crop 164x1200+424+240"
     TESSPARM="-c tessedit_char_whitelist=0123456789"
-    capturepage
+    capturepage adb
     onscreen=$(cat $TEMPDIR/${recname}_capture_crop.txt)
     # In case nothing found yet
     channels=($onscreen)

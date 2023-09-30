@@ -78,7 +78,8 @@ for (( ; ; )) ; do
         if [[ "$currchan" == *_* ]] ; then
             echo `$LOGDATE` "ERROR - invalid channel $currchan"
             err=1
-        elif (( currchan < priorchan )) ; then
+        fi
+        if (( err || currchan < priorchan )) ; then
             echo `$LOGDATE` "WARNING out of sequence, channel $priorchan is before $currchan"
             fixup=($(grep "^$priorchan $currchan" "$fixupfile"))
             if [[ ${fixup[2]} != "" ]] ; then
@@ -86,6 +87,7 @@ for (( ; ; )) ; do
                 echo "Fixups: Changing  $currchan to $fix"
                 channels[ix]="$fix"
                 currchan="$fix"
+                err=0
             else
                 err=1
             fi
