@@ -475,7 +475,9 @@ while true ; do
         fi
         sleep 2
     done
-    if (( lowcount > 10 )) ; then
+    # Set to 15,approx 7.5 minutes, since Amazon end of an episode
+    # titles carry on for about 5 minutes. Allow some extra.
+    if (( lowcount > 15 )) ; then
         echo `$LOGDATE` "ERROR: Recording seems to have stuck, kill it"
         exit 2
     fi
