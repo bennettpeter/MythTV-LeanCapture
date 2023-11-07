@@ -359,13 +359,15 @@ Manually run the scan using terminal. This has to be done again if you have rebo
 
 There are two scripts available for recording, leanfire.sh and leanrec.sh.
 
-leanfire.sh is to record a single movie or video, or a series of videos with autoplay turned on. You can tune to an application (CBS App, Prime, etc.), have autoplay on, go to the first episode and start recording. It all gets recorded into one file that you can split up later if you wish.
+leanfire.sh is to record a single movie or video, or a series of videos with autoplay turned on. You can run an application, have autoplay on, go to the first episode and start recording. It all gets recorded into one file that you can split up later if you wish.
 
-leanrec.sh is designed for use with autoplay turned off, to record a single episode and leave the app in a state where the next episode is ready to record. You set up a shell script that executes it repeatedly with different episode numbers. Each execution checks that the correct next episode is on screen and records it. This way you get a series of videos, one for each episode, with appropriate file names for each episode.
+leanrec.sh is designed to record a single episode and leave the app in a state where the next episode is ready to record. You set up a shell script that executes it repeatedly with different episode numbers. This way you get a series of videos, one for each episode, with appropriate file names for each episode.
+
+leanrec.sh is preferable, and has been kept up to date.
 
 #### leanfire.sh
 
-Run /opt/mythtv/leancap/leanvlc.sh leancap?. Use the remote to navigate to the show or video you want to record. Get to the point where pressing enter on your remote would start playback. Do not press enter on your remote.
+Run /opt/mythtv/leancap/leanvlc.sh leancap1. Use the remote to navigate to the show or video you want to record. Get to the point where pressing enter on your remote would start playback. Do not press enter on your remote.
 
 Run leanfire in terminal. You can get a full list of options by running it with -h.
 
@@ -383,47 +385,36 @@ When recording ends for any reason, whether time limit, blank screen or control-
 
 #### leanrec.sh
 
-This lets you record multiple episodes of a series and store each episode in a separate file. You need to set autoplay off in the android app you are using.
+This lets you record multiple episodes of a series and store each episode in a separate file. If possible, set autoplay off in the android app you are using. Some apps do not allow autoplay to be disabled.
 
-Run /opt/mythtv/leancap/leanvlc.sh leancap?. Use the remote to navigate to the show or video you want to record. Get to the point where pressing enter on your remote would start playback. Do not press enter on your remote.
+Run /opt/mythtv/leancap/leanvlc.sh leancap1. Use the remote to navigate to the show or video you want to record. Get to the point where pressing enter on your remote would start playback. Do not press enter on your remote. Sometimes there are multiple ways to play an episode. Get to a list of episodes with play button highlighted on the one that is selected.
 
-Check if you see "Season x  Episode y" or "Season x (y)" on screen where x is the season and y is the episode. If so you are good to go. If not, find some text on screen or some different format of season and episode, that will uniquely identify the episode.
-
-Set up a shell script like the following example. This assumes that as soon as it is finished playin an episode it is immediately ready to play the next one.
+Set up a shell script like the following example. This assumes that as soon as it is finished playing an episode it is immediately ready to play the next one. This assumes you have added  /opt/mythtv/leancap to your PATH.
 
     #!/bin/bash
     set -e
-    /opt/mythtv/leancap/leanrec.sh -t "Judy Justice"  -S 1 -E 67
-    /opt/mythtv/leancap/leanrec.sh -t "Judy Justice"  -S 1 -E 68
-    /opt/mythtv/leancap/leanrec.sh -t "Judy Justice"  -S 1 -E 69
-    /opt/mythtv/leancap/leanrec.sh -t "Judy Justice"  -S 1 -E 70
-    /opt/mythtv/leancap/leanrec.sh -t "Judy Justice"  -S 1 -E 71
-    /opt/mythtv/leancap/leanrec.sh -t "Judy Justice"  -S 1 -E 72
-
-Another example, for the CBS app where the season and episode are not shown the expected way. In this case when episode 1 is selected you can already see 2 on screen and so on. Also in this case you need to press UP after an episode to get to the next one.
-
-    #!/bin/bash
-    set -e
-    leanrec.sh -t Ghosts -S 1 -E 1   --srch "2. Hello" --postkeys UP
-    leanrec.sh -t Ghosts -S 1 -E 2    --srch "\n3\."  --postkeys UP
-    leanrec.sh -t Ghosts -S 1 -E 3    --srch "\n4\."  --postkeys UP
-    leanrec.sh -t Ghosts -S 1 -E 4    --srch "\n5\."  --postkeys UP
-    leanrec.sh -t Ghosts -S 1 -E 5    --srch "\n6\."  --postkeys UP
-    leanrec.sh -t Ghosts -S 1 -E 6    --srch "\n7\."  --postkeys UP
-
+    leanrec.sh -t "Carnivale"  -m 50 -S 1 -E 1 --textoverlay
+    leanrec.sh -t "Carnivale"  -m 50 -S 1 -E 2 --textoverlay
+    leanrec.sh -t "Carnivale"  -m 50 -S 1 -E 3 --textoverlay
+    leanrec.sh -t "Carnivale"  -m 50 -S 1 -E 4 --textoverlay
+    leanrec.sh -t "Carnivale"  -m 50 -S 1 -E 5 --textoverlay
 
 Note if you put /opt/mythtv/leancap in your path you can just use leanrec.sh without its full path.
-You can get a full list of options by running it with -h.
+You can get a full list of options by running it with -h or with no parameters.
 
-The title is used only for naming the directory where the recording is stored. The season and episode are used for checking that the correct episode is on screen and for naming the episode. If a search string is supplied that is used instead of season and episode to verify the correct episode is on screen.
+The title is used only for naming the directory where the recording is stored. The season and episode are used for naming the episode.
+
+If you are recording a movie specify -M instead of -S and -E
 
 The script will send the Enter button and ffmpeg will start recording. Leave the terminal window open. In file manager look for the video directory (directory specified by VID_RECDIR= in /etc/opt/mythtv/leancapture.conf). You should see a directory with the show title and in that directory a file SnnEnn.mkv for the episode. Refresh until that file is at least 1MB, then you can open it with vlc. See if your recording is going OK. Close vlc and let it continue recording.
 
-There is a time limit of 2 hours per episode, which can be changed by the --time command line option. Recording stops after the specified time or after playback stops. If autoplay is set in the application it will normally carry on playing the next episode. If not it will stop after one episode.
+The -m parameter supplies an approximate number of minutes. The script allows recording from 66% of the time to 150% of the time, as a sanity check. If an episode is outside this range, recording will be terminated and a error returned, so that the next recording will not occur. There is a -s option for a hard stop at the end of a specified time.
 
 To check your recording while still busy recording, open the mkv file in vlc. If it is recording the wrong thing, press Control-C in the terminal window and that will end recording.
 
 When recording ends, the script leaves the fire stick where it returns from playback, ready for the next episode.
+
+If the app  does not allow autoplay to be turned off, leanrec will end one recording and the next leanrec in the script will pick up the already playing session to capture the next episode. For this, the second  and subsequent lines need the --playing option, which prevents the script from sending the enter button at the start. Also the last line of the file must have --postkeys "HOME" so that the app stops playing.
 
 ### Xfinity DVR
 
