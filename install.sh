@@ -13,7 +13,7 @@ if [[ ! -f /etc/opt/mythtv/leaninstall.conf ]] ; then
     echo MythTV User: $MYTHTVUSER
     echo MythTV Group: $MYTHTVGROUP
     echo Install Directory: $SCRIPTDIR
-    echo To change these set MYTHTVUSER, MYTHTVGROUP, and SCRIPTDIR
+    echo To change these set MYTHTVUSER, MYTHTVGROUP, and SCRIPTDIR before running install.sh
     echo Type Y to continue
     read -e resp
     if [[ "$resp" != Y ]] ; then exit 2 ; fi
@@ -80,11 +80,11 @@ fi
 set -e
 
 mkdir -pv /var/log/mythtv_scripts
-chown $MYTHTVUSER:$MYTHTVUSER /var/log/mythtv_scripts
+chown $MYTHTVUSER:$MYTHTVGROUP /var/log/mythtv_scripts
 chmod 2775 /var/log/mythtv_scripts
 
 mkdir -pv /var/opt/mythtv
-chown $MYTHTVUSER:$MYTHTVUSER /var/opt/mythtv
+chown $MYTHTVUSER:$MYTHTVGROUP /var/opt/mythtv
 chmod 2775 /var/opt/mythtv
 
 adduser $MYTHTVUSER audio
