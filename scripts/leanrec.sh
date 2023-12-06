@@ -411,6 +411,9 @@ while true ; do
             # tubi message
             if egrep -a 'Your video will resume after the break' $TEMPDIR/${recname}_capture_crop.txt ; then
                 duptext=0
+            # Hulu just displays "Ad" during an ad
+            elif [[ $(cat $TEMPDIR/${recname}_capture_crop.txt) == Ad ]] ; then
+                duptext=0
             else
                 let duptext++
             fi
@@ -456,9 +459,9 @@ while true ; do
                 break 2
             fi
 
-            # If stopped on a text page for 5 iterations (10-15 sec), end recording
-            if (( duptext > 5 )) ; then
-                echo `$LOGDATE` "Recording $RECFILE ended on static text 5 times."
+            # If stopped on a text page for 15 iterations (60-90 sec), end recording
+            if (( duptext > 15 )) ; then
+                echo `$LOGDATE` "Recording $RECFILE ended on static text 15 times."
                 break 2
             fi
             # peacock prompt: CANCEL on last line
