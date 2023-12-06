@@ -170,6 +170,8 @@ function getparms {
     def == 1 { print $0 } ' /etc/opt/mythtv/$recname.conf \
     > $DATADIR/etc_${recname}.conf
     . $DATADIR/etc_${recname}.conf
+    # In case this not created yet
+    touch $DATADIR/${recname}.conf
     # This sets VIDEO_IN and AUDIO_IN
     . $DATADIR/${recname}.conf
     if [[ "$ANDROID_MAIN" == "" ]] ; then
