@@ -680,6 +680,10 @@ function chansearch {
         chanindex=$target
         return
     fi
+    if (( target == ${chanlist[0]} )) ; then
+        chanindex=0
+        return
+    fi
     for (( ; ; )) ; do
         let chanindex=(ix1+ix2)/2
         if (( target == ${chanlist[chanindex]} )) ; then return ; fi
