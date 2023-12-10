@@ -77,20 +77,19 @@ Note that Ubuntu has an obsolete version of adb in apt. Do not use the out of da
 
 Once the prerequisites have been installed, clone the repository from github
 
-If you are not using this for MythTV (see Other Uses above), run this in the terminal before ./install.sh the first time. Put in your user id and group (the user that will be doing recording).
-
-    export MYTHTVUSER=<user>
-    export MYTHTVGROUP=<group>
-
-Install the scripts by running
+If you are using MythTV with the default user and group mythtv, install the scripts by running
 
     sudo ./install.sh
 
-The install.sh script tests for the presence of required versions and stops if they are not present. After installing, resboot the system so the udev rule can take effect.
+If you are not using this for MythTV (see Other Uses above), run ./install.sh as follows. Put in your user id and group (the user that will be doing recording).
+
+    sudo MYTHTVUSER=<user> MYTHTVGROUP=<group> ./install.sh
+
+The install.sh script tests for the presence of required versions and stops if they are not present. After installing, reboot the system so the udev rule can take effect.
 
 The install script assumes the mythbackend user id is mythtv, and group id is mythtv. It assumes script directory /opt/mythtv/leancap. You can use different values by setting appropriate environment variables before running install.sh the first time. See the top of install.sh for the names.
 
-If there is a new or updated version of the scripts, just run the ./install.sh again. It will not overwrite settings files you have updated.
+If there is a new or updated version of the scripts, just run the ./install.sh again. It will not overwrite settings files you have updated. After the initial install you do not need the MYTHTVUSER=<user> MYTHTVGROUP=<group> It uses stored entries from the first install. If you need to change the user and group, run sudo ./uninstall.sh and then install again with the new settings.
 
 ### Fire stick
 
@@ -129,7 +128,7 @@ There is a script to download a list of channel numbers from the fire stick and 
 
 ### Linux
 
-#### /etc/opt/mythtv/leancap.conf
+#### /etc/opt/mythtv/leancapture.conf
 
 - DATADIR and LOGDIR: I recommend leave these as is. Change them if you need to store data files and logs in a different location. Note that the default directories are created by install. If you change the names here, you must create those directories manually and change ownership to mythtv.
 - VID_RECDIR: Optional. You need to specify a video storage directory here if you want to use leanxdvr, leanfire or leanrec. These are not part of the lean recorder. leanxdvr can be used for recording programs from the Xfinity cloud DVR and adding them to your videos collection. leanfire and leanrec can be used for recording other content from the fire stick (e.g. Youtube videos).

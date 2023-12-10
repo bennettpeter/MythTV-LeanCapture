@@ -192,7 +192,9 @@ $scriptpath/adb-sendkey.sh DOWN
 CROP="-gravity SouthEast -crop 70%x100%"
 capturepage
 top=($(grep -m 1 ^Ep[0-9] $TEMPDIR/${recname}_capture_crop.txt))
-let topepisode=${top[0]#Ep}
+#~ let topepisode=${top[0]#Ep}
+topepisode=${top[0]#Ep}
+topepisode=${topepisode%%[^0-9]*}
 if (( topepisode == 0 )) ; then
     echo `$LOGDATE` "ERROR: Cannot find episode in $top"
     exit 2
