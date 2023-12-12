@@ -427,6 +427,12 @@ while true ; do
                 $scriptpath/adb-sendkey.sh DPAD_CENTER
                 sleep 2
             fi
+            # Hulu prompt
+            if grep "How would you rate your video" $TEMPDIR/${recname}_capture_crop.txt ; then
+                echo `$LOGDATE` "Responding to 'How would you rate your video' Prompt"
+                $scriptpath/adb-sendkey.sh DPAD_CENTER
+                sleep 2
+            fi
 
             # peacock select watch from start or resume
             # default is resume, use right center to resume
