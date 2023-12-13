@@ -616,7 +616,7 @@ function getchannelselection {
 # selection - index of selected item or blank if error
 function getmenuselection {
     convert $TEMPDIR/${recname}_capture_crop.png -gravity West -crop 25%x100% $TEMPDIR/${recname}_capture_crop.jpg
-    jp2a --width=50 -i --red=1 --green=0 --blue=0 $TEMPDIR/${recname}_capture_crop.jpg \
+    jp2a --width=50 -i --red=0 --green=1 --blue=0 $TEMPDIR/${recname}_capture_crop.jpg \
       | sed 's/ //g' > $TEMPDIR/${recname}_capture_crop.ascii
     # 7 blank rows between each, but selected one removed and 15 blank rows there
     # each entry 2-3 rows
