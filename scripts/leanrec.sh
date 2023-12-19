@@ -24,6 +24,8 @@ capture=adb
 # If there in no text overlay you can assume the video is over as soon
 # as you see text.
 textoverlay=0
+# Number of seconds of credits allowed at end of show
+credits=450
 
 # peacock prompt: CANCEL on last line
 # peacock prompt: "Up Next" on a whole line
@@ -126,6 +128,13 @@ while (( "$#" >= 1 )) ; do
                 shift||rc=$?
             fi
             ;;
+        --credits)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                credits="$2"
+                shift||rc=$?
+            fi
+            ;;
         --wait)
             wait=1
             ;;
@@ -162,6 +171,16 @@ case "$capture" in
         ;;
 esac
 
+if (( credits < 90 )) ; then
+    echo "ERROR credits minimum value is 90"
+    error=y
+fi
+
+maxlowcount=credits/30
+let xtra=credits%30
+if (( xtra > 0 ))  ; then
+    let maxlowcount++
+fi
 
 if [[ "$error" == y || "$title" == "" \
       || ( ( "$season" == "" || "$episode" == "" ) && "$movie" == 0 ) \
@@ -176,7 +195,7 @@ if [[ "$error" == y || "$title" == "" \
     echo "Input parameters:"
     echo "--title|-t xxxx : Title"
     echo "--time|-m nn : Estimated Number of minutes"
-    echo "    If show ends before 66% or after 133% of this it is an error"
+    echo "    If show ends before 90% or after 150% of this it is an error"
     echo "--stopafter|-s nn : Stop after a number of minutes "
     echo "    Stop recording without error after this number of minutes"
     echo "    Should be used with postkeys to also stop the playback."
@@ -202,6 +221,8 @@ if [[ "$error" == y || "$title" == "" \
     echo "--capture adb|file : Method of monitoring messages. file requires extension ts"
     echo "--tubi : Set up for recording Tubi."
     echo "    Tubi has Autoplay on, needs --playing on next leanrec, --postkeys HOME on last."
+    echo "--credits nnn : Number of seconds of credits at the end of show."
+    echo "    After this number, recording stops. Default 450, minimum 90"
     exit 2
 fi
 
@@ -355,8 +376,8 @@ ffmpeg_pid=$!
 starttime=`date +%s`
 # Max duration is 50% more than specified duration.
 let maxduration=minutes*60*150/100
-# Min duration is 66% of specified duration.
-let minduration=minutes*60*66/100
+# Min duration is 90% of specified duration.
+let minduration=minutes*60*90/100
 let maxendtime=starttime+maxduration
 # firstminutes is the max length of ads at the beginning
 let firstminutes=starttime+180
@@ -484,11 +505,11 @@ while true ; do
         fi
         sleep 2
     done
-    # Set to 15,approx 7.5 minutes, since Amazon end of an episode
-    # titles carry on for about 5 minutes. Allow some extra.
-    if (( lowcount > 15 )) ; then
-        echo `$LOGDATE` "ERROR: Recording seems to have stuck, kill it"
-        exit 2
+    # maxlowcount default is 15, approx 7.5 minutes, since Amazon end of an episode
+    # titles carry on for about 5 minutes.
+    if (( lowcount >= maxlowcount )) ; then
+        echo `$LOGDATE` "No action on screen, assume recording ended."
+        break 2
     fi
     newsize=`stat -c %s "$RECFILE"`
     let diff=newsize-filesize
