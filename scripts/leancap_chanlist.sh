@@ -16,7 +16,7 @@ scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`
 scriptname=`basename "$scriptname" .sh`
 
-numdate=`date "+%Y%m%d"`
+numdate=`date "+%Y%m%d_%H%M%S"`
 source $scriptpath/leanfuncs.sh
 initialize
 getparms
@@ -148,8 +148,17 @@ if diff "$chanlistfile" "$chanlistfilegen" ; then
     echo `$LOGDATE` "Channel list same as before. No problems."
     exit 0
 fi
-cp "$chanlistfilegen" $DATADIR/"${numdate}_$NAVTYPE".txt
+# Copy here only if there is no old file
 cp -n "$chanlistfilegen" "$chanlistfile"
+cp "$chanlistfilegen" $DATADIR/"${numdate}_$NAVTYPE".txt
+oldnumchans=$(wc -l "$chanlistfile")
+newnumchans=$(wc -l "$chanlistfilegen")
+if (( newnumchans - oldnumchans < -10 )) ; then
+    $scriptpath/notify.py "Channel list lost more than 5" \
+        "leancap_chanlist: See new list in $numdate_$chanlistfilegen .
+cp $chanlistfilegen $chanlistfile if this is ok, otherwise rerun leancap_chanlist."
+    exit
+fi
 if (( numerrors == 0 )) ; then
     cp "$chanlistfilegen" "$chanlistfile"
     $scriptpath/notify.py "Channel list changes" \
