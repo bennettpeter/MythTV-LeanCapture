@@ -151,8 +151,8 @@ fi
 # Copy here only if there is no old file
 cp -n "$chanlistfilegen" "$chanlistfile"
 cp "$chanlistfilegen" $DATADIR/"${numdate}_$NAVTYPE".txt
-oldnumchans=$(wc -l "$chanlistfile")
-newnumchans=$(wc -l "$chanlistfilegen")
+oldnumchans=$(wc -l < "$chanlistfile")
+newnumchans=$(wc -l < "$chanlistfilegen")
 if (( newnumchans - oldnumchans < -10 )) ; then
     $scriptpath/notify.py "Channel list lost more than 5" \
         "leancap_chanlist: See new list in $numdate_$chanlistfilegen .
