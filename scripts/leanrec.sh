@@ -32,8 +32,8 @@ credits=450
 # tubi prompt: Starting in xxs or Starting inxs
 # peacock prompt - i TVMA or i TV-14
 # Hulu no ads prompt "Episodes Inside the Episodes"
-# HBOMAX: "AUTOPLAY OFF" or "NEXT EPISODE " or "Seasons [0-9]"
-endtext='^CANCEL$|^Up Next$|^i *TV.{2,3}$|^Starting in *[0-9]|^Episodes|AUTOPLAY OFF|NEXT EPISODE |Seasons [0-9]'
+# MAX: "AUTOPLAY OFF" or "Next Episode " or "Seasons [0-9]"
+endtext='^CANCEL$|^Up Next$|^i *TV.{2,3}$|^Starting in *[0-9]|^Episodes|AUTOPLAY OFF|Next Episode |Seasons [0-9]'
 
 while (( "$#" >= 1 )) ; do
     case $1 in
@@ -182,6 +182,10 @@ if (( xtra > 0 ))  ; then
     let maxlowcount++
 fi
 
+if [[ "$stopafter" != "" ]] ; then
+    minutes="$stopafter"
+fi
+
 if [[ "$error" == y || "$title" == "" \
       || ( ( "$season" == "" || "$episode" == "" ) && "$movie" == 0 ) \
       || "$minutes" == "" ]] ; then
@@ -196,6 +200,7 @@ if [[ "$error" == y || "$title" == "" \
     echo "--title|-t xxxx : Title"
     echo "--time|-m nn : Estimated Number of minutes"
     echo "    If show ends before 90% or after 150% of this it is an error"
+    echo "    Not used if stopafter is used."
     echo "--stopafter|-s nn : Stop after a number of minutes "
     echo "    Stop recording without error after this number of minutes"
     echo "    Should be used with postkeys to also stop the playback."
@@ -496,7 +501,7 @@ while true ; do
             # tubi prompt: Starting in xxs or Starting inxs
             # peacock prompt - i TVMA or i TV-14
             # Hulu no ads prompt "Episodes Inside the Episodes"
-            # HBOMAX: "AUTOPLAY OFF" or "NEXT EPISODE " or "Seasons [0-9]"
+            # MAX: "AUTOPLAY OFF" or "Next Episode " or "Seasons [0-9]"
             if egrep -a "$endtext" $TEMPDIR/${recname}_capture_crop.txt ; then
                 sleep 2
                 echo `$LOGDATE` "Recording $RECFILE ended with text prompt."
