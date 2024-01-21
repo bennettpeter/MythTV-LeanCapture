@@ -201,9 +201,10 @@ if [[ "$error" == y || "$title" == "" \
     echo "--time|-m nn : Estimated Number of minutes"
     echo "    If show ends before 90% or after 150% of this it is an error"
     echo "    Not used if stopafter is used."
-    echo "--stopafter|-s nn : Stop after a number of minutes "
+    echo "--stopafter|-s nn : Stop after a fixed number of minutes "
     echo "    Stop recording without error after this number of minutes"
     echo "    Should be used with postkeys to also stop the playback."
+    echo "    If recording ends before this it is an error."
     echo "--recname|-n xxxxxxxx : Recorder id (default leancap1)"
     echo "--season|-S nn : Season without leading zeroes"
     echo "--episode|-E nn : Episode without leading zeroes"
@@ -536,7 +537,7 @@ while true ; do
         lowcount=0
     fi
 done
-if (( now < minendtime )) ; then
+if (( now < minendtime || now < stoptime )) ; then
     echo `$LOGDATE` "ERROR Recording is less than minimum, kill it"
     exit 2
 fi
