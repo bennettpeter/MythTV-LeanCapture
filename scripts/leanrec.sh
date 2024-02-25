@@ -26,7 +26,8 @@ capture=adb
 textoverlay=0
 # Number of seconds of credits allowed at end of show
 credits=450
-
+# fffirst means ffmpeg must be running before you start playback
+fffirst=0
 # peacock prompt: CANCEL on last line
 # peacock prompt: "Up Next" on a whole line
 # tubi prompt: Starting in xxs or Starting inxs
@@ -148,6 +149,9 @@ while (( "$#" >= 1 )) ; do
             textoverlay=1
             endtext='Starting in *[0-9]+s$'
             ;;
+        --fffirst)
+            fffirst=1
+            ;;
         *)
             echo "Invalid option $1"
             error=y
@@ -229,6 +233,9 @@ if [[ "$error" == y || "$title" == "" \
     echo "    Tubi has Autoplay on, needs --playing on next leanrec, --postkeys HOME on last."
     echo "--credits nnn : Number of seconds of credits at the end of show."
     echo "    After this number, recording stops. Default 450, minimum 90"
+    echo "--fffirst : Starte ffmpeg first before starting playback. This is needed"
+    echo "    For Apple TV+ and any others that are able to detect that the data is"
+    echo "    not being processed and then stops playback."
     exit 2
 fi
 
@@ -350,7 +357,9 @@ fi
 
 if (( ! playing )) ; then
     sleep 2
-    $scriptpath/adb-sendkey.sh DPAD_CENTER
+    if (( ! fffirst )) ; then
+        $scriptpath/adb-sendkey.sh DPAD_CENTER
+    fi
 fi
 
 ffmpeg -hide_banner -loglevel error \
@@ -380,6 +389,13 @@ ffmpeg -hide_banner -loglevel error \
 
 ffmpeg_pid=$!
 starttime=`date +%s`
+if (( ! playing )) ; then
+    sleep 1
+    if (( fffirst )) ; then
+        $scriptpath/adb-sendkey.sh DPAD_CENTER
+    fi
+fi
+
 # Max duration is 50% more than specified duration.
 let maxduration=minutes*60*150/100
 # Min duration is 90% of specified duration.
