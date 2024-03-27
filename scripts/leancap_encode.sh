@@ -117,6 +117,7 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
             if (( diff < MINBYTES )) ; then
                 let lowcount=lowcount+1
                 if (( lowcount > 3 )) ; then
+                    capturepage adb
                     # 4 in a row.
                     echo `$LOGDATE` "ERROR: increment less that $MINBYTES, retrying."
                     if (( errored == 0 )) ; then
