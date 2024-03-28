@@ -92,6 +92,13 @@ for (( xx=0; xx<5; xx++ )) ; do
     if [[ "$tuned" == Y ]] ; then  break; fi
 
     navigate "$NAVTYPE" "$NAVKEYS"
+
+    if (( xx == 2 )) && grep "^Filters" $TEMPDIR/${recname}_capture_crop.txt ; then
+        echo `$LOGDATE` "ERROR: Filters are set"
+        $scriptpath/notify.py "ERROR: Filters are set" \
+            "leancap_tune: Filters set on $recname. Tuner will likely fail" &
+    fi
+
     currchan=0
     direction=N
     errorpassed=0
