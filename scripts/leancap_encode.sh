@@ -82,8 +82,17 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
             nomail
         sleep 20
     fi
-    # In case there is a message about the mini-guide, dismiss it
-    $scriptpath/adb-sendkey.sh DPAD_CENTER
+    capturepage adb
+    if grep -i "Please Connect to Your In-Home WiFi" $TEMPDIR/${recname}_capture_crop.txt ; then
+        $scriptpath/notify.py "Xfinity Problem" \
+        "leancap_encode: Please Connect to Your In-Home WiFi on ${recname}" &
+        echo "$tunechan $(date -u '+%Y-%m-%d %H:%M:%S')" \
+            >> $TEMPDIR/${recname}_damage.txt
+        $scriptpath/adb-sendkey.sh BACK
+    elif [[ "$pagename" != "" ]] ; then
+        # In case there is a message about the mini-guide, dismiss it
+        $scriptpath/adb-sendkey.sh DPAD_CENTER
+    fi
     # Loop to check if recording is working.
     # When recording is working, nothing is displayed
     # from capture. If anything is captured, something
