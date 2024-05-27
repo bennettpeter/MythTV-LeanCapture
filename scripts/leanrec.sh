@@ -32,9 +32,9 @@ fffirst=0
 # peacock prompt: "Up Next" on a whole line
 # tubi prompt: Starting in xxs or Starting inxs
 # peacock prompt - i TVMA or i TV-14
-# Hulu no ads prompt "Episodes Inside the Episodes"
+# Hulu BACK TO BROWSE
 # MAX: "AUTOPLAY OFF" or "Next Episode " or "Seasons [0-9]"
-endtext='^CANCEL$|^Up Next$|^i *TV.{2,3}$|^Starting in *[0-9]|^Episodes|AUTOPLAY OFF|Next Episode |Seasons [0-9]'
+endtext='^CANCEL$|^Up Next$|^i *TV.{2,3}$|^Starting in *[0-9]|BACK TO BROWSE|AUTOPLAY OFF|Next Episode |Seasons [0-9]'
 
 while (( "$#" >= 1 )) ; do
     case $1 in
@@ -145,6 +145,10 @@ while (( "$#" >= 1 )) ; do
         --textoverlay)
             textoverlay=1
             ;;
+        --hulu)
+            textoverlay=1
+            endtext='BACK TO BROWSE|SEASON [0-9]+$'
+            ;;
         --tubi)
             textoverlay=1
             endtext='Starting in *[0-9]+s$'
@@ -229,6 +233,8 @@ if [[ "$error" == y || "$title" == "" \
     echo "--textoverlay : Service uses textoverlay"
     echo "    For service that has text ads and more than 3 minutes of ads at the start."
     echo "--capture adb|file : Method of monitoring messages. file requires extension ts"
+    echo "--hulu : Set up for recording Hulu."
+    echo "    Sets textoverlay and customized ennd text"
     echo "--tubi : Set up for recording Tubi."
     echo "    Tubi has Autoplay on, needs --playing on next leanrec, --postkeys HOME on last."
     echo "--credits nnn : Number of seconds of credits at the end of show."
