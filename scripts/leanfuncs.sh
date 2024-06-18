@@ -560,6 +560,12 @@ function getchannellist {
         # we have hit the TV Go channels which do not have numbers
         for (( ix=0; ix<arrsize; ix++ )) ; do
             if (( channels[ix] >= MAXCHANNUM )) ; then return ; fi
+            # handle number 444 which is sometimes skipped in the ocr.
+            if (( arrsize == 4 && channels[ix] == 443  && channels[ix+1] == 445)) ; then
+                channels=( "${channels[@]:0:ix+1}" "444" "${channels[@]:ix+1}" )
+                arrsize=${#channels[@]}
+                return
+            fi
         done
         echo `$LOGDATE` "Tesseract OCR Error, trying gocr"
         channels=($(gocr -C 0-9 -l 200 $TEMPDIR/${recname}_capture_crop.png))
