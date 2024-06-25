@@ -93,8 +93,8 @@ adduser $MYTHTVUSER video
 export MYTHTVUSER SCRIPTDIR
 
 mkdir -p /etc/opt/mythtv
-cp -n $scriptpath/settings/leancapture.conf /etc/opt/mythtv/
-cp -n $scriptpath/settings/private.conf /etc/opt/mythtv/
+cp --update=none $scriptpath/settings/leancapture.conf /etc/opt/mythtv/
+cp --update=none $scriptpath/settings/private.conf /etc/opt/mythtv/
 chmod 600 /etc/opt/mythtv/private.conf
 chown $MYTHTVUSER:$MYTHTVGROUP /etc/opt/mythtv/private.conf
 if [[ ! -f /etc/opt/mythtv/leancap1.conf ]] ; then
@@ -114,6 +114,6 @@ if ! diff /tmp/leancap-scan.service /etc/systemd/system/leancap-scan.service ; t
 fi
 
 mkdir -p /etc/udev/rules.d
-cp -n $scriptpath/udev/* /etc/udev/rules.d/
+cp --update=none $scriptpath/udev/* /etc/udev/rules.d/
 
 echo "Install completed successfully"
