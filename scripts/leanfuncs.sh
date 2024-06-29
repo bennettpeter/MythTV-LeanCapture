@@ -215,7 +215,7 @@ function getparms {
 }
 
 # Parameter 1 - set to video to only allow capture from /dev/video.
-# Set to adb to only allow adb. Blank to try video first then adb
+# Set to adb or blank to only allow adb.
 # Set to file to access file at eof. Reads file $RECFILE
 # VIDEO_IN - set to blank will prevent capture from /dev/video
 # TESSPARM - set to "-c tessedit_char_whitelist=0123456789" to restrict to numerics
@@ -246,10 +246,10 @@ function capturepage {
             -frames 1 $TEMPDIR/${recname}_capture.png
         cap_source=file
     fi
-    if ( [[ "$source_req" == "" || "$source_req" == video  ]] ) \
+    if ( [[ "$source_req" == video  ]] ) \
       && ( [[ "$ffmpeg_pid" == "" ]] || ! ps -q $ffmpeg_pid >/dev/null ) \
       && [[ "$VIDEO_IN" != "" ]] ; then
-        ffmpeg -hide_banner -loglevel fatal  -y -f v4l2 -s $OCR_RESOLUTION -i $VIDEO_IN -frames 1 $TEMPDIR/${recname}_capture.png
+        ffmpeg -hide_banner -loglevel fatal  -y -f v4l2 -s $FIRE_RESOLUTION -i $VIDEO_IN -frames 1 -ss 2 $TEMPDIR/${recname}_capture.png
         cap_source=ffmpeg
     fi
     imagesize=$(stat -c %s $TEMPDIR/${recname}_capture.png)
