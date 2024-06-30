@@ -89,7 +89,7 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
         echo "$tunechan $(date -u '+%Y-%m-%d %H:%M:%S')" \
             >> $TEMPDIR/${recname}_damage.txt
         $scriptpath/adb-sendkey.sh BACK
-    elif [[ "$pagename" != "" ]] ; then
+	else
         # In case there is a message about the mini-guide, dismiss it
         $scriptpath/adb-sendkey.sh DPAD_CENTER
     fi
@@ -125,6 +125,8 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
             echo `$LOGDATE` "Size: ${size[1]} Incr: $diff"
             if (( diff < MINBYTES )) ; then
                 let lowcount=lowcount+1
+				# Send ENTER to dismiss any troublesome message
+				$scriptpath/adb-sendkey.sh DPAD_CENTER
                 if (( lowcount > 3 )) ; then
                     capturepage adb
                     # 4 in a row.
@@ -136,6 +138,9 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
                     fi
                     echo "$tunechan $(date -u '+%Y-%m-%d %H:%M:%S')" \
                         >> $TEMPDIR/${recname}_damage.txt
+                    # Send a few things to dismiss any troublesome messages
+                    $scriptpath/adb-sendkey.sh BACK
+                    $scriptpath/adb-sendkey.sh BACK
                     # Try to tune again
                     launchXfinity
                     sleep 2
