@@ -90,7 +90,10 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
             >> $TEMPDIR/${recname}_damage.txt
         $scriptpath/adb-sendkey.sh BACK
 	else
-        # In case there is a message about the mini-guide, dismiss it
+        # In case there is a message about the mini-git
+        # Extra 30 seconds in case it has taken a long time to start
+        # streaming the channel
+        sleep 30
         $scriptpath/adb-sendkey.sh DPAD_CENTER
     fi
     # Loop to check if recording is working.
