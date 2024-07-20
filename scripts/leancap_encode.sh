@@ -89,7 +89,7 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
         echo "$tunechan $(date -u '+%Y-%m-%d %H:%M:%S')" \
             >> $TEMPDIR/${recname}_damage.txt
         $scriptpath/adb-sendkey.sh BACK
-	else
+    else
         # In case there is a message about the mini-git
         # Extra 30 seconds in case it has taken a long time to start
         # streaming the channel
@@ -128,8 +128,8 @@ echo tune_ffmpeg_pid=$ffmpeg_pid >> $tunefile
             echo `$LOGDATE` "Size: ${size[1]} Incr: $diff"
             if (( diff < MINBYTES )) ; then
                 let lowcount=lowcount+1
-				# Send ENTER to dismiss any troublesome message
-				$scriptpath/adb-sendkey.sh DPAD_CENTER
+                # Send ENTER to dismiss any troublesome message
+                $scriptpath/adb-sendkey.sh DPAD_CENTER
                 if (( lowcount > 3 )) ; then
                     capturepage adb
                     # 4 in a row.
