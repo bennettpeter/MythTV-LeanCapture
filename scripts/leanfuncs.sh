@@ -560,7 +560,7 @@ function getchannellist {
         if (( arrsize == 4 && channels[0] == 445 )) ; then
             channels=( "444" "${channels[@]}" )
             return
-        elif (( (( arrsize == 4 && channels[4] == 443 )) ; then
+        elif (( arrsize == 4 && channels[3] == 443 )) ; then
             channels=( "${channels[@]}" "444"  )
             return
         else
