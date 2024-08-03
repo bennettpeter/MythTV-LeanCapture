@@ -560,6 +560,9 @@ function getchannellist {
         if (( arrsize == 4 && channels[0] == 445 )) ; then
             channels=( "444" "${channels[@]}" )
             return
+        elif (( (( arrsize == 4 && channels[4] == 443 )) ; then
+            channels=( "${channels[@]}" "444"  )
+            return
         else
             # If we hit the maximum then do not use gocr because likely
             # we have hit the TV Go channels which do not have numbers
