@@ -33,14 +33,14 @@ mkdir -p $TEMPDIR
 # Keys : 6 DOWNS for favorite or 5 DOWNS for All
 case "$NAVTYPE" in
     "Favorite Channels")
-        NAVKEYS="DOWN DOWN DOWN DOWN DOWN DOWN"
+        NAVKEYS="DOWN +3 UNKNOWN DOWN +3 UNKNOWN DOWN +3 UNKNOWN DOWN +3 UNKNOWN DOWN +3 UNKNOWN DOWN"
         ;;
     "All Channels")
-        NAVKEYS="DOWN DOWN DOWN DOWN DOWN"
+        NAVKEYS="DOWN +3 UNKNOWN DOWN +3 UNKNOWN DOWN +3 UNKNOWN DOWN +3 UNKNOWN DOWN"
         ;;
     *)
         NAVTYPE="All Channels"
-        NAVKEYS="DOWN DOWN DOWN DOWN DOWN"
+        NAVKEYS="DOWN +3 UNKNOWN DOWN +3 UNKNOWN DOWN +3 UNKNOWN DOWN +3 UNKNOWN DOWN"
         ;;
 esac
 
@@ -457,7 +457,7 @@ function navigate {
             # LEFT invokes the menu in case MENU dismissed it
             $scriptpath/adb-sendkey.sh MENU
             $scriptpath/adb-sendkey.sh LEFT
-            $scriptpath/adb-sendkey.sh UP UP UP UP UP UP UP UP UP UP UP UP UP UP UP UP UP DOWN
+            $scriptpath/adb-sendkey.sh +17 UP DOWN
             if [[ "$keystrokes" != "" ]] ; then
                 $scriptpath/adb-sendkey.sh $keystrokes
             fi
@@ -487,7 +487,7 @@ function navigate {
                         # LEFT invokes the menu again if MENU dismissed it
                         $scriptpath/adb-sendkey.sh MENU
                         $scriptpath/adb-sendkey.sh LEFT
-                        $scriptpath/adb-sendkey.sh UP UP UP UP UP UP UP UP UP UP UP UP UP UP UP UP UP DOWN
+                        $scriptpath/adb-sendkey.sh +17 UP DOWN
                         if [[ "$keystrokes" != "" ]] ; then
                             $scriptpath/adb-sendkey.sh $keystrokes
                         fi

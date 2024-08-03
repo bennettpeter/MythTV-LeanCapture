@@ -39,7 +39,7 @@ navigate "$NAVTYPE" "$NAVKEYS"
 # 50 UP presses
 keypress=
 for (( xy=0; xy<50; xy++ )) ; do
-    keypress="$keypress UP"
+    keypress="$keypress UP +3 UNKNOWN"
 done
 
 # Escape from filter box
@@ -135,7 +135,7 @@ for (( ; ; )) ; do
     let distance=3-selection+5
     keypress=
     for (( xy=0; xy<distance; xy++ )) ; do
-        keypress="$keypress DOWN"
+        keypress="$keypress DOWN +3 UNKNOWN"
     done
     $scriptpath/adb-sendkey.sh $keypress
     getchannellist

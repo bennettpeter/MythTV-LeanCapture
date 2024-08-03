@@ -100,7 +100,7 @@ for (( xx=0; xx<5; xx++ )) ; do
     fi
 
     currchan=0
-    direction=N
+    direction=
     errorpassed=0
     jumpsize=100
     trycount=0
@@ -220,7 +220,7 @@ for (( xx=0; xx<5; xx++ )) ; do
         prior_direction=$direction
         keypress=
         for (( xy=0; xy<jumpsize; xy++ )) ; do
-            keypress="$keypress $direction"
+            keypress="$keypress $direction +3 UNKNOWN"
         done
         $scriptpath/adb-sendkey.sh $keypress
     done

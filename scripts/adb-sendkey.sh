@@ -13,7 +13,7 @@
 # TODO 
 # adb shell input keyevent now accepts key name. This script may be able to be simplified.
 
-#KEYCODE_UNKNOWN=0
+KEYCODE_UNKNOWN=0
 #KEYCODE_SOFT_LEFT=1
 #KEYCODE_SOFT_RIGHT=2
 KEYCODE_HOME=3
