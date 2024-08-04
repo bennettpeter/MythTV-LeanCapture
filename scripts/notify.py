@@ -66,14 +66,17 @@ with open(logfilename,"a") as logfile:
         destination.append(email2)
     if len(destination) > 0 \
     and mailoption != "nomail" :
-        msg = MIMEText(now + " " + os.uname().nodename + " " + content)
-        msg['Subject'] = subject
-        msg['From'] = "mythtv <" + config.get(" default ","SMTP_SENDER") + ">"
-        msg['To'] = destination[0]
-        msg['Date'] = formatdate(localtime=True)
-        smtpsrv = smtplib.SMTP_SSL(config.get(" default ","SMTP_HOST"), timeout=30)
-        smtpsrv.login(config.get(" default ","SMTP_USER"),privConfig.get(" default ","SMTP_PASSWORD"))
-        smtpsrv.sendmail(config.get(" default ","SMTP_SENDER"),destination,msg.as_string())
+        try:
+            msg = MIMEText(now + " " + os.uname().nodename + " " + content)
+            msg['Subject'] = subject
+            msg['From'] = "mythtv <" + config.get(" default ","SMTP_SENDER") + ">"
+            msg['To'] = destination[0]
+            msg['Date'] = formatdate(localtime=True)
+            smtpsrv = smtplib.SMTP_SSL(config.get(" default ","SMTP_HOST"), timeout=30)
+            smtpsrv.login(config.get(" default ","SMTP_USER"),privConfig.get(" default ","SMTP_PASSWORD"))
+            smtpsrv.sendmail(config.get(" default ","SMTP_SENDER"),destination,msg.as_string())
+        except Exception as ex:
+            print("Exception 1:", ex)
     if config.has_option(" default ","NTFY_TOPIC") :
         ntfy_topic=config.get(" default ","NTFY_TOPIC")
         msgtext = subject + " " + now + " " + os.uname().nodename + " " + content
