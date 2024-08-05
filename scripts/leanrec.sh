@@ -307,7 +307,7 @@ capturepage adb
 rc=$?
 if (( rc == 1 )) ; then exit $rc ; fi
 # Send prekeys
-if [[ "$prekeys" != "" ]] ; then
+if [[ "$fffirst" == 0 && "$prekeys" != "" ]] ; then
     $scriptpath/adb-sendkey.sh $prekeys
 fi
 # Check season and episode
@@ -398,7 +398,7 @@ starttime=`date +%s`
 if (( ! playing )) ; then
     sleep 1
     if (( fffirst )) ; then
-        $scriptpath/adb-sendkey.sh DPAD_CENTER
+        $scriptpath/adb-sendkey.sh $prekeys DPAD_CENTER
     fi
 fi
 
