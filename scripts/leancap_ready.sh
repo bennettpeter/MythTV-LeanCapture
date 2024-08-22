@@ -33,6 +33,16 @@ while true ; do
         sleep $SLEEPTIME
         continue
     fi
+    # Check if we just woke up and if so make sure it is at least a minute before
+    # starting to search so that the network is up
+    waketime=($(journalctl -n -u sleep.target | grep Stopped | tail -1))
+    now=$(date +%s)
+    waketime=$(date -d "${waketime[0]} ${waketime[1]} ${waketime[2]}" +%s)
+    let interval=now-waketime
+    if (( interval < 60 )) ; then
+        let t=60-interval
+        sleep $t
+    fi
     mrc=0
     gettunestatus
     # Stopped more than 5 minutes ago and not playing - tweak it
