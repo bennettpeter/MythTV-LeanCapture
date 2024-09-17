@@ -287,9 +287,18 @@ function capturepage {
             # echo `$LOGDATE` Blank Screen from $cap_source
             CAP_TYPE=2
         elif diff -q $TEMPDIR/${recname}_capture_crop.txt $TEMPDIR/${recname}_capture_crop_prior.txt >/dev/null ; then
-            echo `$LOGDATE` Same Screen Again
+            if (( dupcounter == 0 )) ; then
+                echo `$LOGDATE` Same Screen Again
+            else
+                echo -n ". "
+            fi
+            let dupcounter++
             CAP_TYPE=1
         else
+            if (( dupcounter > 0 )) ; then
+                echo ' '
+                dupcounter=0
+            fi
             echo "*****" `$LOGDATE` Screen from $cap_source
             cat $TEMPDIR/${recname}_capture_crop.txt
             echo "*****"
