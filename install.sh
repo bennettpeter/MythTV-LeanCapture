@@ -89,6 +89,7 @@ chmod 2775 /var/opt/mythtv
 
 adduser $MYTHTVUSER audio
 adduser $MYTHTVUSER video
+adduser $MYTHTVUSER systemd-journal
 
 export MYTHTVUSER SCRIPTDIR
 
