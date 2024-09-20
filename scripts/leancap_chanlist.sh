@@ -149,7 +149,7 @@ if diff "$chanlistfile" "$chanlistfilegen" ; then
     exit 0
 fi
 # Copy here only if there is no old file
-cp -n "$chanlistfilegen" "$chanlistfile"
+cp --update=none "$chanlistfilegen" "$chanlistfile"
 cp "$chanlistfilegen" $DATADIR/"${numdate}_$NAVTYPE".txt
 oldnumchans=$(wc -l < "$chanlistfile")
 newnumchans=$(wc -l < "$chanlistfilegen")
