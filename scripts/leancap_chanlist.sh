@@ -21,7 +21,7 @@ source $scriptpath/leanfuncs.sh
 initialize
 getparms
 
-if ! locktuner 60 ; then
+if ! locktuner 90 ; then
     echo `$LOGDATE` "Encoder $recname is locked, exiting"
     exit 2
 fi
