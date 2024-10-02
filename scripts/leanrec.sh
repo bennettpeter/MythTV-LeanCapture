@@ -35,8 +35,7 @@ fffirst=0
 # Hulu BACK TO BROWSE
 # MAX: "AUTOPLAY OFF" or "Next Episode " or "Seasons [0-9]"
 endtext='^CANCEL$|^Up Next$|^i *TV.{2,3}$|^Starting in *[0-9]|BACK TO BROWSE|AUTOPLAY OFF|Next Episode |Seasons [0-9]'
-# Hulu displays Ad during an ad and @CBS for the whole show
-ignoretext='Ad|@CBS'
+ignoretext=
 
 
 while (( "$#" >= 1 )) ; do
@@ -151,6 +150,8 @@ while (( "$#" >= 1 )) ; do
         --hulu)
             textoverlay=1
             endtext='BACK TO BROWSE|SEASON [0-9]+$'
+            # Hulu displays Ad during an ad and @CBS for the whole show
+            ignoretext='^Ad$|^@CBS$|^dvertisement$'
             ;;
         --tubi)
             textoverlay=1
@@ -464,7 +465,7 @@ while true ; do
             if egrep -a 'Your video will resume after the break' $TEMPDIR/${recname}_capture_crop.txt ; then
                 duptext=0
             # Hulu just displays "Ad" during an ad and @CBS during a show
-            elif [[ $(cat $TEMPDIR/${recname}_capture_crop.txt) =~ $ignoretext ]] ; then
+            elif [[ "$ignoretext" != "" && $(cat $TEMPDIR/${recname}_capture_crop.txt) =~ $ignoretext ]] ; then
                 duptext=0
             else
                 let duptext++
