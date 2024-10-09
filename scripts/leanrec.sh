@@ -162,6 +162,9 @@ while (( "$#" >= 1 )) ; do
                 shift||rc=$?
             fi
             ;;
+        --noendtext)
+            endtext=
+            ;;
         --hulu)
             textoverlay=1
             endtext='BACK TO BROWSE|SEASON [0-9]+$'
@@ -267,6 +270,7 @@ if [[ "$error" == y || "$title" == "" \
     echo "    This is a regular expression."
     echo "--endtext : Text that signals end of show. This is a regular expression."
     echo "    Default: \"$endtext\""
+    echo "--noendtext : Disable endtext"
     exit 2
 fi
 
