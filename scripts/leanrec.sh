@@ -278,7 +278,6 @@ fi
 
 if [[ -f $VID_RECDIR/STOP_RECORDINGS ]] ; then
     echo "Exiting because of file $VID_RECDIR/STOP_RECORDINGS"
-    ADB_ENDKEY=HOME
     exit 3
 fi
 
