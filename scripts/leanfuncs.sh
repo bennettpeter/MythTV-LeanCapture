@@ -58,6 +58,9 @@ function exitfunc {
     if [[ "$tail_pid" != "" ]] && ps -q $tail_pid >/dev/null ; then
         kill $tail_pid
     fi
+    if [[ "$ready_pid" != "" ]] && ps -q $ready_pid >/dev/null ; then
+        kill $ready_pid
+    fi
     if istunerlocked ; then
         if (( updatetunetime )) ; then
             echo "tunetime=$(date +%s)" >> $tunefile

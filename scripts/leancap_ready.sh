@@ -17,6 +17,7 @@ capseq="$2"
 source $scriptpath/leanfuncs.sh
 
 SLEEPTIME=300
+LOCKMAX=72
 initialize
 
 # tunestatus values
@@ -27,12 +28,26 @@ errored=0
 lastrescheck=
 lastfavcheck=
 startup=$(date +%s)
+let maxtime=SLEEPTIME*2
+ready_pid=0
+numlocked=0
 while true ; do
+    if (( ready_pid )) ; then kill $ready_pid ; fi
+    (   sleep $maxtime; $scriptpath/notify.py "Fire Stick Problem" \
+            "leancap_ready: Taking too long on ${recname}"
+    ) &
+    ready_pid=$!
     if ! locktuner ; then
         echo `$LOGDATE` "Encoder $recname is already locked, waiting"
+        let numlocked++
+        if (( numlocked > LOCKMAX )) ; then
+            $scriptpath/notify.py "Fire Stick Problem" \
+                "leancap_ready: Locked more than 6 hours on ${recname}" &
+        fi
         sleep $SLEEPTIME
         continue
     fi
+    numlocked=0
     # Check if we just woke up and if so make sure it is at least a minute before
     # starting to search so that the network is up
     waketime=($(journalctl -n -u sleep.target | grep Stopped | tail -1))
