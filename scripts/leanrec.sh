@@ -495,8 +495,8 @@ while true ; do
         fi
         if [[ "$pagename" != "" ]] ; then
             # peacock "Are you still watching?" prompt
-            if grep "Are you still watching" $TEMPDIR/${recname}_capture_crop.txt ; then
-                echo `$LOGDATE` "Responding to 'Are you still watching?' Prompt"
+            if egrep -i "Still Watching\?" $TEMPDIR/${recname}_capture_crop.txt ; then
+                echo `$LOGDATE` "Responding to 'still watching?' Prompt"
                 $scriptpath/adb-sendkey.sh DPAD_CENTER
                 sleep 2
             fi
