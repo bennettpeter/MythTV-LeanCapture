@@ -59,6 +59,7 @@ chanlistfile=$DATADIR/"$NAVTYPE".txt
 chanlistfilegen=$DATADIR/"$NAVTYPE"_gen.txt
 errfile=$DATADIR/"$NAVTYPE"_errors.txt
 fixupfile=$DATADIR/"$NAVTYPE"_fixups.txt
+difffile=$DATADIR/"$NAVTYPE"_diff.txt
 true > "$chanlistfilegen"
 true > "$errfile"
 
@@ -143,11 +144,13 @@ for (( ; ; )) ; do
     priorchannels="${channels[@]}"
 done
 
-echo "Channel Changes < means removed > means added:"
-if diff "$chanlistfile" "$chanlistfilegen" ; then
+echo "Channel Changes < means removed > means added:" |& tee "$difffile"
+set -o pipefail
+if diff "$chanlistfile" "$chanlistfilegen" |& tee -a "$difffile"; then
     echo `$LOGDATE` "Channel list same as before. No problems."
     exit 0
 fi
+set +o pipefail
 # Copy here only if there is no old file
 cp --update=none "$chanlistfilegen" "$chanlistfile"
 cp "$chanlistfilegen" $DATADIR/"${numdate}_$NAVTYPE".txt
@@ -163,7 +166,9 @@ if (( numerrors == 0 )) ; then
     cp "$chanlistfilegen" "$chanlistfile"
     $scriptpath/notify.py "Channel list changes" \
         "leancap_chanlist: See new list in $numdate_$chanlistfilegen .
-Run $scriptpath/update_sd_channels.sh to keep schedules direct in sync"
+Run $scriptpath/update_sd_channels.sh to keep schedules direct in sync.
+Changes:
+$(cat "$difffile")"
 else
     echo `$LOGDATE` "Number of errors: $numerrors. Errors listed below. See $errfile"
     $scriptpath/notify.py "Channel list needs fixing" \
