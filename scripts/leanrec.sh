@@ -285,6 +285,13 @@ scriptname=`readlink -e "$0"`
 scriptpath=`dirname "$scriptname"`
 scriptname=`basename "$scriptname" .sh`
 
+function ctrlc {
+    echo "Exiting because of ctrl-c"
+    ADB_ENDKEY=
+    exit 3
+}
+trap ctrlc SIGINT
+
 source $scriptpath/leanfuncs.sh
 initialize
 
@@ -585,8 +592,16 @@ while true ; do
         lowcount=0
     fi
 done
+
+if [[ -f $VID_RECDIR/KILL_RECORDING ]] ; then
+    echo "Exiting because of file $VID_RECDIR/KILL_RECORDING"
+    ADB_ENDKEY=
+    exit 3
+fi
+
 if (( now < minendtime || now < stoptime )) ; then
     echo `$LOGDATE` "ERROR Recording is less than minimum, kill it"
+    ADB_ENDKEY=
     exit 2
 fi
 
