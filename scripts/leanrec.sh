@@ -28,13 +28,13 @@ textoverlay=0
 credits=450
 # fffirst means ffmpeg must be running before you start playback
 fffirst=0
-# peacock prompt: CANCEL on last line
+# peacock prompt: CANCEL or DISMISS on last line
 # peacock prompt: "Up Next" on a whole line
 # tubi prompt: Starting in xxs or Starting inxs
 # peacock prompt - i TVMA or i TV-14
 # Hulu BACK TO BROWSE
 # MAX: "AUTOPLAY OFF" or "Next Episode " or "Seasons [0-9]"
-endtext='^CANCEL$|^Up Next$|^i *TV.{2,3}$|^Starting in *[0-9]|BACK TO BROWSE|AUTOPLAY OFF|Next Episode |Seasons [0-9]'
+endtext='^CANCEL$|^DISMISS$|^Up Next$|^i *TV.{2,3}$|^Starting in *[0-9]|BACK TO BROWSE|AUTOPLAY OFF|Next Episode |Seasons [0-9]'
 # Text that can be repeated many times without signaling end of show. This is a regex.
 ignoretext=
 
@@ -551,7 +551,7 @@ while true ; do
                 break 2
             fi
             if [[ "$endtext" != "" ]] ; then
-                # peacock prompt: CANCEL on last line
+                # peacock prompt: CANCEL or DISMISS on last line
                 # peacock prompt: "Up Next" on a whole line
                 # tubi prompt: Starting in xxs or Starting inxs
                 # peacock prompt - i TVMA or i TV-14
