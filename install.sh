@@ -96,7 +96,7 @@ export MYTHTVUSER SCRIPTDIR
 mkdir -p /etc/opt/mythtv
 cp --update=none $scriptpath/settings/leancapture.conf /etc/opt/mythtv/
 cp --update=none $scriptpath/settings/private.conf /etc/opt/mythtv/
-chmod 600 /etc/opt/mythtv/private.conf
+chmod 660 /etc/opt/mythtv/private.conf
 chown $MYTHTVUSER:$MYTHTVGROUP /etc/opt/mythtv/private.conf
 if [[ ! -f /etc/opt/mythtv/leancap1.conf ]] ; then
     envsubst < $scriptpath/settings/leancap1.conf > /etc/opt/mythtv/leancap1.conf
