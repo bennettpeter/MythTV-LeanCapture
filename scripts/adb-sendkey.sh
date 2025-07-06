@@ -305,6 +305,7 @@ KEYCODE_MEDIA_STEP_BACKWARD=275
 #KEYCODE_SYSTEM_NAVIGATION_RIGHT=283
 #KEYCODE_ALL_APPS=284
 #KEYCODE_REFRESH=285
+KEYCODE_ZZ_EXIT_THIS_DIALOG=0
 
 key1parm="$1"
 
@@ -327,8 +328,10 @@ while true ; do
             xdotool windowmove $winid 0 0
             wait
         )
-        if [[ "$?" != 0 ]] ; then exit ; fi
-        if [[ "$keyname" == "" ]] ; then exit ; fi
+        rc=$?
+        if [[ "$rc" != 0 ]] ; then exit ; fi
+        if [[ "$keyname" == "ZZ_EXIT_THIS_DIALOG" ]] ; then exit ; fi
+        if [[ "$keyname" == "" ]] ; then continue ; fi
     else
         keyname="$1"
         if [[ "$keyname" == "" ]] ; then break ; fi
