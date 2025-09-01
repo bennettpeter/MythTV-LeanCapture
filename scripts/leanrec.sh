@@ -303,14 +303,16 @@ if (( movie )) ; then
     directory=Movies
     file="$title"
 else
+    season0=$season
     directory="$title"
     if (( ${#season} == 1 )) ; then
-        season=0$season
+        season0=0$season
     fi
+    episode0=$episode
     if (( ${#episode} == 1 )) ; then
-        episode=0$episode
+        episode0=0$episode
     fi
-    file=S${season}E${episode}
+    file=S${season0}E${episode0}
 fi
 echo `$LOGDATE` "RECORD: $directory, $file"
 if ! getparms PRIMARY ; then
