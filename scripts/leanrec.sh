@@ -349,11 +349,11 @@ if [[ "$prekeys" != "" ]] ; then
 fi
 # Check season and episode
 if [[ "$srch" != "" ]] ; then
-    str="$srch"
+    searchstr="$srch"
 else
-    str="\nSeason $season.*Episode $episode |\nSeason $season \($episode\)"
+    searchstr="\nSeason $season.*Episode $episode |\nSeason $season \($episode\)"
 fi
-if (( dosrch )) && ! waitforstring "$str" "Season and Episode" ; then
+if (( dosrch )) && ! waitforstring "$searchstr" "Season and Episode" ; then
     echo `$LOGDATE` "ERROR - Wrong Season & Episode Selected"
     exit 2
 fi
@@ -611,6 +611,15 @@ if [[ -f $VID_RECDIR/STOP_RECORDINGS ]] ; then
     echo "Exiting because of file $VID_RECDIR/STOP_RECORDINGS"
     ADB_ENDKEY=HOME
     exit 3
+fi
+
+# If we got back onto the same episode, skip to next
+if (( dosrch )) ; then
+    sleep 2
+    capturepage adb
+    if grep -oPz "$searchstr" $TEMPDIR/${recname}_capture_crop.txt ; then
+        $scriptpath/adb-sendkey.sh RIGHT
+    fi
 fi
 
 ADB_ENDKEY="$postkeys"
