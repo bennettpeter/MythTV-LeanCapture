@@ -252,7 +252,7 @@ function capturepage {
     if ( [[ "$source_req" == video  ]] ) \
       && ( [[ "$ffmpeg_pid" == "" ]] || ! ps -q $ffmpeg_pid >/dev/null ) \
       && [[ "$VIDEO_IN" != "" ]] ; then
-        ffmpeg -hide_banner -loglevel fatal  -y -f v4l2 -s $FIRE_RESOLUTION -i $VIDEO_IN -frames 1 -ss 2 $TEMPDIR/${recname}_capture.png
+        ffmpeg -hide_banner -loglevel fatal  -y -f v4l2 -s $RESOLUTION -i $VIDEO_IN -frames 1 -ss 2 $TEMPDIR/${recname}_capture.png
         cap_source=ffmpeg
     fi
     imagesize=$(stat -c %s $TEMPDIR/${recname}_capture.png)
@@ -265,7 +265,8 @@ function capturepage {
     fi
     if (( imagesize > 0 )) ; then
         resolution=$(identify -format %wx%h $TEMPDIR/${recname}_capture.png)
-        if [[ "$cap_source" == adb && "$resolution" != "$FIRE_RESOLUTION" ]] ; then
+        if [[ "$cap_source" == adb && "$FIRE_RESOLUTION" != unchecked \
+                && "$resolution" != "$FIRE_RESOLUTION" ]] ; then
             rc=1
             echo `$LOGDATE` "WARNING Incorrect resolution $resolution"
         fi

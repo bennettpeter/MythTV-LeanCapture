@@ -82,8 +82,10 @@ while true ; do
             if (( rc == 1 )) ; then
                 $scriptpath/notify.py "Fire Stick Problem" \
                   "leancap_ready: Wrong resolution ${resolution} on ${recname}" &
-            else
+            elif [[ "$FIRE_RESOLUTION" != unchecked ]] ; then
                 echo `$LOGDATE` "Resolution is correct ${resolution} on $recname."
+            else
+                echo `$LOGDATE` "Resolution is not checked on $recname."
             fi
             # call the fixresolution once per day
             # doesn't work
