@@ -19,6 +19,7 @@ chapter=0
 movie=0
 extension=mkv
 capture=adb
+prime=0
 # textoverlay indicates there is a text overlay on the video, which
 # means text can pop up any time and therefore the value must be checked.
 # If there in no text overlay you can assume the video is over as soon
@@ -179,6 +180,9 @@ while (( "$#" >= 1 )) ; do
         --fffirst)
             fffirst=1
             ;;
+        --prime)
+            prime=1
+            ;;
         *)
             echo "Invalid option $1"
             error=y
@@ -271,6 +275,8 @@ if [[ "$error" == y || "$title" == "" \
     echo "--endtext : Text that signals end of show. This is a regular expression."
     echo "    Default: \"$endtext\""
     echo "--noendtext : Disable endtext"
+    echo "--prime : Send an extra RIGHT if the system does not automatically advance"
+    echo "    to the next episode. Needed for Amazon Prime"
     exit 2
 fi
 
@@ -529,14 +535,16 @@ while true ; do
                 continue
             fi
             if (( ! textoverlay )) ; then
-                # Xfinity resume prompt and start over
-                if  grep "Resume" $TEMPDIR/${recname}_capture_crop.txt \
-                    ||  grep "Start" $TEMPDIR/${recname}_capture_crop.txt ; then
-                    echo `$LOGDATE` "Selecting Start Over from Resume Prompt"
-                    $scriptpath/adb-sendkey.sh DOWN
-                    $scriptpath/adb-sendkey.sh DPAD_CENTER
-                    continue
-                fi
+                # This is commented due to aa false positive with Resume in episode description
+                # after end of recording.
+                #~ # Xfinity resume prompt and start over
+                #~ if  grep -w "Resume" $TEMPDIR/${recname}_capture_crop.txt \
+                    #~ ||  grep -w "Start" $TEMPDIR/${recname}_capture_crop.txt ; then
+                    #~ echo `$LOGDATE` "Selecting Start Over from Resume Prompt"
+                    #~ $scriptpath/adb-sendkey.sh DOWN
+                    #~ $scriptpath/adb-sendkey.sh DPAD_CENTER
+                    #~ continue
+                #~ fi
                 sleep 2
                 echo `$LOGDATE` "Recording $RECFILE ended with text screen."
                 break 2
@@ -613,9 +621,9 @@ if [[ -f $VID_RECDIR/STOP_RECORDINGS ]] ; then
     exit 3
 fi
 
-# If we got back onto the same episode, skip to next
-if (( dosrch )) ; then
-    sleep 2
+# Prime - If we got back onto the same episode, skip to next
+if (( prime )) ; then
+    sleep 4
     capturepage adb
     if grep -oPz "$searchstr" $TEMPDIR/${recname}_capture_crop.txt ; then
         $scriptpath/adb-sendkey.sh RIGHT
