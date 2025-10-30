@@ -572,9 +572,11 @@ function getchannellist {
         # Difficulty with 444
         if (( arrsize == 4 && channels[0] == 445 )) ; then
             channels=( "444" "${channels[@]}" )
+            arrsize=${#channels[@]}
             return
         elif (( arrsize == 4 && channels[3] == 443 )) ; then
             channels=( "${channels[@]}" "444"  )
+            arrsize=${#channels[@]}
             return
         else
             # If we hit the maximum then do not use gocr because likely
