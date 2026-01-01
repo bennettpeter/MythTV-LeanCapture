@@ -54,7 +54,7 @@ while true ; do
     now=$(date +%s)
     waketime=$(date -d "${waketime[0]} ${waketime[1]} ${waketime[2]}" +%s)
     let interval=now-waketime
-    if (( interval < 60 )) ; then
+    if (( interval > 0 && interval < 60 )) ; then
         let t=60-interval
         sleep $t
     fi
