@@ -11,6 +11,7 @@ wait=0
 ADB_ENDKEY=
 srch=
 prekeys=
+ffprekeys=
 postkeys=
 dosrch=0
 playing=0
@@ -123,6 +124,13 @@ while (( "$#" >= 1 )) ; do
             if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
             else
                 prekeys="$2"
+                shift||rc=$?
+            fi
+            ;;
+        --ffprekeys)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                ffprekeys="$2"
                 shift||rc=$?
             fi
             ;;
@@ -252,6 +260,8 @@ if [[ "$error" == y || "$title" == "" \
     echo "    This also sets nosrch."
     echo "--prekeys string : Keystrokes to send before playback to get to correct page"
     echo "    This probably should not be used with playing option."
+    echo "--ffprekeys string : Keystrokes to send before playback after ffmpeg starts"
+    echo "    to get to correct page. Only applies with fffirst."
     echo "--postkeys string : Keystrokes to send after successful recording"
     echo "--wait : Pause immediately before playback, for testing"
     echo "    or to rewind in progress show to beginning."
@@ -441,6 +451,10 @@ starttime=`date +%s`
 if (( ! playing )) ; then
     sleep 1
     if (( fffirst )) ; then
+        # Send ffprekeys
+        if [[ "$ffprekeys" != "" ]] ; then
+            $scriptpath/adb-sendkey.sh $ffprekeys
+        fi
         $scriptpath/adb-sendkey.sh DPAD_CENTER
     fi
 fi
