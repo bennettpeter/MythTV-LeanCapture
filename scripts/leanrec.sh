@@ -287,6 +287,11 @@ if [[ "$error" == y || "$title" == "" \
     echo "--noendtext : Disable endtext"
     echo "--prime : Send an extra RIGHT if the system does not automatically advance"
     echo "    to the next episode. Needed for Amazon Prime"
+    echo "File $VID_RECDIR/STOP_RECORDINGS can be created to stop the current recording"
+    echo "  at the end without sending HOME."
+    echo "File $VID_RECDIR/KILL_RECORDING can be created to stop the current recording"
+    echo "  at the end with sending HOME. Use if you are recording a bunch of episodes"
+    echo "  using --playing to make sure play stops."
     exit 2
 fi
 
@@ -294,6 +299,13 @@ fi
 
 if [[ -f $VID_RECDIR/STOP_RECORDINGS ]] ; then
     echo "Exiting because of file $VID_RECDIR/STOP_RECORDINGS"
+    ADB_ENDKEY=
+    exit 3
+fi
+
+if [[ -f $VID_RECDIR/KILL_RECORDING ]] ; then
+    echo "Exiting because of file $VID_RECDIR/KILL_RECORDING"
+    ADB_ENDKEY=HOME
     exit 3
 fi
 
@@ -459,10 +471,10 @@ if (( ! playing )) ; then
     fi
 fi
 
-# Max duration is 50% more than specified duration.
-let maxduration=minutes*60*150/100
-# Min duration is 90% of specified duration.
-let minduration=minutes*60*90/100
+# Max duration is 50% more than specified duration plus 5 minutes
+let maxduration=minutes*60*150/100+5*60
+# Min duration is 90% of specified duration less 5 minutes
+let minduration=minutes*60*90/100-5*60
 let maxendtime=starttime+maxduration
 # firstminutes is the max length of ads at the beginning
 let firstminutes=starttime+180
@@ -619,7 +631,7 @@ done
 
 if [[ -f $VID_RECDIR/KILL_RECORDING ]] ; then
     echo "Exiting because of file $VID_RECDIR/KILL_RECORDING"
-    ADB_ENDKEY=
+    ADB_ENDKEY=HOME
     exit 3
 fi
 
@@ -631,7 +643,7 @@ fi
 
 if [[ -f $VID_RECDIR/STOP_RECORDINGS ]] ; then
     echo "Exiting because of file $VID_RECDIR/STOP_RECORDINGS"
-    ADB_ENDKEY=HOME
+    ADB_ENDKEY=
     exit 3
 fi
 
