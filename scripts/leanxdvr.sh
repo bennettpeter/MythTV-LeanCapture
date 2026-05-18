@@ -234,7 +234,7 @@ while  (( numrecorded < maxrecordings )) ; do
         recfilebase="$season_episode"
     fi
     recfile="$VID_RECDIR/$title/$recfilebase.mkv"
-    convert $TEMPDIR/${recname}_capture.png -gravity East -crop 25%x100% -negate -brightness-contrast 0x20 $TEMPDIR/${recname}_capture_details.png
+    convert $TEMPDIR/${recname}_capture.png -gravity East -crop 25%x100% $NEGATE -brightness-contrast 0x20 $TEMPDIR/${recname}_capture_details.png
     tesseract $TEMPDIR/${recname}_capture_details.png  - 2>/dev/null | sed '/^ *$/d' > $TEMPDIR/${recname}_details.txt
     echo `$LOGDATE` "Episode Details:"
     echo "*****"

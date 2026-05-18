@@ -158,6 +158,14 @@ function initialize {
     if [[ "$recname" != "" ]] ; then
         true > $TEMPDIR/${recname}_capture_crop.txt
     fi
+    local convver=($(convert --version))
+    convver=${convver[2]}
+    convver=${convver:0:1}
+    if [[ $convver == 6 ]] ; then
+        NEGATE='-negate'
+    else
+        NEGATE='-channel RGB -negate +channel'
+    fi
 }
 
 # Parameter 1 - set to PRIMARY to return with code 2 if primary device
@@ -277,7 +285,7 @@ function capturepage {
         fi
     fi
     if (( imagesize > 0 )) ; then
-        convert $TEMPDIR/${recname}_capture.png $CROP -negate -brightness-contrast 0x20 $TEMPDIR/${recname}_capture_crop.png
+        convert $TEMPDIR/${recname}_capture.png $CROP $NEGATE -brightness-contrast 0x20 $TEMPDIR/${recname}_capture_crop.png
     fi
     if [[ `stat -c %s $TEMPDIR/${recname}_capture_crop.png` != 0 ]] ; then
         if (( $USE_GOCR )) ; then
