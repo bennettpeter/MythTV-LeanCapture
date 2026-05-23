@@ -266,7 +266,8 @@ function capturepage {
     imagesize=$(stat -c %s $TEMPDIR/${recname}_capture.png)
     if (( imagesize == 0 )) ; then
         if [[ "$source_req" == "" || "$source_req" == adb  ]] ; then
-            adb -s $ANDROID_DEVICE exec-out screencap -p > $TEMPDIR/${recname}_capture.png
+            timeout 10s adb -s $ANDROID_DEVICE exec-out screencap -p > $TEMPDIR/${recname}_capture.png \
+				|| echo "ERROR Capture timeout rc=$?"
             cap_source=adb
             imagesize=$(stat -c %s $TEMPDIR/${recname}_capture.png)
         fi
