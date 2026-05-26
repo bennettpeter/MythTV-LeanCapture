@@ -178,7 +178,8 @@ while (( "$#" >= 1 )) ; do
             textoverlay=1
             endtext='BACK TO BROWSE|SEASON [0-9]+$'
             # Hulu displays Ad during an ad and @CBS for the whole show
-            ignoretext='^Ad$|^@CBS$|^dvertisement$'
+            # Sometimes it displays hulu for the whole show
+            ignoretext='^Ad$|^@CBS$|^dvertisement$|^hulu$'
             ;;
         --tubi)
             textoverlay=1
