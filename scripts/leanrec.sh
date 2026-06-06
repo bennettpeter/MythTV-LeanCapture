@@ -287,7 +287,7 @@ if [[ "$error" == y || "$title" == "" \
     echo "    Default: \"$endtext\""
     echo "--noendtext : Disable endtext"
     echo "--prime : Send an extra RIGHT if the system does not automatically advance"
-    echo "    to the next episode. Needed for Amazon Prime"
+    echo "    to the next episode. Was needed for Amazon Prime, no longer used."
     echo "File $VID_RECDIR/STOP_RECORDINGS can be created to stop the current recording"
     echo "  at the end without sending HOME."
     echo "File $VID_RECDIR/KILL_RECORDING can be created to stop the current recording"
@@ -351,19 +351,19 @@ ffmpeg_pid=
 
 # Tuner kept locked through entire recording
 if ! locktuner ; then
-    echo `$LOGDATE` "ERROR Encoder $recname is locked."
+	$scriptpath/notify.py "ERROR Encoder $recname is locked." leanrec nomail
     exit 2
 fi
 gettunestatus
 
 if [[ "$tunestatus" != idle ]] ; then
-    echo `$LOGDATE` "ERROR: Tuner in use. Status $tunestatus"
+    $scriptpath/notify.py "ERROR: Tuner in use. Status $tunestatus" leanrec nomail
     exit 2
 fi
 
 adb connect $ANDROID_DEVICE
 if ! adb devices | grep $ANDROID_DEVICE ; then
-    echo `$LOGDATE` "ERROR: Unable to connect to $ANDROID_DEVICE"
+    $scriptpath/notify.py "ERROR: Unable to connect to $ANDROID_DEVICE" leanrec nomail
     exit 2
 fi
 
@@ -383,7 +383,7 @@ else
     searchstr="\nSeason $season.*Episode $episode |\nSeason $season \($episode\)"
 fi
 if (( dosrch )) && ! waitforstring "$searchstr" "Season and Episode" ; then
-    echo `$LOGDATE` "ERROR - Wrong Season & Episode Selected"
+	$scriptpath/notify.py "ERROR - Wrong Season & Episode Selected" leanrec nomail
     exit 2
 fi
 
@@ -501,7 +501,7 @@ fi
 while true ; do
     loopstart=`date +%s`
     if (( loopstart > maxendtime )) ; then
-        echo `$LOGDATE` "ERROR: Recording for too long, kill it"
+		$scriptpath/notify.py "ERROR: Recording for too long, kill it" leanrec nomail
         exit 2
     fi
     if (( stoptime > 0 && loopstart > stoptime )) ; then
@@ -510,7 +510,7 @@ while true ; do
         break
     fi
     if ! ps -q $ffmpeg_pid >/dev/null ; then
-        echo `$LOGDATE` "ERROR: ffmpeg is gone, exit"
+		$scriptpath/notify.py "ERROR: ffmpeg is gone, exit" leanrec nomail
         exit 2
     fi
     for (( x=0; x<30; x++ )) ; do
@@ -583,10 +583,11 @@ while true ; do
             fi
 
             # If stopped on a text page for 15 iterations (60-90 sec), end recording
-            if (( duptext > 15 )) ; then
-                echo `$LOGDATE` "Recording $RECFILE ended on static text 15 times."
-                break 2
-            fi
+            # No longer used - it caused false ending on amazon prime
+            #~ if (( duptext > 15 )) ; then
+                #~ echo `$LOGDATE` "Recording $RECFILE ended on static text 15 times."
+                #~ break 2
+            #~ fi
             if [[ "$endtext" != "" ]] ; then
                 # peacock prompt: CANCEL or DISMISS on last line
                 # peacock prompt: "Up Next" on a whole line
@@ -637,7 +638,7 @@ if [[ -f $VID_RECDIR/KILL_RECORDING ]] ; then
 fi
 
 if (( now < minendtime || now < stoptime )) ; then
-    echo `$LOGDATE` "ERROR Recording is less than minimum, kill it"
+	$scriptpath/notify.py "ERROR Recording is less than minimum, kill it" leanrec nomail
     ADB_ENDKEY=
     exit 2
 fi
