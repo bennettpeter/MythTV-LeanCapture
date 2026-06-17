@@ -21,6 +21,7 @@ movie=0
 extension=mkv
 capture=adb
 prime=0
+maxduptext=999999
 # textoverlay indicates there is a text overlay on the video, which
 # means text can pop up any time and therefore the value must be checked.
 # If there in no text overlay you can assume the video is over as soon
@@ -32,7 +33,6 @@ credits=450
 fffirst=0
 # peacock prompt: CANCEL or DISMISS on last line
 # peacock prompt: "Up Next" on a whole line
-# tubi prompt: Starting in xxs or Starting inxs
 # peacock prompt - i TVMA or i TV-14
 # Hulu BACK TO BROWSE
 # MAX: "AUTOPLAY OFF" or "Next Episode " or "Seasons [0-9]"
@@ -181,17 +181,19 @@ while (( "$#" >= 1 )) ; do
             # Sometimes it displays hulu for the whole show
             ignoretext='^Ad$|^@CBS$|^dvertisement$|^hulu$'
             ;;
-        --tubi)
-            textoverlay=1
-            endtext='Starting in *[0-9]+s$'
-            ignoretext='Your video will resume after the break'
-            ;;
         --fffirst)
             fffirst=1
             ;;
         --prime)
             prime=1
             ;;
+		--maxduptext)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                maxduptext="$2"
+                shift||rc=$?
+            fi
+			;;
         *)
             echo "Invalid option $1"
             error=y
@@ -215,8 +217,8 @@ case "$capture" in
         ;;
 esac
 
-if (( credits < 90 )) ; then
-    echo "ERROR credits minimum value is 90"
+if (( credits < 30 )) ; then
+    echo "ERROR credits minimum value is 30"
     error=y
 fi
 
@@ -274,10 +276,8 @@ if [[ "$error" == y || "$title" == "" \
     echo "--capture adb|file : Method of monitoring messages. file requires extension ts"
     echo "--hulu : Set up for recording Hulu."
     echo "    Sets textoverlay and customized end text"
-    echo "--tubi : Set up for recording Tubi."
-    echo "    Tubi has Autoplay on, needs --playing on next leanrec, --postkeys HOME on last."
     echo "--credits nnn : Number of seconds of credits at the end of show."
-    echo "    After this number, recording stops. Default 450, minimum 90"
+    echo "    After this number, recording stops. Default 450, minimum 30."
     echo "--fffirst : Starte ffmpeg first before starting playback. This is needed"
     echo "    For Apple TV+ and any others that are able to detect that the data is"
     echo "    not being processed and then stops playback."
@@ -289,6 +289,9 @@ if [[ "$error" == y || "$title" == "" \
     echo "--prime : Send an extra RIGHT if the system does not automatically advance"
     echo "    to the next episode. Was needed for Amazon Prime, no longer used."
     echo "File $VID_RECDIR/STOP_RECORDINGS can be created to stop the current recording"
+    echo "--maxduptext nnn : Maximum number of duplicate text screens allowed before"
+    echo "     assuming this is the end of the show. Text readings are 2-4 seconds apart."
+    echo "     Default is 9999999 to effectively bypass the check."
     echo "  at the end without sending HOME."
     echo "File $VID_RECDIR/KILL_RECORDING can be created to stop the current recording"
     echo "  at the end with sending HOME. Use if you are recording a bunch of episodes"
@@ -583,11 +586,11 @@ while true ; do
             fi
 
             # If stopped on a text page for 15 iterations (60-90 sec), end recording
-            # No longer used - it caused false ending on amazon prime
-            #~ if (( duptext > 15 )) ; then
-                #~ echo `$LOGDATE` "Recording $RECFILE ended on static text 15 times."
-                #~ break 2
-            #~ fi
+            # Do not use for amazon - it caused false ending on amazon prime
+            if (( duptext > maxduptext )) ; then
+                echo `$LOGDATE` "Recording $RECFILE ended on static text $duptext times."
+                break 2
+            fi
             if [[ "$endtext" != "" ]] ; then
                 # peacock prompt: CANCEL or DISMISS on last line
                 # peacock prompt: "Up Next" on a whole line
@@ -595,7 +598,7 @@ while true ; do
                 # peacock prompt - i TVMA or i TV-14
                 # Hulu no ads prompt "Episodes Inside the Episodes"
                 # MAX: "AUTOPLAY OFF" or "Next Episode " or "Seasons [0-9]"
-                if egrep -a "$endtext" $TEMPDIR/${recname}_capture_crop.txt ; then
+                if egrep -a -- "$endtext" $TEMPDIR/${recname}_capture_crop.txt ; then
                     sleep 2
                     echo `$LOGDATE` "Recording $RECFILE ended with text prompt."
                     break 2
