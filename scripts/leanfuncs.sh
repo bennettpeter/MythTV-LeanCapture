@@ -456,6 +456,13 @@ function navigate {
     for (( xx=0 ; xx < 25 ; xx++ )) ; do
         sleep 0.5
         capturepage
+        # -oPz is required so that we match the whole file against the string,
+        # Thus allowing strings like "\nSearch\nHome\n" to be matched
+        if grep -oPz "Please restart the application" $TEMPDIR/${recname}_capture_crop.txt ; then
+            # Empty pagename to force restart
+            pagename=
+            # Output a newline
+        fi
         pagenamelc="${pagename,,}"
         case "$pagenamelc" in
         "")
