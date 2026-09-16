@@ -481,7 +481,7 @@ function navigate {
         "xfinity stream")
             continue
             ;;
-        "for you")
+        "for you" | "home")
             sleep 0.5
             # LEFT invokes the menu in case MENU dismissed it
             $scriptpath/adb-sendkey.sh MENU
