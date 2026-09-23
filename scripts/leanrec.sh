@@ -28,7 +28,7 @@ maxduptext=999999
 # as you see text.
 textoverlay=0
 # Number of seconds of credits allowed at end of show
-credits=450
+credits=60
 # fffirst means ffmpeg must be running before you start playback
 fffirst=0
 # peacock prompt: CANCEL or DISMISS on last line
@@ -277,7 +277,7 @@ if [[ "$error" == y || "$title" == "" \
     echo "--hulu : Set up for recording Hulu."
     echo "    Sets textoverlay and customized end text"
     echo "--credits nnn : Number of seconds of credits at the end of show."
-    echo "    After this number, recording stops. Default 450, minimum 30."
+    echo "    After this number, recording stops. Default 60, minimum 30."
     echo "--fffirst : Starte ffmpeg first before starting playback. This is needed"
     echo "    For Apple TV+ and any others that are able to detect that the data is"
     echo "    not being processed and then stops playback."
