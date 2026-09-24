@@ -20,8 +20,8 @@ chapter=0
 movie=0
 extension=mkv
 capture=adb
-prime=0
 maxduptext=999999
+ffpregap=60
 # textoverlay indicates there is a text overlay on the video, which
 # means text can pop up any time and therefore the value must be checked.
 # If there in no text overlay you can assume the video is over as soon
@@ -184,16 +184,20 @@ while (( "$#" >= 1 )) ; do
         --fffirst)
             fffirst=1
             ;;
-        --prime)
-            prime=1
-            ;;
-		--maxduptext)
+        --maxduptext)
             if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
             else
                 maxduptext="$2"
                 shift||rc=$?
             fi
-			;;
+            ;;
+        --ffpregap)
+            if [[ "$2" == "" || "$2" == -* ]] ; then echo "ERROR Missing value for $1" ; error=y
+            else
+                ffpregap="$2"
+                shift||rc=$?
+            fi
+            ;;
         *)
             echo "Invalid option $1"
             error=y
@@ -265,6 +269,9 @@ if [[ "$error" == y || "$title" == "" \
     echo "    This probably should not be used with playing option."
     echo "--ffprekeys string : Keystrokes to send before playback after ffmpeg starts"
     echo "    to get to correct page. Only applies with fffirst."
+    echo "--ffpregap nn : Number of secs for the time spent on ffprekeys. Recording pauses"
+    echo "    until this time elapses. Default 60. Allows for a stadard length to be"
+    echo "    skipped at start of playback. Only used if there are ffprekeys."
     echo "--postkeys string : Keystrokes to send after successful recording"
     echo "--wait : Pause immediately before playback, for testing"
     echo "    or to rewind in progress show to beginning."
@@ -286,8 +293,6 @@ if [[ "$error" == y || "$title" == "" \
     echo "--endtext : Text that signals end of show. This is a regular expression."
     echo "    Default: \"$endtext\""
     echo "--noendtext : Disable endtext"
-    echo "--prime : Send an extra RIGHT if the system does not automatically advance"
-    echo "    to the next episode. Was needed for Amazon Prime, no longer used."
     echo "File $VID_RECDIR/STOP_RECORDINGS can be created to stop the current recording"
     echo "--maxduptext nnn : Maximum number of duplicate text screens allowed before"
     echo "     assuming this is the end of the show. Text readings are 2-4 seconds apart."
@@ -354,7 +359,7 @@ ffmpeg_pid=
 
 # Tuner kept locked through entire recording
 if ! locktuner ; then
-	$scriptpath/notify.py "ERROR Encoder $recname is locked." leanrec nomail
+    $scriptpath/notify.py "ERROR Encoder $recname is locked." leanrec nomail
     exit 2
 fi
 gettunestatus
@@ -386,7 +391,7 @@ else
     searchstr="\nSeason $season.*Episode $episode |\nSeason $season \($episode\)"
 fi
 if (( dosrch )) && ! waitforstring "$searchstr" "Season and Episode" ; then
-	$scriptpath/notify.py "ERROR - Wrong Season & Episode Selected" leanrec nomail
+    $scriptpath/notify.py "ERROR - Wrong Season & Episode Selected" leanrec nomail
     exit 2
 fi
 
@@ -464,16 +469,30 @@ ffmpeg -hide_banner -loglevel error \
 
 ffmpeg_pid=$!
 starttime=`date +%s`
+
+capturepage adb
+if egrep -i "a problem with the connection" $TEMPDIR/${recname}_capture_crop.txt ; then
+    sleep 1
+    $scriptpath/adb-sendkey.sh DPAD_CENTER
+    sleep 2
+fi
+
 if (( ! playing )) ; then
     sleep 1
     if (( fffirst )) ; then
         # Send ffprekeys
         if [[ "$ffprekeys" != "" ]] ; then
             $scriptpath/adb-sendkey.sh $ffprekeys
+            now=`date +%s`
+            let "sleepsecs=ffpregap-(now-starttime)"
+            if (( sleepsecs > 0 )) ; then
+                sleep $sleepsecs
+            fi
         fi
         $scriptpath/adb-sendkey.sh DPAD_CENTER
     fi
 fi
+starttime=`date +%s`
 
 # Max duration is 50% more than specified duration plus 5 minutes
 let maxduration=minutes*60*150/100+5*60
@@ -504,7 +523,7 @@ fi
 while true ; do
     loopstart=`date +%s`
     if (( loopstart > maxendtime )) ; then
-		$scriptpath/notify.py "ERROR: Recording for too long, kill it" leanrec nomail
+        $scriptpath/notify.py "ERROR: Recording for too long, kill it" leanrec nomail
         exit 2
     fi
     if (( stoptime > 0 && loopstart > stoptime )) ; then
@@ -513,7 +532,7 @@ while true ; do
         break
     fi
     if ! ps -q $ffmpeg_pid >/dev/null ; then
-		$scriptpath/notify.py "ERROR: ffmpeg is gone, exit" leanrec nomail
+        $scriptpath/notify.py "ERROR: ffmpeg is gone, exit" leanrec nomail
         exit 2
     fi
     for (( x=0; x<30; x++ )) ; do
@@ -641,7 +660,7 @@ if [[ -f $VID_RECDIR/KILL_RECORDING ]] ; then
 fi
 
 if (( now < minendtime || now < stoptime )) ; then
-	$scriptpath/notify.py "ERROR Recording is less than minimum, kill it" leanrec nomail
+    $scriptpath/notify.py "ERROR Recording is less than minimum, kill it" leanrec nomail
     ADB_ENDKEY=
     exit 2
 fi
@@ -650,15 +669,6 @@ if [[ -f $VID_RECDIR/STOP_RECORDINGS ]] ; then
     echo "Exiting because of file $VID_RECDIR/STOP_RECORDINGS"
     ADB_ENDKEY=
     exit 3
-fi
-
-# Prime - If we got back onto the same episode, skip to next
-if (( prime )) ; then
-    sleep 4
-    capturepage adb
-    if grep -oPz "$searchstr" $TEMPDIR/${recname}_capture_crop.txt ; then
-        $scriptpath/adb-sendkey.sh RIGHT
-    fi
 fi
 
 ADB_ENDKEY="$postkeys"
