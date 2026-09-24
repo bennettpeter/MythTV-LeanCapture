@@ -486,7 +486,11 @@ if (( ! playing )) ; then
             now=`date +%s`
             let "sleepsecs=ffpregap-(now-starttime)"
             if (( sleepsecs > 0 )) ; then
+                echo "Sleeping $sleepsecs seconds to make $ffpregap to skip at start."
                 sleep $sleepsecs
+            else
+                let gap=now-starttime
+                echo "There are $gap seconds of navigation at recorded at the start."
             fi
         fi
         $scriptpath/adb-sendkey.sh DPAD_CENTER
